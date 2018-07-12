@@ -1,0 +1,5 @@
+if input file is natl, convert natl progl
+convert progl cpt
+if input cmd is 'exec', exec cpt
+if input cmd is 'gen', gen cpt
+ 

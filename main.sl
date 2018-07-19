@@ -1,7 +1,7 @@
 $cmd = argv[1]
 $file = argv[2]
 $currsp = idGlobal(cmd)
-$lexsp = subScope(currsp)
-$execsp = subScope(currsp)
-$elem = progl2elem(readFile(file), lexsp);
+$lexsp = scopeNew(currsp)
+$execsp = scopeNew(currsp)
+$elem = progl2obj(readFile(file), lexsp);
 exec($elem, execsp)

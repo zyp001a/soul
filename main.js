@@ -53,56 +53,71 @@ function getStackTrace(){
 
 var root = scopeNew();
 var astScope = scopeNew(root);
-classNew(root, "Class"),
-classNew(root, "Undf", {
+var execsp = scopeNew(root, "exec");
+var definesp = scopeNew(root, "define");
+classNew(definesp, "Class")
+classNew(definesp, "Obj")
+classNew(definesp, "Raw")
+classNew(definesp, "Undf", {
   default: {val: undefined}
-}),
-classNew(root, "Num", {
+}, [definesp.Raw])
+classNew(definesp, "Num", {
   default: {val: 0},
-}),
-classNew(root, "Str", {
+}, [definesp.Raw])
+classNew(definesp, "Str", {
   default: {val: ""},
-}),	
-classNew(root, "Arr", {
+}, [definesp.Raw])
+classNew(definesp, "Arr", {
   default: {val: []}
-}),
-classNew(root, "Dic", {
+}, [definesp.Raw])
+classNew(definesp, "Dic", {
   default: {val: {}}
-}),
-classNew(root, "Argdef", {
+}, [definesp.Raw])
+classNew(definesp, "Argdef", {
   default: {val: [[]]}
-}),
-classNew(root, "Func", {
-  default: {val: function(){}} 
-}),
-classNew(root, "Obj"),
-classNew(root, "Call", {
+}, [definesp.Raw])
+classNew(definesp, "Call", {
 	schema:{
-		func: root.Func,
-		args: root.Arr,
+		func: definesp.Func,
+		args: definesp.Arr,
 	}
 })
-classNew(root, "ArrCall", {
-	parent: [root.Arr],
-	element: root.Call,
+classNew(definesp, "ArrObj", {
+	element: definesp.Obj,
+}, [definesp.Arr])
+classNew(definesp, "Block", {
+  schema: {
+    arrobj: definesp.ArrObj,
+    label: classSub(definesp.Dic, {element: definesp.Num})
+  }
 })
-classNew(root, "Addr", {
-	schema:{
-		lexScope: root.Scope,
-		args: root.Arr,
-		level: root.Int
-	}
-})
-classNew(root, "Stack", {
+classNew(definesp, "Func", {
+  default: {val: function(){}}
+}, [definesp.Raw]);
+classNew(definesp, "FuncNative", {
+  schema: {
+    func: definesp.Func,
+    argdef: definesp.Argdef,
+  }
+});
+classNew(definesp, "FuncBlock", {
+  schema: {
+    func: definesp.Block,
+    argdef: definesp.Argdef,
+  }  
+});
+classNew(definesp, "Stack", {
   default: {val: []}
 })
-funcNew(root, "Stack_pop", {
-})
-funcNew(root, "Stack_push", {
-})
-funcNew(root, "log", function(s){
+funcNew(definesp, "log", function(s){
 	console.log(s);
 }, [["s"]])
+
+funcNew(execsp, "Call", async function(o, s, e){
+  var func = await exec(o.func, s, e);
+  var args = await exec(o.args, s, e);
+  execSub()
+}, [["o"], ["s"], ["e"]])
 
 //parser function
 function valCopy(item){
@@ -125,15 +140,14 @@ function valCopy(item){
 }
 //internal function
 function funcNew(scope, name, func, argdef){
-	var a = objNew(root.Argdef, argdef);
-	var o = objNew(root.Func, {
-		name: name,
+	var a = objNew(definesp.Argdef, argdef);
+	var o = objNew(definesp.Func, {
 		argdef: a,
 		val: func
-	})
+	}, name)
 	return scope[name] = o;
 }
-function objNew(cla, proto){
+function objNew(cla, proto, name){
 	if(!cla) die()
 	if(!proto) proto = {};
 	for(var k in cla.default){
@@ -144,14 +158,27 @@ function objNew(cla, proto){
 		type: cla.__.id,
 		ext: {}
 	};
+  if(name)
+    proto.__.name = name
 	return proto;
 }
-function classNew(pscope, name, conf){
-	var p = pscope[name] = conf || {};
-	var x = p.__ = {};
-	p.parents = {
-		Class: root.Class
-	}
+function classSub(c, conf){
+  var name = c.__.name + JSON.stringify(conf);
+  classNew(c.__.parent, name, conf, [c]);
+}
+function classNew(pscope, name, conf, cla){
+	var p = pscope[name] = {};
+	var x = p.__ = conf || {};
+  x.parent = pscope
+	x.parents = {};
+  if(!cla) cla = [definesp.Class];
+  for(var i in cla){
+    x.parents[cla[i].__.name] = cla;
+  }
+	Object.defineProperty(p, '__', {
+		enumerable: false,
+		configurable: false
+	});  
 	x.name = name;
 	if(!pscope){ //isroot
 	  x.id = ".";
@@ -166,13 +193,14 @@ function classNew(pscope, name, conf){
   		x.id = pscope.__.id + "_" + name;
   	}
 	}
+  x.conf = conf;
 	return p;
 }
 function scopeNew(pscope, name){
 	var proto = {};
 	var x = proto.__ = {
 		parent: pscope,
-		rels: {}
+		parents: {}
 	};
 	Object.defineProperty(proto, '__', {
 		enumerable: false,
@@ -252,13 +280,32 @@ function valType(e){
 function haskey(x, k){
   return Object.getOwnPropertyDescriptor(x, k);
 }
-async function exec(obj, scope){	
-	var t = obj.__;
-	console.log(t)
-	var executor = scopeGet(scope, t+"Exec");
-	
+async function istype(obj, type){
+  
 }
-async function callExec(obj, scope){
+async function exec(obj, scope, execScope, execx){
+	var t = obj.__.type;
+	console.log(t)
+  var ex;
+  if(!execx[t]){
+    ex = execx[t] = await scopeGet(execScope, t);
+    console.log(t)
+  }
+  call(ex, [obj, scope, execx]);
+  
+  
+}
+async function call(func, args){
+  if(func.val){    
+    return await func.val.apply({
+    }, args)
+  }
+  
+  for(var i in func.arrobj){
+    var o = func.arrobj[i];
+//    await 
+  }
+  
 }
 async function dbGet(id, sname){
   return "";
@@ -303,15 +350,15 @@ async function ast2obj(ast, scope){
 		if(v.match(/[eE]/)) p.sci = 1;
 		if(v.match(/[xX]/)) p.hex = 1;
 		p.val = Number(v);
-		return objNew(root.Num, p);
+		return objNew(definesp.Num, p);
 		
 	case "str":
-		return objNew(root.Str, {val: v});
+		return objNew(definesp.Str, {val: v});
 		
 	case "call":
 		var func = await ast2obj(v, scope);
 		var args = await ast2obj(['arr', v2], scope);
-		return objNew(root.Call, {
+		return objNew(definesp.Call, {
 			func: func,
 			args: args
 		})
@@ -325,7 +372,7 @@ async function ast2obj(ast, scope){
 		for(var i in v){
 			arrx[i] = await ast2obj(v[i], scope);
 		}
-		return objNew(root.Arr, {
+		return objNew(definesp.Arr, {
 			val: arrx
 		})
 		//		  return elem("ArrDef", arres, cpt);
@@ -344,18 +391,18 @@ async function main(){
   var _currsp;
   var _scopeNew;
   var _lexsp;
-  var _execsp;
+  var _sp;
   var _progl2obj;
   var _readFile;
   var _elem;
   var _exec;
   _cmd = _argv[1];
   _file = _argv[2];
-  _currsp = await scopeGetOrNew(root, _cmd);
+  _currsp = await scopeGetOrNew(definesp, _cmd);
   _lexsp = scopeNew(_currsp, undefined);
-  _execsp = scopeNew(_currsp, undefined);
+  _sp = scopeNew(_currsp, undefined);
   _elem = await progl2obj(fs.readFileSync(_file).toString(), _lexsp);
-  exec(_elem, _execsp);
+  exec(_elem, _sp, execsp, {});
   
 }
 main();

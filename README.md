@@ -1,21 +1,5 @@
 # Simulation of human minds
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ## Programming
 
 ### Basic types:

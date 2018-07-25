@@ -52,72 +52,86 @@ function getStackTrace(){
 }
 
 var root = scopeNew();
-var astScope = scopeNew(root);
 var execsp = scopeNew(root, "exec");
-var definesp = scopeNew(root, "define");
-classNew(definesp, "Class")
-classNew(definesp, "Obj")
-classNew(definesp, "Raw")
-classNew(definesp, "Undf", {
-  default: {val: undefined}
-}, [definesp.Raw])
-classNew(definesp, "Num", {
-  default: {val: 0},
-}, [definesp.Raw])
-classNew(definesp, "Str", {
-  default: {val: ""},
-}, [definesp.Raw])
-classNew(definesp, "Arr", {
-  default: {val: []}
-}, [definesp.Raw])
-classNew(definesp, "Dic", {
-  default: {val: {}}
-}, [definesp.Raw])
-classNew(definesp, "Argdef", {
-  default: {val: [[]]}
-}, [definesp.Raw])
-classNew(definesp, "Call", {
+execsp.__.ns = "exec";
+var def = scopeNew(root, "def");
+def.__.ns = "def";
+var astScope = scopeNew(def);
+classNew(def, "Class")
+classNew(def, "Obj")
+classNew(def, "Raw")
+classNew(def, "Undf", {
+  default: undefined
+}, [def.Raw])
+classNew(def, "Num", {
+  default: 0
+}, [def.Raw])
+classNew(def, "Str", {
+  default: "",
+}, [def.Raw])
+classNew(def, "Arr", {
+  default: []
+}, [def.Raw])
+classNew(def, "Dic", {
+  default: {}
+}, [def.Raw])
+classNew(def, "Argdef", {
+  default: [[]]
+}, [def.Raw])
+classNew(def, "Callable", {
+})
+classNew(def, "Call", {
 	schema:{
-		func: definesp.Func,
-		args: definesp.Arr,
+		func: def.Func,
+		args: def.Arr,
 	}
-})
-classNew(definesp, "ArrObj", {
-	element: definesp.Obj,
-}, [definesp.Arr])
-classNew(definesp, "Block", {
+}, [def.Callable])
+classNew(def, "Block", {
   schema: {
-    arrobj: definesp.ArrObj,
-    label: classSub(definesp.Dic, {element: definesp.Num})
+    arrobj: def.ArrObj,
+    label: classSub(def.Dic, {element: def.Num})
   }
 })
-classNew(definesp, "Func", {
-  default: {val: function(){}}
-}, [definesp.Raw]);
-classNew(definesp, "FuncNative", {
+classNew(def, "Func", {
+  default: function(){}
+}, [def.Raw]);
+classNew(def, "FuncNative", {
   schema: {
-    func: definesp.Func,
-    argdef: definesp.Argdef,
+    func: def.Func,
+    argdef: def.Argdef,
   }
 });
-classNew(definesp, "FuncBlock", {
+classNew(def, "FuncBlock", {
   schema: {
-    func: definesp.Block,
-    argdef: definesp.Argdef,
-  }  
+    block: def.Block,
+    argdef: def.Argdef,
+  }
 });
-classNew(definesp, "Stack", {
-  default: {val: []}
+classNew(def, "Stack", {
+  default: []
 })
-funcNew(definesp, "log", function(s){
+funcNew(def, "log", function(s){
 	console.log(s);
 }, [["s"]])
-
-funcNew(execsp, "Call", async function(o, s, e){
-  var func = await exec(o.func, s, e);
-  var args = await exec(o.args, s, e);
-  execSub()
-}, [["o"], ["s"], ["e"]])
+var execarg = [["o"], ["s"], ["e"], ["x"]];
+funcNew(execsp, "Call", async function(o, s, e, x){
+  var func = await exec(o.func, s, e, x);
+  var args = await exec(o.args, s, e, x);
+  return await call(func, args);
+}, execarg)
+funcNew(execsp, "Arr$elementCallable", async function(o, s, e, x){
+	var arrx = [];
+	for(var i in o.val){
+		arrx[i] = await exec(o.val[i], s, e, x);
+	}
+	return arrx;
+}, execarg)
+funcNew(execsp, "Raw", function(o, s, e, x){
+	return o.val;
+}, execarg)
+funcNew(execsp, "Class", function(o, s, e, x){
+	return o;
+}, execarg)
 
 //parser function
 function valCopy(item){
@@ -140,10 +154,10 @@ function valCopy(item){
 }
 //internal function
 function funcNew(scope, name, func, argdef){
-	var a = objNew(definesp.Argdef, argdef);
-	var o = objNew(definesp.Func, {
+	var a = objNew(def.Argdef, argdef);
+	var o = objNew(def.FuncNative, {
 		argdef: a,
-		val: func
+		func: func
 	}, name)
 	return scope[name] = o;
 }
@@ -162,38 +176,67 @@ function objNew(cla, proto, name){
     proto.__.name = name
 	return proto;
 }
+function extname(conf){
+	var r = "";
+	for(var k in conf){
+		r+=k;
+		var v = conf[k];
+		switch(valType(v)){
+		case "Class":
+			r+=v.__.id.replace("_", "");
+			break;
+		case "Num":
+			r+=v.toString();
+			break;
+		case "Str":
+			r+=v;
+			break;
+		default:
+			die("TODO: "+valType(v))					
+		}
+	}
+	return r;
+}
 function classSub(c, conf){
-  var name = c.__.name + JSON.stringify(conf);
-  classNew(c.__.parent, name, conf, [c]);
+  var name = c.__.name + "$"+extname(conf);
+	if(c.__.parent[name])
+		return c.__.parent[name];
+  return classNew(c.__.parent, name, conf, [c]);
+}
+function route(pscope, name, p){
+	var x = p.__;
+  if(name == undefined){
+  	name = pscope.__.index.toString();
+  	pscope.__.index++;
+  }
+	x.name = name;	
+	
+  if(!pscope.__.id){	//parent isroot
+		x.id = "."
+  }else if(pscope.__.id == "."){	//grandparent is root
+  	x.id = name;
+  }else{
+  	x.id = pscope.__.id + "_" + name;
+  }
+	x.ns = pscope.__.ns;
 }
 function classNew(pscope, name, conf, cla){
 	var p = pscope[name] = {};
 	var x = p.__ = conf || {};
-  x.parent = pscope
+  x.parent = pscope;
 	x.parents = {};
-  if(!cla) cla = [definesp.Class];
+
+  if(!cla)
+		cla = [def.Class];		
   for(var i in cla){
-    x.parents[cla[i].__.name] = cla;
+    x.parents[cla[i].__.name] = cla[i];
   }
 	Object.defineProperty(p, '__', {
 		enumerable: false,
 		configurable: false
-	});  
-	x.name = name;
-	if(!pscope){ //isroot
-	  x.id = ".";
-	}else{
-  	if(name == undefined){
-  	  name = pscope.__.index.toString();
-  		pscope.__.index++;
-  	}	
-  	if(!pscope.__.parent){	//parent isroot
-  		x.id = name;	  
-  	}else{
-  		x.id = pscope.__.id + "_" + name;
-  	}
-	}
-  x.conf = conf;
+	});
+
+	route(pscope, name, p);
 	return p;
 }
 function scopeNew(pscope, name){
@@ -207,22 +250,9 @@ function scopeNew(pscope, name){
 		configurable: false
 	});
 	x.index = 0;
-	x.name = name;
-	if(!pscope){ //isroot
-	  x.id = ".";
-	}else{
-  	if(name == undefined){
-  	  name = pscope.__.index.toString();
-  		pscope.__.index++;
-  	}	
-  	if(!pscope.__.parent){	//parent isroot
-  		x.id = name;	  
-  	}else{
-  		x.id = pscope.__.id + "_" + name;
-  	}
-	}
-	if(pscope)
-		pscope[name] = proto;
+	if(!pscope)
+		return proto;
+	route(pscope, name, proto);
 	return proto;
 }
 async function scopeGetOrNew(scope, key){	
@@ -239,10 +269,10 @@ async function scopeGetSub(scope, key, cache){
 		//TODO key match _, get subcpt		
 		return await progl2obj(str, scope);
 	}
-	for(var k in scope.__.rels){
+	for(var k in scope.__.parents){
 		if(cache[k]) continue;
 		cache[k] = 1;		
-		var r = scopeGetSub(scope.__.rels[k], key, cache);
+		var r = scopeGetSub(scope.__.parents[k], key, cache);
 		if(r) return r;		
 	}
 }
@@ -267,10 +297,12 @@ function valType(e){
   case "object":
 		if(Array.isArray(e)) return "Arr";
 		var x = Object.getOwnPropertyDescriptor(e, '__');
-		if(!x) return "Dic";
+		if(!x || !x.value) return "Dic";
 		if(x.enumerable == true)
 			return "Obj";
-		return "Scope";
+		if(haskey(x.value, "index"))
+			return "Scope";
+		return "Class";
 	case "function":
 		return "Func";
   default:
@@ -283,35 +315,43 @@ function haskey(x, k){
 async function istype(obj, type){
   
 }
-async function exec(obj, scope, execScope, execx){
-	var t = obj.__.type;
-	console.log(t)
+async function execGet(sp, esp, t){
+	var r = await scopeGet(esp, t);
+	if(r) return r;
+	var tt = await scopeGet(sp, t);
+	for(var k in tt.__.parents){
+		r = await execGet(sp, esp, k);
+		if(r) return r;
+	}	
+}
+async function exec(obj, scope, execsp, execx){
+	var t = obj.__.type;	
+//	console.log(t)
   var ex;
   if(!execx[t]){
-    ex = execx[t] = await scopeGet(execScope, t);
-    console.log(t)
+		ex = await execGet(scope, execsp, t);
+		if(!ex)
+			die(t+" not exec defined");
+    execx[t] = ex
   }
-  call(ex, [obj, scope, execx]);
-  
-  
+  return await call(ex, [obj, scope, execsp, execx]);
 }
 async function call(func, args){
-  if(func.val){    
-    return await func.val.apply({
+  if(func.func){
+    return await func.func.apply({
     }, args)
   }
-  
   for(var i in func.arrobj){
     var o = func.arrobj[i];
 //    await 
-  }
-  
+  }  
 }
 async function dbGet(id, sname){
   return "";
 }
 async function progl2obj(str, cpt){
   var ast = proglparser.parse(str);
+	log(ast)
 	return await ast2obj(ast, cpt)
 }
 async function ast2obj(ast, scope){
@@ -325,7 +365,6 @@ async function ast2obj(ast, scope){
 		var c = 1;
 		while(c){
 			var l = v[v.length-1];
-			v = v.substr(0, v.length - 1);			
 			switch(l){
 			case "u":
 				p.unsigned = 1;
@@ -343,22 +382,24 @@ async function ast2obj(ast, scope){
 				p.storage = "float";
 				break;
 			default:
-				c = 0;				
+				c = 0;
+				continue;
 			}
+			v = v.substr(0, v.length - 1);			
 		}
 		if(v.match("\\.")) p.float = 1;
 		if(v.match(/[eE]/)) p.sci = 1;
 		if(v.match(/[xX]/)) p.hex = 1;
 		p.val = Number(v);
-		return objNew(definesp.Num, p);
+		return objNew(def.Num, p);
 		
 	case "str":
-		return objNew(definesp.Str, {val: v});
+		return objNew(def.Str, {val: v});
 		
 	case "call":
 		var func = await ast2obj(v, scope);
 		var args = await ast2obj(['arr', v2], scope);
-		return objNew(definesp.Call, {
+		return objNew(def.Call, {
 			func: func,
 			args: args
 		})
@@ -372,7 +413,8 @@ async function ast2obj(ast, scope){
 		for(var i in v){
 			arrx[i] = await ast2obj(v[i], scope);
 		}
-		return objNew(definesp.Arr, {
+		var c = classSub(def.Arr, {element: def.Callable})
+		return objNew(c, {
 			val: arrx
 		})
 		//		  return elem("ArrDef", arres, cpt);
@@ -398,7 +440,7 @@ async function main(){
   var _exec;
   _cmd = _argv[1];
   _file = _argv[2];
-  _currsp = await scopeGetOrNew(definesp, _cmd);
+  _currsp = await scopeGetOrNew(def, _cmd);
   _lexsp = scopeNew(_currsp, undefined);
   _sp = scopeNew(_currsp, undefined);
   _elem = await progl2obj(fs.readFileSync(_file).toString(), _lexsp);

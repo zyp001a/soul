@@ -53,9 +53,7 @@ function getStackTrace(){
 
 var root = scopeNew();
 var execsp = scopeNew(root, "exec");
-execsp.__.ns = "exec";
 var def = scopeNew(root, "def");
-def.__.ns = "def";
 var astScope = scopeNew(def);
 classNew(def, "Class")
 classNew(def, "Obj")
@@ -212,13 +210,16 @@ function route(pscope, name, p){
 	x.name = name;	
 	
   if(!pscope.__.id){	//parent isroot
-		x.id = "."
+		x.id = ".";
+		x.ns = name;
   }else if(pscope.__.id == "."){	//grandparent is root
   	x.id = name;
+		x.ns = pscope.__.ns;		
   }else{
   	x.id = pscope.__.id + "_" + name;
+		x.ns = pscope.__.ns;				
   }
-	x.ns = pscope.__.ns;
+	pscope[name] = p
 }
 function classNew(pscope, name, conf, cla){
 	var p = pscope[name] = {};
@@ -264,7 +265,7 @@ async function scopeGetSub(scope, key, cache){
 	if(haskey(scope, key)){
     return scope[key];
   }
-	let str = await dbGet(scope.__.id, key)
+	let str = await dbGet(scope.__.ns, scope.__.id, key)
 	if(str){
 		//TODO key match _, get subcpt		
 		return await progl2obj(str, scope);
@@ -276,12 +277,11 @@ async function scopeGetSub(scope, key, cache){
 		if(r) return r;		
 	}
 }
-async function scopeGet(scope, key){
+async function scopeGet(scope, key){	
 	var r = await scopeGetSub(scope, key, {});
 	if(r) return scope[key] = r;
 	if(scope.__.parent)
-		return await scopeGet(scope.__.parent, key);	
-	return undefined
+		return await scopeGet(scope.__.parent, key);
 }
 
 function valType(e){
@@ -346,7 +346,21 @@ async function call(func, args){
 //    await 
   }  
 }
-async function dbGet(id, sname){
+function dbPath(x){
+	var prefix = "~/soul/db";
+	var id, ns;
+	if(!x.__.id)
+		id = "."
+	else
+		id = x.__.id
+	if(!x.__.ns)
+		ns = ""
+	else
+		ns = "/" + x.__.ns
+	return prefix + ns + "/" + id.replace("_", "/")
+}
+async function dbGet(ns, id, sname){
+//	die()
   return "";
 }
 async function progl2obj(str, cpt){
@@ -427,24 +441,26 @@ async function ast2obj(ast, scope){
 process.argv.shift();
 var _argv = process.argv;
 async function main(){
-  var _cmd;
   var _file;
   var _idGlobal;
-  var _currsp;
+  var _def;
   var _scopeNew;
   var _lexsp;
   var _sp;
+  var _execr;
+  var _execsp;
   var _progl2obj;
   var _readFile;
   var _elem;
   var _exec;
-  _cmd = _argv[1];
-  _file = _argv[2];
-  _currsp = await scopeGetOrNew(def, _cmd);
-  _lexsp = scopeNew(_currsp, undefined);
-  _sp = scopeNew(_currsp, undefined);
+  _file = _argv[1];
+  _def = await scopeGetOrNew(root, "def");
+  _lexsp = scopeNew(_def, undefined);
+  _sp = scopeNew(_def, undefined);
+  _execr = await scopeGetOrNew(root, "exec");
+  _execsp = scopeNew(_execr, undefined);
   _elem = await progl2obj(fs.readFileSync(_file).toString(), _lexsp);
-  exec(_elem, _sp, execsp, {});
+  exec(_elem, _sp, _execsp, {});
   
 }
 main();

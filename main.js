@@ -1,6 +1,7 @@
 
 var fs = require("fs");
 var proglparser = require("./proglparser");
+var tplparser = require("./tplparser");
 Object.defineProperty(global, '__stack', {
 	get: function() {
     var orig = Error.prepareStackTrace;
@@ -96,6 +97,8 @@ classNew(def, "FuncNative", {
 }, [def.Func]);
 classNew(def, "FuncBlock", {
 }, [def.Func]);
+classNew(def, "FuncTpl", {
+}, [def.Func]);
 
 funcNew(def, "log", function(s){
 	console.log(s);
@@ -190,6 +193,11 @@ function fbNew(block, argdef){
 	return objNew(def.FuncBlock, {
 		block: block,
 		argdef: argdef
+	})
+}
+function ftNew(str){
+	return objNew(def.FuncTpl, {
+		str: str
 	})
 }
 function funcNew(scope, name, func, argdef){
@@ -421,17 +429,24 @@ async function blockExec(b, conf, stt){
 	}
 	return r;
 }
+async function callTpl(str, args, conf){
+	var t = tplparser.parse(str);
+	console.log(t);
+}
 async function call(func, args, conf){
   if(func.func){//is FuncNative
 		//log(func.__.name)
     return await func.func.apply(conf, args)
   }
+	if(func.str){//is FuncTpl
+		return await callTpl(func.str, args, conf);
+	}
 	//is FuncBlock
 	var x = conf.x;
 	var state = stateNew(func.argdef[0], args);
 	x.stack.push(x.state);
 	x.state = state;
-	var r= await blockExec(func.block, conf);
+	var r = await blockExec(func.block, conf);
 	x.state = x.stack.pop();
 	return r;
 }
@@ -447,10 +462,9 @@ function dbPath(x){
 }
 async function dbGet(scope, key){
 	if(scope.__.tmp) return "";
-	var p = dbPath(scope) + "/"+ key + ".sl";
-	log(p)
-	if(fs.existsSync(prefix+p)){
-		return fs.readFileSync(prefix+p).toString();
+	var p = prefix + dbPath(scope) + "/"+ key + ".sl";
+	if(fs.existsSync(p)){
+		return fs.readFileSync(p).toString();
 	}
   return "";
 }
@@ -611,6 +625,8 @@ async function ast2obj(scope, ast){
 		}
 		var b = await ast2obj(nscope, block);
 		return fbNew(b, a)
+	case "tpl":		
+		return ftNew(v);	
 	case "dic":
 		if(!v2){
 			var kall = 1;

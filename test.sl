@@ -1,2 +1,3 @@
+print=&(x){log(x)}
 a=1
-log(a)
+print(a)

@@ -50,7 +50,7 @@ function getStackTrace(){
   Error.captureStackTrace(obj, getStackTrace);
   return obj.stack.toString().replace("[object Object]\n","");
 }
-
+var prefix = process.env.HOME+"/soul/db";
 var root = scopeNew();
 var execsp = scopeNew(root, "exec");
 var def = scopeNew(root, "def");
@@ -256,6 +256,7 @@ function route(pscope, name, p){
 	pscope[name] = p;	
   if(name == undefined){
   	name = pscope.__.index.toString();
+		x.tmp = 1;
   	pscope.__.index++;
   }
 	x.name = name;	
@@ -308,11 +309,13 @@ async function scopeGetSub(scope, key, cache){
 	if(haskey(scope, key)){
     return scope[key];
   }
-	let str = await dbGet(scope.__.ns, scope.__.id, key);
+	let str = await dbGet(scope, key);
 	if(str){
-		//TODO key match _, get subcpt		
-		var rtn = await progl2obj(str, scope);
-		return scope[key] = rtn;
+		//TODO key match _, get subcpt
+		var rtn = await progl2obj(scope, str);
+		if(rtn.___.type == "FuncBlock")
+			route(scope, key, rtn);
+		return rtn;
 	}
 	for(var k in scope.__.parents){
 		if(cache[k]) continue;
@@ -433,20 +436,22 @@ async function call(func, args, conf){
 	return r;
 }
 function dbPath(x){
-	var prefix = "~/soul/db";
-	var id, ns;
-	if(!x.__.id)
-		id = "."
-	else
-		id = x.__.id
+	var ns;	
 	if(!x.__.ns)
 		ns = ""
 	else
 		ns = "/" + x.__.ns
-	return prefix + ns + "/" + id.replace("_", "/")
+	if(!x.__.id)
+		return ns;
+	return ns + "/" + x.__.id.replace("_", "/")
 }
-async function dbGet(ns, id, sname){
-//	die()
+async function dbGet(scope, key){
+	if(scope.__.tmp) return "";
+	var p = dbPath(scope) + "/"+ key + ".sl";
+	log(p)
+	if(fs.existsSync(prefix+p)){
+		return fs.readFileSync(prefix+p).toString();
+	}
   return "";
 }
 function raw2obj(r){
@@ -462,10 +467,11 @@ function raw2obj(r){
 		return r;
 	}
 }
-async function progl2obj(str, cpt){
+
+async function progl2obj(scope, str){
   var ast = proglparser.parse(str);
 	log(ast)
-	return await ast2obj(cpt, ast)
+	return await ast2obj(scope, ast)
 }
 async function ast2obj(scope, ast){
   if(typeof ast != "object") return ast;
@@ -676,7 +682,7 @@ async function main(){
   _sp = scopeNew(_def, undefined);
   _execr = await scopeGetOrNew(root, "exec");
   _execsp = scopeNew(_execr, undefined);
-  _elem = await progl2obj((("{" + fs.readFileSync(_file).toString()) + "}"), _lexsp);
+  _elem = await progl2obj(_lexsp, (("{" + fs.readFileSync(_file).toString()) + "}"));
   exec(_elem, {s:_sp, e:_execsp, x:{}});
   
 }

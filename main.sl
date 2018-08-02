@@ -5,4 +5,4 @@ $sp = scopeNew(def)
 $execr = idGlobal("exec")
 $execsp = scopeNew(execr);
 $elem = progl2obj("{"+readFile(file)+"}", lexsp);
-exec($elem, sp, execsp)
+exec(asmain($elem), sp, execsp)

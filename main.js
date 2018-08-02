@@ -58,6 +58,7 @@ var def = scopeNew(root, "def");
 classNew(def, "Class")
 classNew(def, "Obj")
 classNew(def, "Callable")
+classNew(def, "Src");
 classNew(def, "Raw", {}, [def.Callable])
 classNew(def, "RawObj", {}, [def.Raw])
 classNew(def, "Var", {
@@ -99,6 +100,10 @@ classNew(def, "FuncBlock", {
 }, [def.Func]);
 classNew(def, "FuncTpl", {
 }, [def.Func]);
+classNew(def, "Main", {
+}, [def.Src]);
+classNew(def, "Lib", {
+}, [def.Src]);
 
 funcNew(def, "log", function(s){
 	console.log(s);
@@ -106,10 +111,10 @@ funcNew(def, "log", function(s){
 funcNew(def, "push", function(arr, e){
 	arr.push(e);
 	return e;
-}, [["s"]])
+}, [["arr"], ["e"]])
 funcNew(def, "join", function(arr, str){
 	return arr.join(str)
-}, [["s"]])
+}, [["arr"],["str"]])
 funcNew(def, "state", function(){
 	var self = this;
 	return self.x.state;
@@ -157,6 +162,12 @@ funcNew(execsp, "Dic$elementCallable", async function(o){
 		dicx[k] = await exec(o.val[k], this);
 	}
 	return dicx;
+}, execarg)
+funcNew(execsp, "Lib", function(o){
+	return o.content
+}, execarg)
+funcNew(execsp, "Main", async function(o){
+	return await exec(o.content, this)
 }, execarg)
 funcNew(execsp, "Raw", function(o){
 	return o.val;
@@ -332,7 +343,7 @@ async function scopeGetSub(scope, key, cache){
 		var rtn = await progl2obj(scope, str);
 		if(rtn.___.type == "FuncBlock")
 			route(scope, key, rtn);
-		return rtn;
+		return objNew(def.Lib, {content: rtn});
 	}
 	for(var k in scope.__.parents){
 		if(cache[k]) continue;
@@ -502,10 +513,14 @@ function dbPath(x){
 }
 async function dbGet(scope, key){
 	if(scope.__.tmp) return "";
-	var p = prefix + dbPath(scope) + "/"+ key + ".sl";
-	if(fs.existsSync(p)){
-		return fs.readFileSync(p).toString();
+	var p = prefix + dbPath(scope) + "/"+ key;
+	if(fs.existsSync(p+".sl")){
+		return fs.readFileSync(p+".sl").toString();
 	}
+	if(fs.existsSync(p+".slt")){
+		return "@`"+fs.readFileSync(p+".slt").toString()+"`";
+	}
+	
   return "";
 }
 function raw2obj(r){
@@ -525,7 +540,8 @@ function raw2obj(r){
 async function progl2obj(scope, str){
   var ast = proglparser.parse(str);
 	log(ast[1])
-	return await ast2obj(scope, ast)
+	var r = await ast2obj(scope, ast);
+	return r;
 }
 async function ast2obj(scope, ast){
   if(typeof ast != "object") return ast;
@@ -732,14 +748,15 @@ async function main(){
   var _readFile;
   var _elem;
   var _exec;
+  var _asmain;
   _file = _argv[1];
   _def = await scopeGetOrNew(root, "def");
   _lexsp = scopeNew(_def, undefined);
   _sp = scopeNew(_def, undefined);
   _execr = await scopeGetOrNew(root, "exec");
   _execsp = scopeNew(_execr, undefined);
-  _elem = await progl2obj(_lexsp, (("{" + fs.readFileSync(_file).toString()) + "}"));
-  exec(_elem, {s:_sp, e:_execsp, x:{}});
+  _elem = await progl2obj(_lexsp, (("{" + fs.readFileSync(_file).toString()) + "}"), def.Main);
+  exec(objNew(def.Main, {content: _elem}), {s:_sp, e:_execsp, x:{}});
   
 }
 main();

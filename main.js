@@ -103,6 +103,13 @@ classNew(def, "FuncTpl", {
 funcNew(def, "log", function(s){
 	console.log(s);
 }, [["s"]])
+funcNew(def, "push", function(arr, e){
+	arr.push(e);
+	return e;
+}, [["s"]])
+funcNew(def, "join", function(arr, str){
+	return arr.join(str)
+}, [["s"]])
 funcNew(def, "state", function(){
 	var self = this;
 	return self.x.state;
@@ -111,24 +118,24 @@ funcNew(def, "global", function(){
 	var self = this;
 	return self.x.global;
 })
-funcNew(def, "set", function(p, k, v){
+funcNew(def, "set", function(p, k, v, t){
 	return p[k] = v;
-}, [["p"], ["k"], ["v"]])
+}, [["p"], ["k"], ["v"], ["t"]])
 funcNew(def, "get", function(p, k){
 	return p[k];
 }, [["p"], ["k"]])
 funcNew(def, "concat", function(p, k, v){
 	return p[k] += v;
 }, [["p"], ["k"], ["v"]])
+funcNew(def, "exec", async function(o){
+	if(o === undefined) return;
+	return await exec(o, this);
+}, [["o"], ["conf"]], 1)
 
 var execarg = [["o"]];
 funcNew(execsp, "Call", async function(o){
   var func = await exec(o.func, this);
-	var arrx = [];
-	for(var i in o.args){
-		arrx[i] = await exec(o.args[i], this);
-	}
-  return await call(func, arrx, this);
+  return await call(func, o.args, this);
 }, execarg)
 
 funcNew(execsp, "Block", async function(o){
@@ -200,13 +207,15 @@ function ftNew(str){
 		str: str
 	})
 }
-function funcNew(scope, name, func, argdef){
+function funcNew(scope, name, func, argdef, flagraw){
 	var o = objNew(def.FuncNative, {
 		argdef: argdef,
 		func: func
 	});
   if(name)
 		route(scope, name, o);
+	if(flagraw)
+		o.__.rawargs = 1;
 	return o;
 }
 function objNew(cla, proto){
@@ -383,6 +392,15 @@ async function execGet(sp, esp, t){
 		if(r) return r;
 	}	
 }
+function execInit(x, g){
+	if(!x.init){
+		x.state = objNew(def.Dic, {})
+		x.stack = objNew(def.Arr, [])
+		x.global = g || objNew(def.Dic, {})
+		x.init = 1;
+	}
+	return x
+}
 async function exec(obj, conf){
 	var s = conf.s;
 	var e = conf.e;
@@ -390,12 +408,7 @@ async function exec(obj, conf){
 	var t = obj.___.type;
 //	console.log(t)
   var ex;
-	if(!x.init){
-		x.state = objNew(def.Dic, {})
-		x.stack = objNew(def.Arr, [])
-		x.global = objNew(def.Dic, {})
-		x.init = 1;
-	}
+	execInit(x);
   if(!x[t]){
 		ex = await execGet(s, e, t);
 		if(!ex)
@@ -404,7 +417,7 @@ async function exec(obj, conf){
   }else{
 		ex = x[t];
 	}
-  return await call(ex, [obj], conf);
+  return await call(ex, objNew(def.Arr, [obj]), conf, 1);
 }
 function stateNew(a0, args){
 	var state = objNew(def.Dic, {});
@@ -412,6 +425,7 @@ function stateNew(a0, args){
 		var d = a0[i];
 		state[i] = state[d[0]] = args[i];
 	}
+	state.$arglen$ = args.length;
 	return state;
 }
 function scopeLoad(a0, scope){
@@ -429,18 +443,44 @@ async function blockExec(b, conf, stt){
 	}
 	return r;
 }
-async function callTpl(str, args, conf){
-	var t = tplparser.parse(str);
-	console.log(t);
+async function tplCall(str, args, conf){
+	var tstr = tplparser.parse(str);
+	var scope = scopeNew(def);
+	var obj = await progl2obj(scope, tstr);
+	var nconf = {
+		s: scopeNew(def),
+		e: execsp,
+		x: execInit({}, conf.global)
+	}
+	for(var i in args){
+		nconf.x.state[i] = args[i]
+	}
+	nconf.x.state.$arglen$ = args.length;
+	var r = await blockExec(obj, nconf);
+	log(r)
+	return r;
 }
-async function call(func, args, conf){
+async function call(func, argsn, conf, rawflag){
+	if(func.str){//is FuncTpl
+		return await tplCall(func.str, argsn, conf);
+	}
+	//Process args
+	if(!rawflag){
+		var args = [];
+		for(var i in argsn){
+			args[i] = await exec(argsn[i], conf);
+		}
+	}else{
+		args = argsn;
+	}
+	
   if(func.func){//is FuncNative
 		//log(func.__.name)
-    return await func.func.apply(conf, args)
+		if(func.___.rawargs)
+			return await func.func.apply(conf, argsn)
+		else
+			return await func.func.apply(conf, args)			
   }
-	if(func.str){//is FuncTpl
-		return await callTpl(func.str, args, conf);
-	}
 	//is FuncBlock
 	var x = conf.x;
 	var state = stateNew(func.argdef[0], args);
@@ -484,7 +524,7 @@ function raw2obj(r){
 
 async function progl2obj(scope, str){
   var ast = proglparser.parse(str);
-	log(ast)
+	log(ast[1])
 	return await ast2obj(scope, ast)
 }
 async function ast2obj(scope, ast){
@@ -621,7 +661,7 @@ async function ast2obj(scope, ast){
 		var nscope = scopeNew(scope);
 		for(var i in a0){
 			var d = a0[i];
-			nscope[i] = nscope[d[0]] = d[1];
+			nscope[i] = nscope[d[0]] = {type: d[1]};
 		}
 		var b = await ast2obj(nscope, block);
 		return fbNew(b, a)

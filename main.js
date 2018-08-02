@@ -132,6 +132,12 @@ funcNew(def, "get", function(p, k){
 funcNew(def, "concat", function(p, k, v){
 	return p[k] += v;
 }, [["p"], ["k"], ["v"]])
+funcNew(def, "plus", function(l, r){
+	return l + r;
+}, [["l"], ["r"]])
+funcNew(def, "minus", function(l, r){
+	return l - r;
+}, [["l"], ["r"]])
 funcNew(def, "exec", async function(o){
 	if(o === undefined) return;
 	return await exec(o, this);
@@ -178,6 +184,35 @@ funcNew(execsp, "RawObj", function(o){
 funcNew(execsp, "Class", function(o){
 	return o;
 }, execarg)
+
+
+funcNew(execsp, "Ctrl", async function(o){
+	var self = this;
+	switch(o.ctrl){
+	case "if":
+	case "for":
+	case "while":		
+		while(await exec(o.args[0], self)){
+			await blockExec(o.args[1], self);
+		}
+		break;
+	case "foreach":
+	case "each":
+		break;
+	case "goto":
+		break;
+	case "return":
+		o.return = await exec(o.args[0], self);
+	case "continue":
+	case "break":
+		break;
+	default:
+		console.log(o);
+		die("wrong ctrl")
+	}
+	return o;
+}, [["o"]])
+
 var objList = {};
 objList.undf = objNew(def.Undf, {val: undefined})
 //parser function
@@ -229,6 +264,7 @@ function funcNew(scope, name, func, argdef, flagraw){
 		o.__.rawargs = 1;
 	return o;
 }
+
 function objNew(cla, proto){
 	if(!cla) die()
 	if(!proto) proto = {};
@@ -443,16 +479,14 @@ function scopeLoad(a0, scope){
 }
 async function blockExec(b, conf, stt){
 	if(stt) stt = b.labels[stt];
-	var r;
 	for(var i in b.arr){
 		if(stt && stt < i)
 			continue;
-		r = await exec(b.arr[i], conf);
+		var r = await exec(b.arr[i], conf);
 
-		if(rawType(r) == "Obj" && r.___.type == "Return")
-			return r.args[0];
+		if(rawType(r) == "Obj" && r.ctrl == "return")
+			return r.return;
 	}
-	return r;
 }
 async function tplCall(str, args, conf){
 	var tstr = tplparser.parse(str);
@@ -664,7 +698,7 @@ async function ast2obj(scope, ast){
 		var block = v[0];
 		var argdef = v[1];
 		var a = [[]];
-		var a0 = argdef[0]
+		var a0 = argdef[0];
 		for(var i in a0){
 			var d = a0[i];
 			a[0][i] = [d[0]];
@@ -711,7 +745,7 @@ async function ast2obj(scope, ast){
 			var iscallable = 0;
 			for(var i in v){
 				var x = v[i];
-				var y = await ast2obj(x[0], scope);
+				var y = await ast2obj(scope, x[0]);
 				dicx[x[1]] = y;
 				if(!iscallable && istype(y, "Callable")){
 					iscallable = 1;
@@ -725,7 +759,15 @@ async function ast2obj(scope, ast){
 			return objNew(c, {val: dicx});			
 		}
 	case "ctrl":
-		return;
+		var args = [];
+		for(var i in v2){
+			args[i] = await ast2obj(scope, v2[i]);
+		}
+		var r = objNew(def.Ctrl, {
+			ctrl: v,
+			args: args,
+		});
+		return r;
 	default:
 		console.log(ast);
 		die("type error");

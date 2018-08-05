@@ -1,1 +1,8 @@
-~log("Block")~aa
+~
+a# = pget($0, "arr");
+@foreach e#,a {
+~
+~=exec(e, $conf#)~
+~
+}
+~

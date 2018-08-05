@@ -1,0 +1,1 @@
+~log(1)~~=exec(getp($0, "content"), $conf#)~

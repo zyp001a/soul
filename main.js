@@ -58,7 +58,6 @@ var def = scopeNew(root, "def");
 classNew(def, "Class")
 classNew(def, "Obj")
 classNew(def, "Callable")
-classNew(def, "Src");
 classNew(def, "Raw", {}, [def.Callable])
 classNew(def, "RawObj", {}, [def.Raw])
 classNew(def, "Var", {
@@ -101,9 +100,7 @@ classNew(def, "FuncBlock", {
 classNew(def, "FuncTpl", {
 }, [def.Func]);
 classNew(def, "Main", {
-}, [def.Src]);
-classNew(def, "Lib", {
-}, [def.Src]);
+});
 
 funcNew(def, "log", function(s){
 	console.log(s);
@@ -119,15 +116,19 @@ funcNew(def, "state", function(){
 	var self = this;
 	return self.x.state;
 })
+funcNew(def, "root", function(){
+  return root;
+})
 funcNew(def, "global", function(){
 	var self = this;
 	return self.x.global;
 })
-funcNew(def, "set", function(p, k, v, t){
-	return p[k] = v;
+funcNew(def, "set", function(p, k, v, t){//t is type 
+  //TODO if type, check type
+	return scopeSet(p, k, v)
 }, [["p"], ["k"], ["v"], ["t"]])
 funcNew(def, "get", function(p, k){
-	return p[k];
+	return scopeGet(p, k);
 }, [["p"], ["k"]])
 funcNew(def, "concat", function(p, k, v){
 	return p[k] += v;
@@ -149,9 +150,9 @@ funcNew(execsp, "Call", async function(o){
   return await call(func, o.args, this);
 }, execarg)
 
-funcNew(execsp, "Block", async function(o){
-	return blockExec(o, this)
-}, execarg)
+//funcNew(execsp, "Block", async function(o){
+//	return blockExec(o, this)
+//}, execarg)
 
 funcNew(execsp, "Arr$elementCallable", async function(o){
 	var self = this;
@@ -169,11 +170,8 @@ funcNew(execsp, "Dic$elementCallable", async function(o){
 	}
 	return dicx;
 }, execarg)
-funcNew(execsp, "Lib", function(o){
-	return o.content
-}, execarg)
 funcNew(execsp, "Main", async function(o){
-	return await exec(o.content, this)
+	return await blockExec(o.content, this)
 }, execarg)
 funcNew(execsp, "Raw", function(o){
 	return o.val;
@@ -191,9 +189,9 @@ funcNew(execsp, "Ctrl", async function(o){
 	switch(o.ctrl){
 	case "if":
 	case "for":
-	case "while":		
+	case "while":
 		while(await exec(o.args[0], self)){
-			await blockExec(o.args[1], self);
+			var r = await blockExec(o.args[1], self);
 		}
 		break;
 	case "foreach":
@@ -357,42 +355,74 @@ function varNew(pscope, name, cla){
 	p.type = cla;
 	return p;
 }
-function scopeNew(pscope, name){
-	var p = route(pscope, name);	
+function scopeNew(pscope, k){
+  if(pscope && k && k.match("_")){
+    var arr = k.split("_");
+    var xx = pscope;
+    var xr;
+    var i;
+    for(i=0; i<arr.length;i++){
+      xr = haskey(xx, arr[i]);
+      if(!xr) scopeNew(xx, arr[i]);
+      xx = xx[arr[i]];
+    }
+    return xx;
+  }
+  
+	var p = route(pscope, k);	
 	var x = p.__;
 	x.parents = {};
 	x.index = 0;
 	return p;
 }
-async function scopeGetOrNew(scope, key){	
+async function scopeGetOrNew(scope, key){
 	var x = await scopeGet(scope, key);
 	if(!x) x = scopeNew(scope, key);
 	return x;
 }
 async function scopeGetSub(scope, key, cache){
-	if(haskey(scope, key)){
-    return scope[key];
+  var v = haskeyr(scope, key);
+	if(v){
+    return v.value;
   }
+  
 	let str = await dbGet(scope, key);
 	if(str){
 		//TODO key match _, get subcpt
 		var rtn = await progl2obj(scope, str);
 		if(rtn.___.type == "FuncBlock")
 			route(scope, key, rtn);
-		return objNew(def.Lib, {content: rtn});
+		return rtn;
 	}
 	for(var k in scope.__.parents){
 		if(cache[k]) continue;
 		cache[k] = 1;		
 		var r = await scopeGetSub(scope.__.parents[k], key, cache);
-		if(r) return r;		
+		if(r) return r;
 	}
 }
-async function scopeGet(scope, key){	
+async function scopeGet(scope, key){
 	var r = await scopeGetSub(scope, key, {});
-	if(r) return scope[key] = r;
+	if(r) return r//scopeSet(scope, key, r);
 	if(scope.__.parent)
 		return await scopeGet(scope.__.parent, key);
+}
+function scopeSet(x, k, r){
+  if(k.match("_")){
+    var arr = k.split("_");
+    var xx = x;
+    var xr;
+    var i;
+    for(i=0; i<arr.length - 1;i++){
+      xr = haskey(xx, arr[i]);
+      if(!xr) scopeNew(xx, arr[i]);
+      xx = xx[arr[i]];
+    }
+    return xx[arr[i]] = r;
+  }else{
+  
+    return x[k] = r;
+  }
 }
 
 function rawType(e){
@@ -427,6 +457,22 @@ function rawType(e){
 function haskey(x, k){
   return Object.getOwnPropertyDescriptor(x, k);
 }
+function haskeyr(x, k){
+  if(k.match("_")){
+    var arr = k.split("_");
+    var xx = x;
+    var xr;
+    for(var i in arr){
+      if(!xx) return;
+      xr = haskey(xx, arr[i]);
+      if(!xr) return;
+      xx = xr.value
+    }
+    return xr;
+  }else{
+    return Object.getOwnPropertyDescriptor(x, k);
+  }
+}
 async function istype(obj, type){
   
 }
@@ -453,7 +499,6 @@ async function exec(obj, conf){
 	var e = conf.e;
 	var x = conf.x;
 	var t = obj.___.type;
-//	console.log(t)
   var ex;
 	execInit(x);
   if(!x[t]){
@@ -484,8 +529,9 @@ async function blockExec(b, conf, stt){
 			continue;
 		var r = await exec(b.arr[i], conf);
 
-		if(rawType(r) == "Obj" && r.ctrl == "return")
-			return r.return;
+		if(rawType(r) == "Obj" &&
+       (r.ctrl == "return" || r.ctrl == "break" || r.ctrl == "continue"))
+			return r;
 	}
 }
 async function tplCall(str, args, conf){
@@ -502,8 +548,7 @@ async function tplCall(str, args, conf){
 	}
 	nconf.x.state.$arglen$ = args.length;
 	var r = await blockExec(obj, nconf);
-	log(r)
-	return r;
+	return r.return;
 }
 async function call(func, argsn, conf, rawflag){
 	if(func.str){//is FuncTpl
@@ -527,11 +572,14 @@ async function call(func, argsn, conf, rawflag){
 			return await func.func.apply(conf, args)			
   }
 	//is FuncBlock
+
 	var x = conf.x;
 	var state = stateNew(func.argdef[0], args);
 	x.stack.push(x.state);
 	x.state = state;
 	var r = await blockExec(func.block, conf);
+	if(rawType(r) == "Obj" && r.ctrl == "return")
+    r = r.return;
 	x.state = x.stack.pop();
 	return r;
 }

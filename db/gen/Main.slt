@@ -1,1 +1,5 @@
-~log(1)~~=exec(getp($0, "content"), $conf#)~
+~
+postfix = "sl"
+main# = exec(pget($0, "content"), $conf#)
+fileWrite(argv[1]^"."^postfix, main)
+~

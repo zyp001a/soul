@@ -112,17 +112,25 @@ funcNew(def, "push", function(arr, e){
 funcNew(def, "join", function(arr, str){
 	return arr.join(str)
 }, [["arr"],["str"]])
+
+funcNew(def, "root", function(){
+  return root;
+})
 funcNew(def, "state", function(){
 	var self = this;
 	return self.x.state;
-})
-funcNew(def, "root", function(){
-  return root;
 })
 funcNew(def, "global", function(){
 	var self = this;
 	return self.x.global;
 })
+
+funcNew(def, "getp", function(p, k){
+	return p[k];
+}, [["p"], ["k"]])
+funcNew(def, "setp", function(p, k, v){
+	return p[k] = v;
+}, [["p"], ["k"], ["v"]])
 funcNew(def, "set", function(p, k, v, t){//t is type 
   //TODO if type, check type
 	return scopeSet(p, k, v)
@@ -130,19 +138,37 @@ funcNew(def, "set", function(p, k, v, t){//t is type
 funcNew(def, "get", function(p, k){
 	return scopeGet(p, k);
 }, [["p"], ["k"]])
+funcNew(def, "geti", function(p, k){
+	return p[k]
+}, [["p"], ["k"]])
 funcNew(def, "concat", function(p, k, v){
 	return p[k] += v;
 }, [["p"], ["k"], ["v"]])
+funcNew(def, "strplus", function(l, r){
+	return l + r;
+}, [["l"], ["r"]])
 funcNew(def, "plus", function(l, r){
 	return l + r;
 }, [["l"], ["r"]])
 funcNew(def, "minus", function(l, r){
 	return l - r;
 }, [["l"], ["r"]])
-funcNew(def, "exec", async function(o){
+funcNew(def, "times", function(l, r){
+	return l * r;
+}, [["l"], ["r"]])
+funcNew(def, "exec", async function(o, conf){
+  if(!conf) conf = this;
 	if(o === undefined) return;
-	return await exec(o, this);
+	var r = await exec(o, conf);
+//  if(rawType(r) == "Obj" && r.ctrl == "return")
+  //    r = r.return;
+  return r;
 }, [["o"], ["conf"]], 1)
+
+funcNew(def, "fileWrite", function(f, c){
+	return fs.writeFileSync(f, c);
+}, [["f"], ["c"]])
+
 
 var execarg = [["o"]];
 funcNew(execsp, "Call", async function(o){
@@ -302,6 +328,7 @@ function extname(conf){
 	return r;
 }
 function classSub(c, conf){
+
   var name = c.__.name + "$"+extname(conf);
 	if(c.__.parent[name])
 		return c.__.parent[name];
@@ -420,7 +447,6 @@ function scopeSet(x, k, r){
     }
     return xx[arr[i]] = r;
   }else{
-  
     return x[k] = r;
   }
 }
@@ -485,11 +511,14 @@ async function execGet(sp, esp, t){
 		if(r) return r;
 	}	
 }
-function execInit(x, g){
+function execInit(x){
 	if(!x.init){
-		x.state = objNew(def.Dic, {})
-		x.stack = objNew(def.Arr, [])
-		x.global = g || objNew(def.Dic, {})
+    if(!haskey(x, "state"))
+		  x.state = objNew(def.Dic, {})
+    if(!haskey(x, "stack"))    
+		  x.stack = objNew(def.Arr, [])
+    if(!haskey(x, "global"))    
+		  x.global = objNew(def.Dic, {})
 		x.init = 1;
 	}
 	return x
@@ -517,7 +546,7 @@ function stateNew(a0, args){
 		var d = a0[i];
 		state[i] = state[d[0]] = args[i];
 	}
-	state.$arglen$ = args.length;
+	state.$arglen = args.length;
 	return state;
 }
 function scopeLoad(a0, scope){
@@ -541,12 +570,15 @@ async function tplCall(str, args, conf){
 	var nconf = {
 		s: scopeNew(def),
 		e: execsp,
-		x: execInit({}, conf.global)
+		x: execInit({
+      global: conf.x.global
+    }),
 	}
+  nconf.x.state.$conf = conf;
 	for(var i in args){
 		nconf.x.state[i] = args[i]
 	}
-	nconf.x.state.$arglen$ = args.length;
+	nconf.x.state.$arglen = args.length;
 	var r = await blockExec(obj, nconf);
 	return r.return;
 }
@@ -695,7 +727,7 @@ async function ast2obj(scope, ast){
 		if(!v[2]){
 			return callNew(def.set, args);
 		}
-		if(v[2] == "plus"){
+		if(v[2] == "strplus"){
 			return callNew(def.concat, args);
 		}
 		args[2] = callNew(def[v[2]], [getv, args[2]]);
@@ -706,7 +738,7 @@ async function ast2obj(scope, ast){
 		
 	case "id":
 		var a0;
-		if(haskey(scope, v)){
+	  if(haskey(scope, v)){
 			a0 = callNew(def.state);
 		}else{
 			var r = await scopeGet(scope, v);
@@ -729,9 +761,15 @@ async function ast2obj(scope, ast){
 		return callNew(def.get, [a0, a1]);		
 		
 	case "get":
-		var a0 = await ast2obj(scope, v[0]);
-		var a1 = await ast2obj(scope, v[0]);
+		var a0 = await ast2obj(scope, v);
+		var a1 = await ast2obj(scope, v2);
+    //TODO split arrget and dicget
 		return callNew(def.get, [a0, a1]);
+		
+	case "arrget":
+		var a0 = await ast2obj(scope, v);
+		var a1 = await ast2obj(scope, v2);
+		return callNew(def.geti, [a0, a1]);
 		
 	case "arr":
 		var arrx = [];
@@ -846,7 +884,7 @@ async function main(){
   _execr = await scopeGetOrNew(root, "exec");
   _execsp = scopeNew(_execr, undefined);
   _elem = await progl2obj(_lexsp, (("{" + fs.readFileSync(_file).toString()) + "}"), def.Main);
-  exec(objNew(def.Main, {content: _elem}), {s:_sp, e:_execsp, x:{}});
+  exec(objNew(def.Main, {content: _elem}), {s:_sp, e:_execsp, x:{global:{argv:objNew(classSub(def.Arr, {element:def.Str}), process.argv)}}});;
   
 }
 main();

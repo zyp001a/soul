@@ -3,6 +3,6 @@ $def = idGlobal("def")
 $lexsp = scopeNew(def)
 $sp = scopeNew(def)
 $execr = idGlobal("gen")
-$execsp = scopeNew(execr);
+$execxsp = scopeNew(execr);
 $elem = progl2obj("{"+readFile(file)+"}", lexsp);
-exec(asmain($elem), sp, execsp)
+exec(asmain($elem), sp, execxsp)

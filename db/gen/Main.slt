@@ -1,5 +1,10 @@
 ~
-postfix = "sl"
-main# = exec(pget($0, "content"), $conf#)
-fileWrite(argv[1]^"."^postfix, main)
+execsp = pget(#$conf, "e");
+postfix = get(execsp, "postfix")
+packages = {}
+imports = {}
+funcs = {}
+classes = {}
+#main = exec(pget($0, "content"), #$conf)
+fileWrite(argv[1]^"."^postfix(), main)
 ~

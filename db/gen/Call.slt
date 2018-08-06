@@ -1,1 +1,27 @@
-call
+~
+#f = pget($0, "func")
+#a = pget($0, "args")
+#execa = 0
+@if isleaf(f) {
+ #n = rget(f, "name")
+ #r = get(execsp, n)
+ @if r {
+ ~~=call(r, a)~~
+ } @else {
+  execa = 1
+	#fid = rget(f, "id")
+	funcs[fid] = f;
+ ~~=fid~~
+ }
+} @else {
+ execa = 1
+ ~~=exec(f, #$conf)~~
+}
+#arr = [];
+@if execa {
+ @foreach #e,a {
+  push(arr, exec(e, #$conf));
+ }
+ ~(~=join(arr, ", ")~)~
+}
+~

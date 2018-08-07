@@ -1,0 +1,17 @@
+~
+#t = pget($0, "ctrl")
+#a = pget($0, "args")
+@if t=="if" {
+ @for #i=0;i<len(a)-1;i+=2 {
+  @if i == 0 {
+	 ~@if~
+	}@else{
+	 ~@elif~
+	}
+	~ ~=exec(a[i], #$conf)~ {~="\n" + ind(exec(a[i+1], #$conf))~}~	
+ }
+ @if mod(len(a), 2) == 1 {
+	~@else {~="\n" + ind(exec(a[len(a)-1], #$conf))~}~
+ }
+}
+~

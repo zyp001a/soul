@@ -1,4 +1,5 @@
 ~
+indent = "  "
 execsp = pget(#$conf, "e");
 postfix = get(execsp, "postfix")
 packages = {}

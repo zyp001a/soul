@@ -36,6 +36,9 @@ Call
  CallStatic
  CallDynamic
 
+### class-obj schema
+route: __
+obj: ___
 
 
 ## Concept formation

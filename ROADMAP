@@ -1,0 +1,32 @@
++basic grammar
++basic calling/scoping
++type system
+object/class system
+self generated
+intellegence system
+ event system:
+ think system:
+obj -> rec -> mem -> binary corr
+-> expect target -> conduct target
+  rec system:
+   [class tree + class def] => rec obj to most specific class
+  mem system:
+   [rec->rare obj] > mem	 
+  corr system:
+   [co-occ obj] > Class rel
+	expect system:
+	 
+  conduct system:
+   [objects + func] =combination> result obj
+
+ tax system:
+  [objects of same Class] =group> split Class
+
+
+-
+ test support(.test.sl)
+ exception support(cascade)
+ debug support(line number, memory check)
+-
+ pseudo natural language
+ natural language

@@ -19,6 +19,9 @@ $ -> -
 _ -> /
 
 
+Spec
+
+
 @ $at at
 ` $gr grave accent
 ' $q1 
@@ -41,18 +44,44 @@ get dic/arr []
 pget prop .
 
 
+Obj: A special structure represent anything. Anything is obj.
+ for js:
+ common: {__:{}} //__ is obj
+ dic: {___:{__:{}, dicElement: Class, val:self}}
+ arr: [___:{__:{}, arrElement: Class, val:self}]
+ scope: {___:{__:{}, scopeRoute: "", scopeParents: {}, val:self}}
 
-Obj {___:_}
-Route = Obj{route:_} 
-Class = Route{class:_} //
+Class: A special structure summarize the prop of obj {}
+
+Meta: A class summarize the prop of Class {}
+
+Meta  -> Class
+Class -> Obj
+
+Spec: A special structure, determine value/valuetype/restrict of class
+ spec grammar: like mongodb query
+
+
+map dbms
+ Spec -> query/ sub
+ Class -> schema
+ Obj -> data
+
+ArrCallable
+
+
+Class {___:_}
+Scope = Dic{scope:_}
+Class = Scope{class:_} //
 Val = Obj{val:_}
-Undf = Val{valtype:"Undf"}
 Num = Val{valtype:"Num"}
 Str = Val{valtype:"Str"}
 Function = Val{valtype:"Function"}
 
 Dic = Val{valtype:"Dic"} //{val: {}} = {__:obj}
 Arr = Val{valtype:"Arr"} //{val: {}} = {__:obj}
+
+Callable
 
 function _class(obj, clatree){
   

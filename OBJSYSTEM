@@ -19,8 +19,7 @@ $ -> -
 _ -> /
 
 
-Spec
-
+Constraint
 
 @ $at at
 ` $gr grave accent
@@ -99,3 +98,9 @@ color = new(Prop, Color)
 
 Blue = Color$
 Class$kcolor$cBlue
+
+
+
+
+Naming strategy
+Class

@@ -1,0 +1,3 @@
+strict evaluation
+call by value when eval
+call by sharing when gen

@@ -1,1 +1,1 @@
-log(indc())
+log(1)

@@ -1,6 +1,6 @@
 ~
-#f = pget($0, "func")
-#a = pget($0, "args")
+#f = pget(#0, "func")
+#a = pget(#0, "args")
 #execa = 0
 @if isleaf(f) {
  #n = rget(f, "name")

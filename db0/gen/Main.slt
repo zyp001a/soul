@@ -11,7 +11,7 @@ packages = {}
 imports = {}
 funcs = {}
 classes = {}
-#main = exec(pget($0, "content"), #$conf)
+#main = exec(pget(#0, "content"), #$conf)
 fileWrite(argv[1]^"."^postfix(),
  genpackages() + genimports() + genfuncs() + genclasses() + main + genlast())
 ~

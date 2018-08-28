@@ -33,6 +33,10 @@ objInit(with no class)?
  fbNew
  exec
 
+# bootstrap cmd
+'''ti jssl ti2soulgen.sl bootstrap.sl
+'''node bootstrap0.sl.js bootstrap.sl
+
 # interface
  progl2ast
  valInit
@@ -47,3 +51,4 @@ objInit(with no class)?
 4. FuncTpl
 
 # gen 
+

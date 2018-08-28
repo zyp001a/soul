@@ -1,6 +1,6 @@
 ~
-#a = pget(#0, "arr");
-@foreach #e,a {
+#a = propGet(#0, "arr");
+@foreach e a {
 ~
 ~=exec(e, #$conf)~
 ~

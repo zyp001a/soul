@@ -1,0 +1,8 @@
+~
+#str = ""
+@each k v #0 {
+ str += val(k) + ": " + exec(v, #$conf) + ", \n"
+}
+~
+{
+~=ind(str)~}

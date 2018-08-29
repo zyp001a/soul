@@ -1,5 +1,10 @@
 ~
 ##scopeInit = @FuncInternal
+##classInit = @FuncInternal
+##pset = @FuncInternal
+##route = @FuncInternal
+##consInit = @FuncInternal
+
 ~
 function die(){
   for(var i in arguments){
@@ -92,5 +97,51 @@ function scopeInit(pscope, k, parents){
   else //is root
     p.__.index = 0;
   return p;
+}
+function classInit(pscope, name, parents, schema){
+  var p = objInit();
+  var x = p.__;
+  p.classParents = {};
+  for(var i in parents){
+    p.classParents[parents[i].__.id] = parents[i];//TODO reduce class tree
+  }
+  p.classSchema = {};
+  for(var k in schema){
+    p.classSchema[k] = schema[k];
+  }
+  if(pscope)
+    route(pscope, name, p);
+  return p;
+}
+
+function consInit(c, dic){
+  var p = objInit();
+	p.consClass = c;
+	p.cons = {}
+	for(var k in dic){
+	  p.cons[k] = dic[k]
+	}
+	return p;
+}
+
+
+function s(x, k, v){
+  return w(x)[k] = v
+}
+function g(x, k){
+  return w(x)[k];
+}
+function w(x){
+  if(ptype(x) == "Obj"){
+    return x.val;
+  }
+  return x;
+}
+function rw(x){
+  var t = ptype(x);
+  if(t == "Obj"){
+    return x
+  }
+  return objNew(_def[t], {val: x});
 }
 

@@ -9,12 +9,12 @@
  ~~=call(r, a, #$conf)~~
  } @else {
   execa = 1
-	#fid = rget(f, "id")
+	#fid = rget(f, "name")
 	funcs[fid] = f;
  ~~=fid~~
  }
 } @else {
- execa = 1
+ execa = 2
  ~~=exec(f, #$conf)~~
 }
 #arr = [];

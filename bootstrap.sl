@@ -1,6 +1,3 @@
-//predefined: route, scopeInit, classInit, consInit
-
-///////////////scope/////////////////////
 ##root = scopeInit()
 ##def = scopeInit(root, "def")
 
@@ -19,7 +16,6 @@ classNew = &(scope, name, parents, schema){
  pset(x, "class", classc)
  @return x
 }
-
 scopeNew = &(scope, name, parents){
 //TODO when key match "_"
  #x = scopeInit(scope, name, parents)
@@ -69,12 +65,14 @@ consNew = &(scope, name, class, cons){
 ##functplc = classNew(def, "FuncTpl", {
  func: strc
 }, [funcc])
+##funcspecc = classNew(def, "FuncSpec", {
+}, [funcc])
 
 classc->classSchema = {
  classGetter: dicc
  classSetter: dicc
  classParents: dicc
- classSchema: dicc   
+ classSchema: dicc
 }
 consc->classSchema = {
  consClass: classc
@@ -105,6 +103,4 @@ scopec->classSchema = {
 ##returnc = classNew(def, "Return", [objc], {
  return: objc
 })
-
-
 

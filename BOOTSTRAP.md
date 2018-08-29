@@ -26,8 +26,10 @@ objInit(with no class)?
 2. eval-related class init:
  -> classNew: Call -> CallDic | CallArr
  -> Ctrl | CtrlReturn | CtrlIf ... | Return
+ 
  -> funcnativeNew: log 
  -> execScope -> Main -> Block -> Call -> Num
+ -> 
 
 3. run
  fbNew

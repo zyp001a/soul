@@ -149,5 +149,9 @@ function rw(x){
 
 function objNew(cla, dic){
   var p = objInit();	
-	p. = c;
+	p.class = cla;
+	for(var k in dic){
+    p[k] = dic[k]
+	}
+	return p;
 }

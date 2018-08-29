@@ -1,0 +1,5 @@
+~@if(type(#0) == "Str"){
+~global._~=val(#0)~ = &1~
+} @else {
+~globalSet(&0, &1)~
+}~

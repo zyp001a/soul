@@ -1,1 +1,96 @@
-aaa
+~
+##scopeInit = @FuncInternal
+~
+function die(){
+  for(var i in arguments){
+    console.error(arguments[i]);
+  }
+  console.error(getStackTrace());
+  process.exit();
+}
+function getStackTrace(){
+  var obj = {};
+  Error.captureStackTrace(obj, getStackTrace);
+  return obj.stack.toString().replace("[object Object]\n","");
+}
+
+Object.defineProperty(global, '__stack', {
+  get: function() {
+    var orig = Error.prepareStackTrace;
+    Error.prepareStackTrace = function(_, stack) {
+      return stack;
+    };
+    var err = new Error;
+    Error.captureStackTrace(err, arguments.callee);
+    var stack = err.stack;
+    Error.prepareStackTrace = orig;
+    return stack;
+  }
+});
+Object.defineProperty(global, '__line', {
+  get: function() {
+    return __stack[2].getLineNumber();
+  }
+});
+Object.defineProperty(global, '__line2', {
+  get: function() {
+    return __stack[3].getLineNumber();
+  }
+});
+Object.defineProperty(global, '__function', {
+  get: function() {
+    return __stack[2].getFunctionName();
+  }
+});
+Object.defineProperty(global, '__file', {
+  get: function() {
+    return __stack[2].getFileName();
+  }
+});
+function objInit(){
+  var p = {};
+  p.__ = {}
+  Object.defineProperty(p, '__', {
+    enumerable: false,
+    configurable: false
+  });
+  return p;
+}
+function route(pscope, name, p){
+  if(!p) die("error");
+  var x = p.__;
+  pscope[name] = p;
+  if(name == undefined){
+    name = pscope.__.index.toString();
+    x.tmp = 1;
+    pscope.__.index++;
+  }
+  x.name = name;
+
+  if(!pscope.__.id){  //parent isroot
+    x.id = ".";
+    x.ns = name;
+  }else if(pscope.__.id == "."){  //grandparent is root
+    x.id = name;
+    x.ns = pscope.__.ns;
+  }else{
+    x.id = pscope.__.id + "_" + name;
+    x.ns = pscope.__.ns;
+  }
+  x.scope = pscope
+  return p;
+}
+function scopeInit(pscope, k, parents){
+  var p = objInit();
+  p.val = {}
+  var pp = p.scopeParents = {};
+  for(var i in parents){
+    pp[parents[i].__.id] = parents[i];
+  }
+  if(pscope)
+    route(pscope, k, p);
+  else //is root
+    p.__.index = 0;
+  return p;
+}
+

@@ -6,7 +6,7 @@
  #n = rget(f, "name")
  #r = scopeGet(execsp, n)
  @if r {
- ~~=call(r, a)~~
+ ~~=call(r, a, #$conf)~~
  } @else {
   execa = 1
 	#fid = rget(f, "id")

@@ -12,7 +12,8 @@ packages = {}
 imports = {}
 funcs = {}
 classes = {}
+#pre = genpre();
 #main = exec(propGet(#0, "main"), #$conf)
 fileWrite(argv[1]^"."^postfix(),
- genpackages() + genimports() + genfuncs() + genclasses() + genpre() + main + genpost())
+ genpackages() + genimports() + genfuncs() + genclasses() + pre + main + genpost())
 ~

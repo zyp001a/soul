@@ -104,3 +104,10 @@ scopec->classSchema = {
  return: objc
 })
 
+scopeNew = &(scope, name, parents){
+//TODO when key match "_"
+ #x = scopeInit(scope, name, parents)
+ pset(x, "class", classc)
+ @return x
+}
+

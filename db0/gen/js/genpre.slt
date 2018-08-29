@@ -1,10 +1,12 @@
 ~
+##route = @FuncInternal
+##pset = @FuncInternal
+
 ##scopeInit = @FuncInternal
 ##classInit = @FuncInternal
-##pset = @FuncInternal
-##route = @FuncInternal
 ##consInit = @FuncInternal
 
+##objNew = @FuncInternal
 ~
 function die(){
   for(var i in arguments){
@@ -145,3 +147,7 @@ function rw(x){
   return objNew(_def[t], {val: x});
 }
 
+function objNew(cla, dic){
+  var p = objInit();	
+	p. = c;
+}

@@ -26,12 +26,18 @@ objInit(with no class)?
 2. eval-related class init:
  -> classNew: Call -> CallDic | CallArr
  -> Ctrl | CtrlReturn | CtrlIf ... | Return
+ 
  -> funcnativeNew: log 
  -> execScope -> Main -> Block -> Call -> Num
+ -> 
 
 3. run
  fbNew
  exec
+
+# bootstrap cmd
+'''ti jssl ti2soulgen.sl bootstrap.sl
+'''node bootstrap0.sl.js bootstrap.sl
 
 # interface
  progl2ast
@@ -47,3 +53,4 @@ objInit(with no class)?
 4. FuncTpl
 
 # gen 
+

@@ -1,0 +1,5 @@
+~@if(type(#0) == "Str"){
+~_~=val(#0)~~
+} @else {
+~stateGet(&0)~
+}~

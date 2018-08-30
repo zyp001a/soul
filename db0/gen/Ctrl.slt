@@ -1,6 +1,6 @@
 ~
-#t = pget($0, "ctrl")
-#a = pget($0, "args")
+#t = propGet(#0, "ctrl")
+#a = propGet(#0, "args")
 @if t=="if" {
  @for #i=0;i<len(a)-1;i+=2 {
   @if i == 0 {

@@ -54,10 +54,11 @@ function getStackTrace(){
   Error.captureStackTrace(obj, getStackTrace);
   return obj.stack.toString().replace("[object Object]\n","");
 }
-var prefix = process.env.HOME+"/soul/db";
+var prefix = process.env.HOME+"/soul/db0";
 var root = scopeNew();
 var execsp = scopeNew(root, "exec");
 var def = scopeNew(root, "def");
+var globalScope = scopeNew(root, "global");
 classNew(def, "Class")
 
 classNew(def, "ClassMeta")
@@ -291,14 +292,19 @@ funcNew(def, "fileWrite", function(f, c){
 }, [["f"], ["c"]])
 
 funcNew(def, "exec", async function(o, conf){
-  if(!conf) conf = this;
 	if(o === undefined) return;
+	var nconf;
+//  if(!conf)
+//		nconf = this;
+//	else{
+//	nconf = await exec(conf, this);
+	//
 	var r = await exec(o, conf);
   return r;
-}, [["o"], ["conf"]], 1)
+}, [["o"], ["conf"]])
 funcNew(def, "call", async function(r, args){
 	return await call(r, args, this, 1);
-}, [["r"], ["args"]], 1)
+}, [["r"], ["args"]])
 funcNew(def, "and", async function(l, r){
 	return (await exec(l, this)) && (await exec(r, this));
 }, [["l"], ["r"]], 1)
@@ -478,7 +484,7 @@ function funcNew(scope, name, func, argdef, flagraw){
   if(name)
 		route(scope, name, o);
 	if(flagraw)
-		o.__.rawargs = 1;
+		o.___.rawargs = 1;
 	return o;
 }
 
@@ -829,6 +835,7 @@ async function blockExec(b, conf, stt){
 	}
 }
 async function tplCall(str, args, conf){
+	if(!str) return "";
 	var tstr = tplparser.parse(str);
 	var scope = scopeNew(def);
 	var obj = await progl2obj(scope, tstr);
@@ -862,7 +869,6 @@ async function call(func, argsn, conf, rawflag){
 	}
 	
   if(func.func){//is FuncNative
-		//log(func.__.name)
 		if(func.___.rawargs)
 			return await func.func.val.apply(conf, argsn)
 		else
@@ -979,7 +985,7 @@ async function ast2obj(scope, ast){
 		var func = await ast2obj(scope, v);
 	//TODO classSub		
 		var args = objNew(def.Arr, await ast2arr(scope, v2))
-		if(v[0] == "get")
+		if(v[0] == "objget")
 			args.unshift(func.args[0]);
 		return callNew(func, args);
 		
@@ -1035,13 +1041,16 @@ async function ast2obj(scope, ast){
 		var f;
 	  if(haskey(scope, v)){
 			a0 = callNew(def.state);
-			f = def.aget
+			f = def.aget;
+		}else if(haskey(globalScope, v)){
+			a0 = callNew(def.global);
+			f = def.get;			
 		}else{
 			var r = await scopeGet(scope, v);
 			if(r)
 				return r.value;
 			a0 = callNew(def.global);
-			f = def.get
+			f = def.get;
 		}
 		a1 = raw2obj(v);
 		return callNew(f, [a0, a1]);
@@ -1055,7 +1064,24 @@ async function ast2obj(scope, ast){
 		varNew(scope, v, t);
 		var a0 = callNew(def.state);
 		var a1 = raw2obj(v);
+		return callNew(def.aget, [a0, a1]);
+		
+	case "global":
+		var t;
+		if(v2)
+			t = await ast2obj(globalScope, v2);
+		else
+			t = def.Class;
+		varNew(globalScope, v, t);		
+		var a0 = callNew(def.global);
+		var a1 = raw2obj(v);
 		return callNew(def.aget, [a0, a1]);		
+		
+	case "objget":
+		var a0 = await ast2obj(scope, v);
+		var a1 = await ast2obj(scope, v2);
+    //TODO split arrget and dicget
+		return callNew(def.objget, [a0, a1]);
 		
 	case "get":
 		var a0 = await ast2obj(scope, v);
@@ -1063,7 +1089,7 @@ async function ast2obj(scope, ast){
     //TODO split arrget and dicget
 		return callNew(def.get, [a0, a1]);
 		
-	case "arrget":
+	case "itemsget":
 		var a0 = await ast2obj(scope, v);
 		var a1 = await ast2obj(scope, v2);
 		return callNew(def.aget, [a0, a1]);

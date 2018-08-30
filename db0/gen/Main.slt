@@ -1,0 +1,19 @@
+~
+indent = "  "
+execsp = propGet(#$conf, "e");
+postfix = scopeGet(execsp, "postfix")
+genpackages = scopeGet(execsp, "genpackages")
+genimports = scopeGet(execsp, "genimports")
+genfuncs = scopeGet(execsp, "genfuncs")
+genclasses = scopeGet(execsp, "genclasses")
+genpre = scopeGet(execsp, "genpre")
+genpost = scopeGet(execsp, "genpost")
+packages = {}
+imports = {}
+funcs = {}
+classes = {}
+#pre = genpre();
+#main = exec(propGet(#0, "main"), #$conf)
+fileWrite(argv[1]^"."^postfix(),
+ genpackages() + genimports() + genfuncs() + genclasses() + pre + main + genpost())
+~

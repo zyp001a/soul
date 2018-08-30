@@ -1,25 +1,25 @@
 ~
-#f = pget($0, "func")
-#a = pget($0, "args")
+#f = propGet(#0, "func")
+#a = propGet(#0, "args")
 #execa = 0
 @if isleaf(f) {
  #n = rget(f, "name")
- #r = get(execsp, n)
+ #r = scopeGet(execsp, n)
  @if r {
- ~~=call(r, a)~~
+ ~~=call(r, a, #$conf)~~
  } @else {
   execa = 1
-	#fid = rget(f, "id")
+	#fid = rget(f, "name")
 	funcs[fid] = f;
  ~~=fid~~
  }
 } @else {
- execa = 1
+ execa = 2
  ~~=exec(f, #$conf)~~
 }
 #arr = [];
 @if execa {
- @foreach #e,a {
+ @foreach e a {
   push(arr, exec(e, #$conf));
  }
  ~(~=join(arr, ", ")~)~

@@ -1,0 +1,7 @@
+~
+#block = propGet(#0, "block")
+#argdef = propGet(#0, "argdef")
+#str = exec(block, #$conf);
+~
+function ~=rget(#0, "name")~(~=exec(argdef, #$conf)~){
+~=ind(str)~}

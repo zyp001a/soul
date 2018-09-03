@@ -29,6 +29,7 @@ scopeNew = &(scope, name, parents){
 consNew = &(scope, name, class, cons){
  #x = consInit(class, cons)
  route(scope, name, x)
+ pset(x, "class", consc) 
  @return x;
 }
 
@@ -104,6 +105,13 @@ scopec->classSchema = {
  return: objc
 })
 
-fnNew = &(scope, name, func, flagraw){
+&fnNew = (scope, name, fn){
+  var o = fnInit(scope, name, fn.func, fn.funcArgts, fn.funcReturn);
+  pset(x, "class", funcnativec)
+  //TODO if ** raw
+  return o;
 }
 
+fnNew(def, "log", &(x){
+  log(x)
+})

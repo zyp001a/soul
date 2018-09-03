@@ -1,7 +1,16 @@
 ~
-#block = propGet(#0, "block")
-#argdef = propGet(#0, "argdef")
+#block = propGet(#0, "func")
+#argdef = propGet(#0, "funcArgts")
 #str = exec(block, #$conf);
+
+#a = argdef;
+#x = "";
+@for #i=0;i<len(a);i+=1 {
+ #v = a[i];
+ @if (i != 0) {x += ", "}
+ #vv = "_" + v[0]
+ x += vv;
+}
 ~
-function ~=rget(#0, "name")~(~=exec(argdef, #$conf)~){
+function ~=rget(#0, "name")~(~=x~){
 ~=ind(str)~}

@@ -1,14 +1,18 @@
 ~
-##route = @FuncInternal
-##pset = @FuncInternal
+##route = @FuncInternal {}
+##pset = @FuncInternal {}
 
-##scopeInit = @FuncInternal
-##classInit = @FuncInternal
-##consInit = @FuncInternal
+//##objInit = @FuncInternal {}
 
-##objNew = @FuncInternal
+##scopeInit = @FuncInternal {}
+##classInit = @FuncInternal {}
+##consInit = @FuncInternal {}
 
-##fnInit = @FuncInternal
+##objNew = @FuncInternal {}
+
+##fnInit = @FuncInternal {}
+
+##callInit = @FuncInternal {}
 ~
 function die(){
   for(var i in arguments){
@@ -158,11 +162,15 @@ function objNew(cla, dic){
 	return p;
 }
 
-function fnInit(scope, name, func, argts, return){
+function fnInit(scope, name, func, argts, returnx){
   var o = objInit();
   o.func = func;
   o.funcArgts = argts;
-  o.funcReturn = return;
+  o.funcReturn = returnx;
   route(scope, name, o);
   return o;
+}
+
+function callInit(func, args){
+  
 }

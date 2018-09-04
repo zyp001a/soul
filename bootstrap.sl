@@ -1,3 +1,10 @@
+scopeInit = &(scope, name, parents){
+  #x =  @ReprScope {
+    val: {}
+  }
+  setParents(x, parents);
+  route(x, scope, name);
+}
 ##root = scopeInit()
 ##def = scopeInit(root, "def")
 
@@ -105,13 +112,16 @@ scopec->classSchema = {
  return: objc
 })
 
-&fnNew = (scope, name, fn){
-  var o = fnInit(scope, name, fn.func, fn.funcArgts, fn.funcReturn);
-  pset(x, "class", funcnativec)
+fnNew = &(scope, name, fn){
+  #o = fnInit(scope, name, fn.func, fn.funcArgts, fn.funcReturn);
+  pset(o, "class", funcnativec)
   //TODO if ** raw
-  return o;
+  @return o;
 }
 
-fnNew(def, "log", &(x){
+fnNew(def, "log", @ReprFunc &(x){
   log(x)
 })
+
+##testc = callNew()
+exec(testc)

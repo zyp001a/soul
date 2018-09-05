@@ -1,0 +1,6 @@
+~
+#r = scopeGet(execsp, "FuncBlock")
+~initx({
+  func: ~=ind(call(r, [#0], #$conf))~,
+  funcArgts: ~=exec(#0.funcArgts, #$conf)~,
+})

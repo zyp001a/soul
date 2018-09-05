@@ -1,11 +1,14 @@
 ~
 #a = propGet(#0, "arr");
 #b = propGet(#0, "scope");
-#r = scopeGet(execsp, "var")
-@each k v b {
- @if (!issizet(k) && !isarg(v) && !isdef(v)) {
+#c = propGet(#0, "novar");
+@if(!c){
+ #r = scopeGet(execsp, "var")
+ @each k v b {
+  @if (!issizet(k) && !isarg(v) && !isdef(v)) {
 ~~=call(r, [k, v], #$conf)~
 ~
+  }
  }
 }
 @foreach e a {

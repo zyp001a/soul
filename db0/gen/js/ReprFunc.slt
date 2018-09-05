@@ -1,4 +1,0 @@
-~
-#r = scopeGet(execsp, "FuncBlock")
-~
-{func: ~=call(r, [#0], #$conf)~, funcArgts: ~=exec(#0.funcArgts, #$conf)~,}

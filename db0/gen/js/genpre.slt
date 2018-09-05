@@ -1,18 +1,8 @@
 ~
 ##route = @FuncInternal {}
+##routeGet = @FuncInternal {}
 ##pset = @FuncInternal {}
 
-//##objInit = @FuncInternal {}
-
-##scopeInit = @FuncInternal {}
-##classInit = @FuncInternal {}
-##consInit = @FuncInternal {}
-
-##objNew = @FuncInternal {}
-
-##fnInit = @FuncInternal {}
-
-##callInit = @FuncInternal {}
 ~
 function die(){
   for(var i in arguments){
@@ -60,8 +50,8 @@ Object.defineProperty(global, '__file', {
     return __stack[2].getFileName();
   }
 });
-function objInit(){
-  var p = {};
+function initx(p){
+  if(!p) p = {};
   p.__ = {}
   Object.defineProperty(p, '__', {
     enumerable: false,
@@ -69,15 +59,20 @@ function objInit(){
   });
   return p;
 }
-function route(pscope, name, p){
+
+function route(p, pscope, name){
   if(!p) die("error");
-  var x = p.__;
-  pscope[name] = p;
+  var x = p.__;	
+	if(!x.index) x.index = 0;	
+	if(!pscope){
+		return p;
+	}
   if(name == undefined){
     name = pscope.__.index.toString();
     x.tmp = 1;
     pscope.__.index++;
   }
+  pscope[name] = p;	
   x.name = name;
 
   if(!pscope.__.id){  //parent isroot
@@ -93,6 +88,10 @@ function route(pscope, name, p){
   x.scope = pscope
   return p;
 }
+function routeGet(x, k){
+  return x.__[k];
+}
+/*
 function scopeInit(pscope, k, parents){
   var p = objInit();
   p.val = {}
@@ -174,3 +173,4 @@ function fnInit(scope, name, func, argts, returnx){
 function callInit(func, args){
   
 }
+*/

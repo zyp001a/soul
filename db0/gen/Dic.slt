@@ -3,6 +3,7 @@
 @each k v #0 {
  str += val(k) + ": " + exec(v, #$conf) + ", \n"
 }
-~
-{
-~=ind(str)~}
+@if(str != ""){
+  str = "\n" + ind(str);
+}
+~{~=str~}

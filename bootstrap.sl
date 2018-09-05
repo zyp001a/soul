@@ -1,10 +1,54 @@
-scopeInit = &(scope, name, parents){
-  #x =  @ReprScope {
-    val: {}
-  }
-  setParents(x, parents);
-  route(x, scope, name);
+ReprScope = % Struct {
+ val: Dic
+ scopeParents: Dic
 }
+ReprClass = % Struct {
+ classSchema: Dic
+ classParents: Dic
+}
+ReprCons = % Struct {
+ cons: Dic,
+ consClass: Class
+}
+ReprCall = % Struct {
+ callFunc: ReprFunc,
+ callArgs: Arr
+}
+ReprEnv = % Struct {
+ env: Dic
+ envScope: ReprScope
+ envExec: ReprExec
+}
+
+scopeInit = &(scope, name, parents){
+ #x = @ReprScope {
+  scope: {}
+  scopeParents: {}
+ }
+ @if parents {
+  @foreach e parents{
+	 //TODO reduce
+   x.scopeParents[routeGet(e, "id")] = e;
+  }
+ }
+ route(x, scope, name);
+ @return x;
+}
+classInit = &(scope, name, parents, schema){
+ #x = @ReprClass {
+  classSchema: schema
+  classParents: {}
+ }
+ @if parents {
+  @foreach e parents{
+	 //TODO reduce
+   x.classParents[routeGet(e, "id")] = e;
+  }	
+ }
+ route(x, scope, name);	
+ @return x;
+}
+
 ##root = scopeInit()
 ##def = scopeInit(root, "def")
 
@@ -12,21 +56,21 @@ scopeInit = &(scope, name, parents){
 ##classc = classInit(def, "Class", [objc])
 ##scopec = classInit(def, "Scope", [objc])
 
-pset(root, "class", scopec)
-pset(def, "class", scopec)
-pset(objc, "class", classc)
-pset(classc, "class", classc)
-pset(scopec, "class", classc)
+pset(root, "obj", scopec)
+pset(def, "obj", scopec)
+pset(objc, "obj", classc)
+pset(classc, "obj", classc)
+pset(scopec, "obj", classc)
 
-classNew = &(scope, name, parents, schema){
- #x = classInit(scope, name, parents, schema)
- pset(x, "class", classc)
- @return x
-}
 scopeNew = &(scope, name, parents){
 //TODO when key match "_"
  #x = scopeInit(scope, name, parents)
- pset(x, "class", classc)
+ pset(x, "obj", scopec)
+ @return x
+}
+classNew = &(scope, name, parents, schema){
+ #x = classInit(scope, name, parents, schema)
+ pset(x, "obj", classc)
  @return x
 }
 
@@ -34,9 +78,12 @@ scopeNew = &(scope, name, parents){
 ##valc = classNew(def, "Val", [objc])
 
 consNew = &(scope, name, class, cons){
- #x = consInit(class, cons)
- route(scope, name, x)
- pset(x, "class", consc) 
+ #x = @ReprCons {
+  cons: cons
+  consClass: class
+ }
+ route(x, scope, name)
+ pset(x, "obj", consc) 
  @return x;
 }
 
@@ -51,30 +98,30 @@ consNew = &(scope, name, class, cons){
 ##arrc = consNew(def, "Arr", itemsc)
 ##dicc = consNew(def, "Dic", itemsc)
 
-##argtc = classNew(def, "Argt", {
+##argtc = classNew(def, "Argt", [objc], {
  argtName: strc
  argtType: classc
-}, [objc])
+})
 
-##funcc = classNew(def, "Func", {
+##funcc = classNew(def, "Func", [objc], {
  funcArgts: consInit(arrc, {itemsType: argtc})
  funcReturn: classc
-}, [objc])
-##blockc = classNew(def, "Block", {
+})
+##blockc = classNew(def, "Block", [objc], {
  block: arrc,
  blockLabels: consInit(arrc, {itemsType: strc})
-}, [objc])
-##funcnativec = classNew(def, "FuncNative", {
+})
+##funcnativec = classNew(def, "FuncNative", [funcc], {
  func: funcvc
-}, [funcc])
-##funcblockc = classNew(def, "FuncBlock", {
+})
+##funcblockc = classNew(def, "FuncBlock", [funcc], {
  func: blockc
-}, [funcc])
-##functplc = classNew(def, "FuncTpl", {
+})
+##functplc = classNew(def, "FuncTpl", [funcc], {
  func: strc
-}, [funcc])
-##funcspecc = classNew(def, "FuncSpec", {
-}, [funcc])
+})
+##funcinternalc = classNew(def, "FuncInternal", [funcc], {
+})
 
 classc->classSchema = {
  classGetter: dicc
@@ -90,14 +137,19 @@ scopec->classSchema = {
  scopeParents: dicc
 }
 
-////////////////call////////////////
+##envc = classNew(def, "Env", [objc], {
+ env: dicc
+ envScope: scopec
+ envExec: scopec
+});
 
 ##callc = classNew(def, "Call", [objc], {
- callFunc: funcc
+ call: funcc
  callArgs: arrc
 })
 ##calldicc =  consNew(def, "CallDic", dicc)
 ##callarrc =  consNew(def, "CallArr", arrc)
+
 ##ctrlc = classNew(def, "Ctrl", [objc], {
  ctrlArgs: arrc
 })
@@ -113,15 +165,34 @@ scopec->classSchema = {
 })
 
 fnNew = &(scope, name, fn){
-  #o = fnInit(scope, name, fn.func, fn.funcArgts, fn.funcReturn);
-  pset(o, "class", funcnativec)
-  //TODO if ** raw
-  @return o;
+ route(fn, scope, name);
+ pset(fn, "obj", funcnativec)
+ //TODO if  raw	
+ @return fn
 }
 
-fnNew(def, "log", @ReprFunc &(x){
-  log(x)
-})
+##logc = fnNew(def, "log", repr(&(x){
+ log(x)
+}))
 
-##testc = callNew()
-exec(testc)
+callNew = &(func, args){
+ @return @ReprCall {
+  callFunc: func
+  callArgs: args
+ }
+}
+
+##execsp = scopeNew(root, "exec");
+
+##testc = callNew(logc, [1])
+
+##env = @ReprEnv {
+ env: {},
+ envScope: scopeNew(def)
+ envExec: scopeNew(execsp)
+}
+
+callExec = &(o, env){
+ log(2)
+}
+callExec(testc, env)

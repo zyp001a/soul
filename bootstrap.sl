@@ -15,9 +15,12 @@ ReprCall = % Struct {
  callArgs: Arr
 }
 ReprEnv = % Struct {
- env: Dic
- envScope: ReprScope
- envExec: ReprExec
+ envLexScope: ReprScope
+ envExecScope: ReprScope
+ envExecCache: Dic,
+ envState: Dic,
+ envGlobal: Dic,
+ envStack: Arr,
 }
 
 scopeInit = &(scope, name, parents){
@@ -88,6 +91,7 @@ consNew = &(scope, name, class, cons){
 }
 
 ##nullc = consNew(def, "Null", valc)
+##undfc = consNew(def, "Undf", valc)
 ##numc = consNew(def, "Num", valc)
 ##sizetc = consNew(def, "Sizet", numc)
 ##strc = consNew(def, "Str", valc)
@@ -170,29 +174,66 @@ fnNew = &(scope, name, fn){
  //TODO if  raw	
  @return fn
 }
-
-##logc = fnNew(def, "log", repr(&(x){
- log(x)
-}))
-
 callNew = &(func, args){
- @return @ReprCall {
+ #x = @ReprCall {
   callFunc: func
   callArgs: args
  }
+ pset(x, "obj", callc)
+ @return x;
+}
+
+type = &(o){
+ @return routeGet(pget(o, "obj"), "id")
+}
+scopeGet = &(scope, key){
+ 
+}
+execFind = &(t, env, cache){
+ @if(!cache){
+  cache = {};
+ }
+ #exect = scopeGet(env.envExecScope, t)
+ @if(?exect){
+  @return exect
+ }
+ #deft = scopeGet(env.envDefScope, t) 
+ @each k v pget(deft, "classParents"){
+  @if(cache[k]){ @return; }
+	cache[k] = 1;
+	exect = execFind(k, env, cache);
+	@if(?exect){
+	 @return exect;
+	}
+ }
+}
+objExec = &(o, env){
+ #ex = execFind(type(o), env)
+ log(ex)
+// @return callExec(ex, [o], env, 1);
+}
+callExec = &(func, args, env, flag){
 }
 
 ##execsp = scopeNew(root, "exec");
 
+##logc = fnNew(def, "log", repr(&(x){
+ log(x)
+}))
+##calle = fnNew(execsp, "Call", repr(&(o){
+// #func = objExec
+ log("exec Call")
+}))
+
 ##testc = callNew(logc, [1])
 
 ##env = @ReprEnv {
- env: {},
- envScope: scopeNew(def)
- envExec: scopeNew(execsp)
+ envDefScope: scopeNew(def)
+ envExecScope: scopeNew(execsp)
+ envExecCache: {},
+ envState: {},
+ envGlobal: {},
+ envStack: [],
 }
 
-callExec = &(o, env){
- log(2)
-}
-callExec(testc, env)
+objExec(testc, env)

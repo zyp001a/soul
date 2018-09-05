@@ -2,6 +2,7 @@
 ##route = @FuncInternal {}
 ##routeGet = @FuncInternal {}
 ##pset = @FuncInternal {}
+##pget = @FuncInternal {}
 
 ~
 function die(){
@@ -91,46 +92,6 @@ function route(p, pscope, name){
 function routeGet(x, k){
   return x.__[k];
 }
-/*
-function scopeInit(pscope, k, parents){
-  var p = objInit();
-  p.val = {}
-  var pp = p.scopeParents = {};
-  for(var i in parents){
-    pp[parents[i].__.id] = parents[i];
-  }
-  if(pscope)
-    route(pscope, k, p);
-  else //is root
-    p.__.index = 0;
-  return p;
-}
-function classInit(pscope, name, parents, schema){
-  var p = objInit();
-  var x = p.__;
-  p.classParents = {};
-  for(var i in parents){
-    p.classParents[parents[i].__.id] = parents[i];//TODO reduce class tree
-  }
-  p.classSchema = {};
-  for(var k in schema){
-    p.classSchema[k] = schema[k];
-  }
-  if(pscope)
-    route(pscope, name, p);
-  return p;
-}
-
-function consInit(c, dic){
-  var p = objInit();
-	p.consClass = c;
-	p.cons = {}
-	for(var k in dic){
-	  p.cons[k] = dic[k]
-	}
-	return p;
-}
-
 
 function s(x, k, v){
   return w(x)[k] = v
@@ -151,26 +112,3 @@ function rw(x){
   }
   return objNew(_def[t], {val: x});
 }
-
-function objNew(cla, dic){
-  var p = objInit();	
-	p.class = cla;
-	for(var k in dic){
-    p[k] = dic[k]
-	}
-	return p;
-}
-
-function fnInit(scope, name, func, argts, returnx){
-  var o = objInit();
-  o.func = func;
-  o.funcArgts = argts;
-  o.funcReturn = returnx;
-  route(scope, name, o);
-  return o;
-}
-
-function callInit(func, args){
-  
-}
-*/

@@ -11,5 +11,7 @@
  #vv = "_" + v[0]
  x += vv;
 }
+@if(block){
 ~function ~=rget(#0, "name")~(~=x~){
-~=ind(str)~}
+~=ind(str)~}~
+}~

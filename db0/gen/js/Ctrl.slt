@@ -18,5 +18,11 @@
 } @elif t == "foreach" {
 ~for(let _~=val(a[0])~ of ~=exec(a[1], #$conf)~){  
 ~=ind(exec(a[2], #$conf))~}~
+} @elif t == "each" {
+ #tmp = suid();
+~let _tmp~=tmp~ = ~=exec(a[2], #$conf)~;
+for(let _~=val(a[0])~ in _tmp~=tmp~){
+  let _~=val(a[1])~ = _tmp~=tmp~[_~=val(a[0])~];
+~=ind(exec(a[3], #$conf))~}~
 }
 ~

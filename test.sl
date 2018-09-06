@@ -1,1 +1,2 @@
-log(1);
+a = readfile("x")
+a = readfile("y")

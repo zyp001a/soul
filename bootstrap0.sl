@@ -273,12 +273,7 @@ proglParser = &(){
 }
 progl2obj = &(){
 }
-ast2obj = &(scope, ast){
- #t = ast[0]
- #v = ast[1]
- @if(t == "str"){
-  @return objNew(strc, {val: v});
- }
+ast2obj = &(){
 }
 
 //////////////define call function
@@ -361,6 +356,5 @@ fnNewx(execsp, "Call", repr(&(env, o){
  envStack: [],
 }
 
-//log(execx(testc, env))
-log(ast2obj(def, ["str", "a"]))
+log(execx(testc, env))
 

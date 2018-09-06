@@ -15,6 +15,9 @@
  }
 } @else {
  execa = 2
+ @if(!f){
+  die("some function not defined, check   ()")
+ }
  ~~=exec(f, #$conf)~~
 }
 #arr = [];

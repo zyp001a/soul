@@ -15,5 +15,6 @@
  #nn = rget(#0, "name");
  @if(nn){ nn = " "^nn }
 ~function~=nn~(~=x~){
+  let _env = this;
 ~=ind(str)~}~
 }~

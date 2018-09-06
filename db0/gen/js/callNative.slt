@@ -1,0 +1,1 @@
+&0.apply(undefined, [&2].concat(&1))

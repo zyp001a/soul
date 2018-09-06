@@ -1,130 +1,165 @@
-ReprScope = % Struct {
+ReprScopex = % Struct {
  val: Dic
  scopeParents: Dic
 }
-ReprClass = % Struct {
+ReprClassx = % Struct {
  classSchema: Dic
  classParents: Dic
 }
-ReprCons = % Struct {
+ReprConsx = % Struct {
  cons: Dic,
  consClass: Class
 }
-ReprCall = % Struct {
- callFunc: ReprFunc,
+ReprFuncx = % Struct {
+ func: Class
+ funcArgts: Arr
+ funcReturn: Class
+}
+ReprCallx = % Struct {
+ callFunc: ReprFuncx,
  callArgs: Arr
 }
-ReprEnv = % Struct {
- envLexScope: ReprScope
- envExecScope: ReprScope
+ReprEnvx = % Struct {
+ envLexScope: ReprScopex
+ envExecScope: ReprScopex
  envExecCache: Dic,
  envState: Dic,
  envGlobal: Dic,
  envStack: Arr,
 }
-
-scopeInit = &(scope, name, parents){
- #x = @ReprScope {
+routex = &(o, scope, name){
+ @if(!innateGet(o, "index")){
+  innateSet(o, "index", 0)
+ }
+ @if(!scope){
+  @return o
+ }
+ @if(!?name){
+  name = str(innateGet(o, "index"))
+  innateSet(o, "index", innateGet(o, "index") + 1);
+  innateSet(o, "noname", 1)
+ }
+ scopeSet(scope, name, o);
+ innateSet(o, "name", name)
+ #id = innateGet(scope, "id")
+ @if(!?id){
+  innateSet(o, "id", ".")
+  innateSet(o, "ns", name)
+ }@elif(id == "."){
+  innateSet(o, "id", name)
+  innateSet(o, "ns", innateGet(scope, "ns"))
+ }@else{
+  innateSet(o, "id", id^"_"^name)
+  innateSet(o, "ns", innateGet(scope, "ns"))
+ }
+ innateSet(o, "scope", scope)
+ @return o;
+}
+scopeInitx = &(scope, name, parents){
+ #x = @ReprScopex {
   scope: {}
   scopeParents: {}
  }
  @if parents {
   @foreach e parents{
-	 //TODO reduce
-   x.scopeParents[routeGet(e, "id")] = e;
+   //TODO reduce
+   x.scopeParents[innateGet(e, "id")] = e;
   }
  }
- route(x, scope, name);
+ routex(x, scope, name);
  @return x;
 }
-classInit = &(scope, name, parents, schema){
- #x = @ReprClass {
-  classSchema: schema
+classInitx = &(scope, name, parents, schema){
+ #x = @ReprClassx {
+  classSchema: schema || {}
   classParents: {}
  }
  @if parents {
   @foreach e parents{
-	 //TODO reduce
-   x.classParents[routeGet(e, "id")] = e;
-  }	
+   //TODO reduce
+   x.classParents[innateGet(e, "id")] = e;
+  }
  }
- route(x, scope, name);	
+ routex(x, scope, name);
  @return x;
 }
 
-##root = scopeInit()
-##def = scopeInit(root, "def")
+##root = scopeInitx()
+##def = scopeInitx(root, "def")
 
-##objc = classInit(def, "Obj")
-##classc = classInit(def, "Class", [objc])
-##scopec = classInit(def, "Scope", [objc])
+##objc = classInitx(def, "Obj")
+##classc = classInitx(def, "Class", [objc])
+##scopec = classInitx(def, "Scope", [objc])
 
-pset(root, "obj", scopec)
-pset(def, "obj", scopec)
-pset(objc, "obj", classc)
-pset(classc, "obj", classc)
-pset(scopec, "obj", classc)
+innateSet(root, "obj", scopec)
+innateSet(def, "obj", scopec)
+innateSet(objc, "obj", classc)
+innateSet(classc, "obj", classc)
+innateSet(scopec, "obj", classc)
 
-scopeNew = &(scope, name, parents){
+scopeNewx = &(scope, name, parents){
 //TODO when key match "_"
- #x = scopeInit(scope, name, parents)
- pset(x, "obj", scopec)
+ #x = scopeInitx(scope, name, parents)
+ innateSet(x, "obj", scopec)
  @return x
 }
-classNew = &(scope, name, parents, schema){
- #x = classInit(scope, name, parents, schema)
- pset(x, "obj", classc)
+classNewx = &(scope, name, parents, schema){
+ #x = classInitx(scope, name, parents, schema)
+ innateSet(x, "obj", classc)
  @return x
 }
 
-##consc = classNew(def, "Cons", [objc])
-##valc = classNew(def, "Val", [objc])
+##consc = classNewx(def, "Cons", [objc])
+##valc = classNewx(def, "Val", [objc])
 
-consNew = &(scope, name, class, cons){
- #x = @ReprCons {
-  cons: cons
+consInitx = &(class, cons){
+ #x = @ReprConsx {
+  cons: cons || {}
   consClass: class
  }
- route(x, scope, name)
- pset(x, "obj", consc) 
+ innateSet(x, "obj", consc)
+ @return x
+}
+consNewx = &(scope, name, class, cons){
+ #x = consInitx(class, cons)
+ routex(x, scope, name)
  @return x;
 }
 
-##nullc = consNew(def, "Null", valc)
-##undfc = consNew(def, "Undf", valc)
-##numc = consNew(def, "Num", valc)
-##sizetc = consNew(def, "Sizet", numc)
-##strc = consNew(def, "Str", valc)
-##funcvc = consNew(def, "Funcv", valc)
-##itemsc =  classNew(def, "Items", [valc], {
+##nullc = consNewx(def, "Null", valc)
+##undfc = consNewx(def, "Undf", valc)
+##numc = consNewx(def, "Num", valc)
+##sizetc = consNewx(def, "Sizet", numc)
+##strc = consNewx(def, "Str", valc)
+##funcvc = consNewx(def, "Funcv", valc)
+##itemsc =  classNewx(def, "Items", [valc], {
  itemsType: classc
 })
-##arrc = consNew(def, "Arr", itemsc)
-##dicc = consNew(def, "Dic", itemsc)
+##arrc = consNewx(def, "Arr", itemsc)
+##dicc = consNewx(def, "Dic", itemsc)
 
-##argtc = classNew(def, "Argt", [objc], {
+##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
  argtType: classc
 })
-
-##funcc = classNew(def, "Func", [objc], {
- funcArgts: consInit(arrc, {itemsType: argtc})
+##funcc = classNewx(def, "Func", [objc], {
+ funcArgts: consInitx(arrc, {itemsType: argtc})
  funcReturn: classc
 })
-##blockc = classNew(def, "Block", [objc], {
+##blockc = classNewx(def, "Block", [objc], {
  block: arrc,
- blockLabels: consInit(arrc, {itemsType: strc})
+ blockLabels: consInitx(arrc, {itemsType: strc})
 })
-##funcnativec = classNew(def, "FuncNative", [funcc], {
+##funcnativec = classNewx(def, "FuncNative", [funcc], {
  func: funcvc
 })
-##funcblockc = classNew(def, "FuncBlock", [funcc], {
+##funcblockc = classNewx(def, "FuncBlock", [funcc], {
  func: blockc
 })
-##functplc = classNew(def, "FuncTpl", [funcc], {
+##functplc = classNewx(def, "FuncTpl", [funcc], {
  func: strc
 })
-##funcinternalc = classNew(def, "FuncInternal", [funcc], {
+##funcinternalc = classNewx(def, "FuncInternal", [funcc], {
 })
 
 classc->classSchema = {
@@ -134,106 +169,166 @@ classc->classSchema = {
  classSchema: dicc
 }
 consc->classSchema = {
- consClass: classc
  cons: dicc
+ consClass: classc
 }
 scopec->classSchema = {
+ scope: dicc
  scopeParents: dicc
 }
 
-##envc = classNew(def, "Env", [objc], {
+##envc = classNewx(def, "Env", [objc], {
  env: dicc
  envScope: scopec
  envExec: scopec
 });
-
-##callc = classNew(def, "Call", [objc], {
+##callc = classNewx(def, "Call", [objc], {
  call: funcc
  callArgs: arrc
 })
-##calldicc =  consNew(def, "CallDic", dicc)
-##callarrc =  consNew(def, "CallArr", arrc)
+##calldicc =  consNewx(def, "DicCall", dicc)
+##callarrc =  consNewx(def, "ArrCall", arrc)
+##callarrc =  consNewx(def, "LazyCall", callc) //and or && ||
 
-##ctrlc = classNew(def, "Ctrl", [objc], {
+##ctrlc = classNewx(def, "Ctrl", [objc], {
  ctrlArgs: arrc
 })
-##ctrlreturnc = consNew(def, "CtrlReturn", ctrlc)
-##ctrlbreakc = consNew(def, "CtrlBreak", ctrlc)
-##ctrlcontinuec = consNew(def, "CtrlContinue", ctrlc)
-##ctrlgotoc = consNew(def, "CtrlGoto", ctrlc)
-##ctrlifc = consNew(def, "CtrlIf", ctrlc)
-##ctrlforc = consNew(def, "CtrlFor", ctrlc)
+##ctrlreturnc = consNewx(def, "CtrlReturn", ctrlc)
+##ctrlbreakc = consNewx(def, "CtrlBreak", ctrlc)
+##ctrlcontinuec = consNewx(def, "CtrlContinue", ctrlc)
+##ctrlgotoc = consNewx(def, "CtrlGoto", ctrlc)
+##ctrlifc = consNewx(def, "CtrlIf", ctrlc)
+##ctrlforc = consNewx(def, "CtrlFor", ctrlc)
 
-##returnc = classNew(def, "Return", [objc], {
+##returnc = classNewx(def, "Return", [objc], {
  return: objc
 })
 
-fnNew = &(scope, name, fn){
- route(fn, scope, name);
- pset(fn, "obj", funcnativec)
- //TODO if  raw	
+fnNewx = &(scope, name, fn){
+ innateSet(fn, "obj", funcnativec)
+ routex(fn, scope, name);
+ //TODO if  raw
  @return fn
 }
-callNew = &(func, args){
- #x = @ReprCall {
+callNewx = &(func, args){
+ #x = @ReprCallx {
   callFunc: func
   callArgs: args
  }
- pset(x, "obj", callc)
+ innateSet(x, "obj", callc)
  @return x;
 }
 
-type = &(o){
- @return routeGet(pget(o, "obj"), "id")
+typex = &(o){
+ @return innateGet(innateGet(o, "obj"), "id")
 }
-scopeGet = &(scope, key){
- 
+dbGetx = &(scope, key){
+
 }
-execFind = &(t, env, cache){
+scopeGetSubx = &(scope, key, cache){
+ #r = scopeGetLocal(scope, key)
+ @if(?r){
+  @return r
+ }
+ #str = dbGetx(scope, key);
+ @if(str){
+  //TODO scope get sub
+  str = key^"="^str;
+  @return
+ }
+ @each k v scope.scopeParents {
+  @if(cache[k]){ @continue };
+  cache[k] = 1;
+  r = scopeGetSubx(v, key, cache)
+  @if(?r){
+   @return r;
+  }
+ }
+}
+scopeGetx = &(scope, key){
+ #r = scopeGetSubx(scope, key, {})
+ @if(?r){
+  @return r;
+ }
+ #pscope = innateGet(scope, "scope")
+ @if(?pscope){
+  r = scopeGetx(pscope, key)
+  @return r;
+ }
+}
+execGetx = &(t, env, cache){
+ @if(?env[t]){
+  @return env[t];
+ }
  @if(!cache){
   cache = {};
  }
- #exect = scopeGet(env.envExecScope, t)
+ #exect = scopeGetx(env.envExecScope, t)
  @if(?exect){
+  env[t] = exect;
   @return exect
  }
- #deft = scopeGet(env.envDefScope, t) 
- @each k v pget(deft, "classParents"){
-  @if(cache[k]){ @return; }
-	cache[k] = 1;
-	exect = execFind(k, env, cache);
-	@if(?exect){
-	 @return exect;
-	}
+ #deft = scopeGetx(env.envDefScope, t)
+ #deftt = typex(deft)
+ @if(deftt == "Cons"){
+  exect = execGetx(innateGet(deft.consClass, "id"), env, cache);
+  @if(?exect){
+   env[t] = exect;	
+   @return exect;
+  } 
+ }@else{
+  @each k v deft.classParents{
+   @if(cache[k]){ @return; }
+   cache[k] = 1;
+   exect = execGetx(k, env, cache);
+   @if(?exect){
+    env[t] = exect;	
+    @return exect;
+   }
+  }
  }
 }
-objExec = &(o, env){
- #ex = execFind(type(o), env)
- log(ex)
-// @return callExec(ex, [o], env, 1);
+callx = &(func, args, env){
+ #t = typex(func);
+ @if(t == "FuncNative"){
+  @return callNative(func.func, args, env)
+ }
 }
-callExec = &(func, args, env, flag){
+execx = &(o, env){
+ #t = typex(o)
+ #ex = execGetx(t, env)
+ @if(!?ex){
+  die("exec: unknown type, "^t);
+ }
+ @return callx(ex, [o], env);
 }
 
-##execsp = scopeNew(root, "exec");
-
-##logc = fnNew(def, "log", repr(&(x){
+##execsp = scopeNewx(root, "exec");
+##logf = fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
-##calle = fnNew(execsp, "Call", repr(&(o){
-// #func = objExec
- log("exec Call")
+fnNewx(execsp, "Obj", repr(&(env, o){
+ @return o
+}))
+fnNewx(execsp, "Call", repr(&(env, o){
+ #func = execx(o.callFunc, env)
+ #args = []
+ @foreach e o.callArgs{
+  push(args, execx(e, env))
+ }
+ callx(func, args, env);
 }))
 
-##testc = callNew(logc, [1])
+##testc = callNewx(logf, [repr(1)])
 
-##env = @ReprEnv {
- envDefScope: scopeNew(def)
- envExecScope: scopeNew(execsp)
+##env = @ReprEnvx {
+ envDefScope: scopeNewx(def)
+ envExecScope: scopeNewx(execsp)
  envExecCache: {},
  envState: {},
  envGlobal: {},
  envStack: [],
 }
 
-objExec(testc, env)
+execx(testc, env)
+

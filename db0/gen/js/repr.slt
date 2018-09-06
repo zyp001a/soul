@@ -1,6 +1,13 @@
 ~
-#r = scopeGet(execsp, "FuncBlock")
+#t = type(#0)
+@if(t == "FuncBlock"){
+ #r = scopeGet(execsp, "FuncBlock")
 ~initx({
   func: ~=ind(call(r, [#0], #$conf))~,
   funcArgts: ~=exec(#0.funcArgts, #$conf)~,
-})
+})~
+}@else{
+~initx({
+  val: &0
+}, {obj: global._def.~=t~})~
+}~

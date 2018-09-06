@@ -1,1 +1,11 @@
-&0[&1]
+~
+@if(val(#1) == "scopeParents"){
+~&0.__.parents~
+}@elif(val(#1) == "scope"){
+~&0~
+}@elif(val(#1) == "innate"){
+~&0.__~
+~&0~
+}@else{
+~&0[&1]~
+}~

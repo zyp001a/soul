@@ -15,6 +15,8 @@
  }
 } @elif t == "return" {
  ~return ~=exec(a[0], #$conf)~~
+} @elif t == "return" {
+ ~continue~
 } @elif t == "foreach" {
 ~for(let _~=val(a[0])~ of ~=exec(a[1], #$conf)~){  
 ~=ind(exec(a[2], #$conf))~}~

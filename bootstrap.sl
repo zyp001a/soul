@@ -290,8 +290,13 @@ scopeGetx = &(scope, key){
 }
 
 //////////////define parser function
-
+ast2obj = &(scope, ast)
 ast2arr = &(scope, arr){
+ #arrx = []
+ @foreach k arr{
+  push(arrx, ast2obj(scope, k))
+ }
+ @return arrx
 }
 ast2obj = &(scope, ast){
  #t = ast[0]
@@ -320,8 +325,12 @@ ast2obj = &(scope, ast){
  } 
  
  @if(t == "id"){
+  #r = scopeGetx(scope, v)
+  @return r;
  }
  @if(t == "idlib"){
+  #r = scopeGetx(scope, v)
+  @return r;
  }
  @if(t == "idglobal"){
  }
@@ -333,6 +342,7 @@ ast2obj = &(scope, ast){
  @if(t == "dic"){
  }
  @if(t == "func"){
+  
  }
  @if(t == "class"){
  }
@@ -419,20 +429,21 @@ fnNewx(execsp, "Call", repr(&(env, o){
  callx(func, args, env);
 }))
 
-////////////////////test 
+////////////////////test
 
+##globalsp = scopeNewx(root, "global");
 ##gensp = scopeNewx(root, "gen");
-##testc = callNewx(logf, [repr(1)])
+
 ##env = @ReprEnvx {
- envDefScope: scopeNewx(def)
- envExecScope: scopeNewx(execsp)
+ envDefScope: scopeNewx(def),
+ envExecScope: scopeNewx(execsp),
+ envGlobalScope: scopeNewx(globalsp), 
  envExecCache: {},
  envState: {},
  envGlobal: {},
  envStack: [],
 }
 
-//log(execx(testc, env))
-log(progl2obj(def, "1"))
-//log("'a'")
-
+//##testc = callNewx(logf, [repr(1)])
+##testc = progl2obj(def, fileRead(##$argv[0]))
+log(execx(testc, env))

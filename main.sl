@@ -1,4 +1,4 @@
-$file = argv[1]
+$file = $argv[1]
 $def = idGlobal("def")
 $lexsp = scopeNew(def)
 $sp = scopeNew(def)

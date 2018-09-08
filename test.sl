@@ -1,4 +1,1 @@
-a = &(str){
- log(str)
-}
-a()
+log(1)

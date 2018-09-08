@@ -3,6 +3,10 @@
 ##tplParse = @FuncInternal {}
 
 ~
+process.argv.shift();
+process.argv.shift();
+global._$argv = process.argv;
+var fs = require("fs");
 var proglParser = require("./proglparser")
 var tplParser = require("./tplparser")
 function die(){

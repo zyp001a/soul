@@ -1,3 +1,10 @@
+~
+##proglParse = @FuncInternal {}
+##tplParse = @FuncInternal {}
+
+~
+var proglParser = require("./proglparser")
+var tplParser = require("./tplparser")
 function die(){
   for(var i in arguments){
     console.error(arguments[i]);

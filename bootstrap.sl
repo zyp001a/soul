@@ -167,17 +167,17 @@ consNewx = &(scope, name, class, cons){
 ##funcinternalc = classNewx(def, "FuncInternal", [funcc], {
 })
 
-classc->classSchema = {
+classc.classSchema = {
  classGetter: dicc
  classSetter: dicc
  classParents: dicc
  classSchema: dicc
 }
-consc->classSchema = {
+consc.classSchema = {
  cons: dicc
  consClass: classc
 }
-scopec->classSchema = {
+scopec.classSchema = {
  scope: dicc
  scopeParents: dicc
 }
@@ -189,13 +189,36 @@ scopec->classSchema = {
  envScope: scopec
  envExec: scopec
 });
+
 ##callc = classNewx(def, "Call", [objc], {
  call: funcc
  callArgs: arrc
 })
+##calllazyc =  consNewx(def, "CallLazy", callc)
+//and or assign
+//&& || =
+
 ##calldicc =  consNewx(def, "DicCall", dicc)
 ##callarrc =  consNewx(def, "ArrCall", arrc)
-##callarrc =  consNewx(def, "LazyCall", callc) //and or && ||
+
+##idc =  classNewx(def, "Id", [objc], {
+ id: strc,
+})
+##idlocalc =  consNewx(def, "IdLocal", idc)
+##idglobalc =  consNewx(def, "IdGlobal", idc)
+##idlibc =  consNewx(def, "IdLib", idc, {
+ idLib: scopec
+})
+##idobjc =  consNewx(def, "IdObj", idc, {
+ idObj: objc
+})
+##iddic =  consNewx(def, "IdDic", idc, {
+ idDic: dicc
+})
+##arridc = classNewx(def, "Arrid", [objc], {
+ arrid: numc
+ arridArr: arrc
+})
 
 ##ctrlc = classNewx(def, "Ctrl", [objc], {
  ctrlArgs: arrc
@@ -267,11 +290,8 @@ scopeGetx = &(scope, key){
 }
 
 //////////////define parser function
-tplParser = &(){
-}
-proglParser = &(){
-}
-progl2obj = &(){
+
+ast2arr = &(scope, arr){
 }
 ast2obj = &(scope, ast){
  #t = ast[0]
@@ -279,6 +299,57 @@ ast2obj = &(scope, ast){
  @if(t == "str"){
   @return objNew(strc, {val: v});
  }
+ @if(t == "num"){
+  @return objNew(numc, {val: num(v)}); 
+ }
+ @if(t == "null"){
+  @return objNew(nullc, {val: null()});  
+ }
+ 
+ @if(t == "call"){
+  @return objNew(callc, {
+   callFunc: ast2obj(scope, v);
+   callArgs: ast2arr(scope, ast[2])
+  })
+ }
+ @if(t == "assign"){
+ }
+ @if(t == "get"){
+ }
+ @if(t == "ctrl"){
+ } 
+ 
+ @if(t == "id"){
+ }
+ @if(t == "idlib"){
+ }
+ @if(t == "idglobal"){
+ }
+ @if(t == "idlocal"){
+ }
+
+ @if(t == "arr"){
+ }
+ @if(t == "dic"){
+ }
+ @if(t == "func"){
+ }
+ @if(t == "class"){
+ }
+ @if(t == "cons"){
+ }
+ @if(t == "obj"){
+ }
+ @if(t == "scope"){
+ }
+ 
+ die("unknown type"^t)
+}
+
+progl2obj = &(scope, str){
+ #ast = proglParse(str)
+ #r = ast2obj(scope, ast)
+ @return r
 }
 
 //////////////define call function
@@ -362,5 +433,6 @@ fnNewx(execsp, "Call", repr(&(env, o){
 }
 
 //log(execx(testc, env))
-log(ast2obj(def, ["str", "a"]))
+log(progl2obj(def, "1"))
+//log("'a'")
 

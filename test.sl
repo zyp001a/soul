@@ -1,2 +1,4 @@
-a = readfile("x")
-a = readfile("y")
+a = &(str){
+ log(str)
+}
+a()

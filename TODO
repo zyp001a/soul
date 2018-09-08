@@ -2,3 +2,10 @@ __.context
 contextSet/Get/Add/Del
 
 hybrid buffer/alloc
+
+Idcall
+
+blockExec
+idExec
+
+input output ui abstraction

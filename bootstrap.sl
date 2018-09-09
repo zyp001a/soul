@@ -156,6 +156,7 @@ consNewx = &(scope, name, class, cons){
 ##blockc = classNewx(def, "Block", [objc], {
  block: arrc,
  blockLabels: consInitx(arrc, {itemsType: strc})
+ blockNovar: numc
 })
 ##funcnativec = classNewx(def, "FuncNative", [funcc], {
  func: funcvc
@@ -395,6 +396,43 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "arr"){
  }
  @if(t == "dic"){
+  #tt = ast[2]
+  @if(!?tt){
+   #kall = 1;
+   @each k va v{
+    @if(?va[1]){
+     kall = 0;
+     @break
+    }
+   }
+   @if(kall){
+    tt = "Dic"
+   }@else{
+    tt = "Block"
+   }
+  }
+  @if(tt == "Block" || tt == "BlockNovar"){
+   #arr = []
+   #labels = {}
+   @each i e v{
+    push(arr, ast2objx(scope, gscope, e[0]))
+    labels[e[1]] = objNew(numc, {val: num(i)})
+   }
+   @if(tt == "BlockNovar"){
+    @return objNew(blockc, {
+     block: arr
+     blockLabels: labels
+     blockNovar: 1     
+    })
+   }
+   @return objNew(blockc, {
+    block: arr
+    blockLabels: labels
+   })
+  }
+  @if(tt == "Dic"){
+  }
+  
  }
  @if(t == "func"){
   #block = v[0];

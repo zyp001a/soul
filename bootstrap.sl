@@ -283,18 +283,29 @@ istypex = &(o, t){
  @return 0;
 }
 dbGetx = &(scope, key){
-
+ #p = ##$env["HOME"]^"/soul/db"
+ @if(fileExists(p^".sl")){
+  @return fileRead(p^".sl")
+ }
+ @if(fileExists(p^".slt")){
+  @return "@`"^fileRead(p^".slt")^"`"
+ }
+ @if(fileExists(p)){
+  @return "<<>>"
+ }
 }
 scopeGetSubx = &(scope, key, cache){
  #r = scopeGetLocal(scope, key)
  @if(?r){
   @return r
  }
- #str = dbGetx(scope, key);
- @if(str){
-  //TODO scope get sub
-  str = key^"="^str;
-  @return
+ @if(!?innateGet(scope, noname)){
+  #str = dbGetx(scope, key);
+  @if(?str){
+   //TODO scope get sub
+   str = key^"="^str;
+   @return
+  }  
  }
  @each k v scope.scopeParents {
   @if(cache[k]){ @continue };
@@ -318,15 +329,15 @@ scopeGetx = &(scope, key){
 }
 
 //////////////define parser function
-ast2obj = &(scope, gscope, ast)
-ast2arr = &(scope, gscope, arr){
+ast2objx = &(scope, gscope, ast)
+ast2arrx = &(scope, gscope, arr){
  #arrx = []
  @foreach k arr{
-  push(arrx, ast2obj(scope, gscope, k))
+  push(arrx, ast2objx(scope, gscope, k))
  }
  @return arrx
 }
-ast2obj = &(scope, gscope, ast){
+ast2objx = &(scope, gscope, ast){
  #t = ast[0]
  #v = ast[1]
  @if(t == "str"){
@@ -341,8 +352,8 @@ ast2obj = &(scope, gscope, ast){
  
  @if(t == "call"){
   @return objNew(callc, {
-   callFunc: ast2obj(scope, gscope, v);
-   callArgs: ast2arr(scope, gscope, ast[2])
+   callFunc: ast2objx(scope, gscope, v);
+   callArgs: ast2arrx(scope, gscope, ast[2])
   })
  }
  @if(t == "assign"){
@@ -386,7 +397,22 @@ ast2obj = &(scope, gscope, ast){
  @if(t == "dic"){
  }
  @if(t == "func"){
-  
+  #block = v[0];
+  #argts = v[1][0];
+  #return = v[1][1];
+  #funcArgts = []
+  @foreach argast argts{
+   push(funcArgts, objNew(argtc, {
+    argtName: argast[0]
+    argtType: ast2objx(scope, gscope, argast[1])
+   }))
+  }
+  @if(return){
+   #funcReturn = ast2objx(scope, gscope, return);
+  }
+ }
+ @if(t == "tpl"){
+  @return objNew(functplc, {func: v})
  }
  @if(t == "class"){
  }
@@ -400,14 +426,18 @@ ast2obj = &(scope, gscope, ast){
  die("unknown type"^t)
 }
 
-progl2obj = &(scope, gscope, str){
+progl2objx = &(scope, gscope, str){
  #ast = proglParse(str)
- #r = ast2obj(scope, gscope, ast)
+ #r = ast2objx(scope, gscope, ast)
  @return r
 }
 
 //////////////define call function
 
+blockExecx = &(){
+}
+idExecx = &(){
+}
 execGetx = &(t, env, cache){
  @if(?env[t]){
   @return env[t];
@@ -439,10 +469,31 @@ execGetx = &(t, env, cache){
   }
  }
 }
+tplCallx = &(str, args, env){
+ @if(!str){ @return ""}
+ #tstr = tplParse(str);
+ #tscope = scopeNewx(def) 
+ #o = progl2objx(tscope, env.envGlobalScope, tstr);
+ #nenv = @ReprEnvx {
+  envDefScope: tscope
+  envGlobalScope: env.envGlobalScope
+ 
+  envExecScope: execsp
+  envExecCache: ##defExecCache,
+  envState: {},
+  envGlobal: env.envGlobal,
+  envStack: [], 
+ }
+ 
+ 
+}
 callx = &(func, args, env){
  #t = typex(func);
  @if(t == "FuncNative"){
   @return callNative(func.func, args, env)
+ }
+ @if(t == "FuncTpl"){
+  @return tplCallx(func.func, args, env);
  }
 }
 execx = &(o, env){
@@ -476,18 +527,19 @@ fnNewx(execsp, "Call", repr(&(env, o){
 
 ##globalsp = scopeNewx(root, "global");
 ##gensp = scopeNewx(root, "gen");
+##defExecCache = {}
 
 #deftmp = scopeNewx(def),
 #globaltmp = scopeNewx(globalsp)
 
 
-#testc = progl2obj(deftmp, globaltmp, fileRead(##$argv[0]))
+#testc = progl2objx(deftmp, globaltmp, fileRead(##$argv[0]))
 
 #env = @ReprEnvx {
  envDefScope: deftmp
  envGlobalScope: globaltmp
  
- envExecScope: scopeNewx(execsp),
+ envExecScope: execsp,
  envExecCache: {},
  envState: {},
  envGlobal: {},

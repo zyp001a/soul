@@ -6,6 +6,7 @@
 process.argv.shift();
 process.argv.shift();
 global._$argv = process.argv;
+global._$env = process.env;
 var fs = require("fs");
 var proglParser = require("./proglparser")
 var tplParser = require("./tplparser")

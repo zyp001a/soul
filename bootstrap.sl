@@ -227,7 +227,7 @@ scopec.classSchema = {
 })
 
 ##confidc = classNewx(def, "Confid", [objc], {
- confid: strc,
+ confidName: strc,
  confidType: classc, 
 })
 ##confidargc = consNewx(def, "ConfidArg", confid)
@@ -410,6 +410,28 @@ ast2objx = &(scope, gscope, ast){
   @if(return){
    #funcReturn = ast2objx(scope, gscope, return);
   }
+  @if(!?block){
+   @return objNew(funcblockc, {
+    funcArgts: funcArgts,
+    funcReturn: funcReturn
+   })
+  }
+  block[2] = "Block"
+  #nscope = scopeNewx(scope);
+  @each i a funcArgts{
+   #x = objNew(confidargc, {
+    confidName: a.argtName
+    confidType: a.argtType
+   })
+   scopeSet(nscope, i, x) 
+   scopeSet(nscope, a.argtName, x)  
+  }
+  #b = ast2objx(nscope, gscope, block)
+  @return objNew(funcblockc, {
+   func: b
+   funcArgts: funcArgts,
+   funcReturn: funcReturn
+  })  
  }
  @if(t == "tpl"){
   @return objNew(functplc, {func: v})

@@ -358,6 +358,7 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "assign"){
+  
  }
  @if(t == "get"){
  }
@@ -416,7 +417,9 @@ ast2objx = &(scope, gscope, ast){
    #labels = {}
    @each i e v{
     push(arr, ast2objx(scope, gscope, e[0]))
-    labels[e[1]] = objNew(numc, {val: num(i)})
+    @if(?e[1]){
+     labels[e[1]] = objNew(numc, {val: num(i)})
+    }
    }
    @if(tt == "BlockNovar"){
     @return objNew(blockc, {
@@ -440,10 +443,16 @@ ast2objx = &(scope, gscope, ast){
   #return = v[1][1];
   #funcArgts = []
   @foreach argast argts{
-   push(funcArgts, objNew(argtc, {
-    argtName: argast[0]
-    argtType: ast2objx(scope, gscope, argast[1])
-   }))
+   @if(?argast[1]){
+    push(funcArgts, objNew(argtc, {
+     argtName: argast[0]
+     argtType: ast2objx(scope, gscope, argast[1])    
+    }))   
+   }@else{
+    push(funcArgts, objNew(argtc, {
+     argtName: argast[0]
+    }))
+   }
   }
   @if(return){
    #funcReturn = ast2objx(scope, gscope, return);
@@ -483,7 +492,7 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "scope"){
  }
  
- die("unknown type"^t)
+ die("unknown type "^t)
 }
 
 progl2objx = &(scope, gscope, str){
@@ -595,6 +604,8 @@ fnNewx(execsp, "Call", repr(&(env, o){
 
 #testc = progl2objx(deftmp, globaltmp, fileRead(##$argv[0]))
 
+log(testc.func)
+
 #env = @ReprEnvx {
  envDefScope: deftmp
  envGlobalScope: globaltmp
@@ -607,4 +618,4 @@ fnNewx(execsp, "Call", repr(&(env, o){
 }
 
 
-log(execx(testc, env))
+//log(execx(testc, env))

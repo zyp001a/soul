@@ -22,12 +22,13 @@ ReprCallx = % Struct {
  callArgs: Arr
 }
 ReprEnvx = % Struct {
- envLexScope: ReprScopex
- envExecScope: ReprScopex
- envExecCache: Dic,
- envState: Dic,
- envGlobal: Dic,
- envStack: Arr,
+ envDefScope: ReprScope
+ envGlobalScope: ReprScope
+ envExecScope: ReprScope
+ envExecCache: Dic
+ envState: Dic
+ envGlobal: Dic
+ envStack: Arr 
 }
 
 ////////define basic class/cons
@@ -126,6 +127,7 @@ consInitx = &(class, cons){
  @return x
 }
 consNewx = &(scope, name, class, cons){
+ //TODO class cannot be def.Cons
  #x = consInitx(class, cons)
  routex(x, scope, name)
  @return x;
@@ -185,10 +187,14 @@ scopec.classSchema = {
 ////////define call class/cons
 
 ##envc = classNewx(def, "Env", [objc], {
- env: dicc
- envScope: scopec
- envExec: scopec
-});
+ envDefScope: scopec
+ envGlobalScope: scopec
+ envExecScope: scopec,
+ envExecCache: dicc,
+ envState: dicc,
+ envGlobal: dicc,
+ envStack: arrc, 
+})
 
 ##callc = classNewx(def, "Call", [objc], {
  call: funcc
@@ -219,6 +225,13 @@ scopec.classSchema = {
  arrid: numc
  arridArr: arrc
 })
+
+##confidc = classNewx(def, "Confid", [objc], {
+ confid: strc,
+ confidType: classc, 
+})
+##confidargc = consNewx(def, "ConfidArg", confid)
+##confidlocalc = consNewx(def, "ConfidLocal", confid)
 
 ##ctrlc = classNewx(def, "Ctrl", [objc], {
  ctrlArgs: arrc
@@ -253,6 +266,21 @@ callNewx = &(func, args){
 
 typex = &(o){
  @return innateGet(innateGet(o, "obj"), "id")
+}
+istypex = &(o, t){
+ #c = innateGet(o, "obj")
+ @if(innateGet(c, "id") == t){
+  @return 1
+ }
+ @if(typex(c) == "Cons"){
+  @return istypex(c, t);
+ }
+ @each k v c.classParents{
+  @if(istypex(o, k)){
+   @return 1
+  }
+ }
+ @return 0;
 }
 dbGetx = &(scope, key){
 
@@ -290,15 +318,15 @@ scopeGetx = &(scope, key){
 }
 
 //////////////define parser function
-ast2obj = &(scope, ast)
-ast2arr = &(scope, arr){
+ast2obj = &(scope, gscope, ast)
+ast2arr = &(scope, gscope, arr){
  #arrx = []
  @foreach k arr{
-  push(arrx, ast2obj(scope, k))
+  push(arrx, ast2obj(scope, gscope, k))
  }
  @return arrx
 }
-ast2obj = &(scope, ast){
+ast2obj = &(scope, gscope, ast){
  #t = ast[0]
  #v = ast[1]
  @if(t == "str"){
@@ -313,8 +341,8 @@ ast2obj = &(scope, ast){
  
  @if(t == "call"){
   @return objNew(callc, {
-   callFunc: ast2obj(scope, v);
-   callArgs: ast2arr(scope, ast[2])
+   callFunc: ast2obj(scope, gscope, v);
+   callArgs: ast2arr(scope, gscope, ast[2])
   })
  }
  @if(t == "assign"){
@@ -325,16 +353,32 @@ ast2obj = &(scope, ast){
  } 
  
  @if(t == "id"){
+  @if(scopeGetLocal(scope, v)){
+   @return objNew(idlocalc, {id: v})
+  }
+  @if(scopeGetLocal(gscope, v)){
+   @return objNew(idglobalc, {id: v})
+  }  
   #r = scopeGetx(scope, v)
+  @if(!?r){
+   die(v^"not defined")
+  }
   @return r;
  }
  @if(t == "idlib"){
   #r = scopeGetx(scope, v)
+  @if(!?r){
+   die(v^"not defined")
+  }  
   @return r;
  }
  @if(t == "idglobal"){
+  //varnew 
+  @return objNew(idglobalc, {id: v}) 
  }
  @if(t == "idlocal"){
+  //varnew
+  @return objNew(idlocalc, {id: v}) 
  }
 
  @if(t == "arr"){
@@ -356,9 +400,9 @@ ast2obj = &(scope, ast){
  die("unknown type"^t)
 }
 
-progl2obj = &(scope, str){
+progl2obj = &(scope, gscope, str){
  #ast = proglParse(str)
- #r = ast2obj(scope, ast)
+ #r = ast2obj(scope, gscope, ast)
  @return r
 }
 
@@ -377,8 +421,7 @@ execGetx = &(t, env, cache){
   @return exect
  }
  #deft = scopeGetx(env.envDefScope, t)
- #deftt = typex(deft)
- @if(deftt == "Cons"){
+ @if(typex(deft) == "Cons"){
   exect = execGetx(innateGet(deft.consClass, "id"), env, cache);
   @if(?exect){
    env[t] = exect;	
@@ -434,16 +477,22 @@ fnNewx(execsp, "Call", repr(&(env, o){
 ##globalsp = scopeNewx(root, "global");
 ##gensp = scopeNewx(root, "gen");
 
-##env = @ReprEnvx {
- envDefScope: scopeNewx(def),
+#deftmp = scopeNewx(def),
+#globaltmp = scopeNewx(globalsp)
+
+
+#testc = progl2obj(deftmp, globaltmp, fileRead(##$argv[0]))
+
+#env = @ReprEnvx {
+ envDefScope: deftmp
+ envGlobalScope: globaltmp
+ 
  envExecScope: scopeNewx(execsp),
- envGlobalScope: scopeNewx(globalsp), 
  envExecCache: {},
  envState: {},
  envGlobal: {},
  envStack: [],
 }
 
-//##testc = callNewx(logf, [repr(1)])
-##testc = progl2obj(def, fileRead(##$argv[0]))
+
 log(execx(testc, env))

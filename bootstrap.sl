@@ -197,35 +197,36 @@ scopec.classSchema = {
  envStack: arrc, 
 })
 
-##callc = classNewx(def, "Call", [objc], {
+##callablec = classNewx(def, "Callable", [objc])
+
+##callc = classNewx(def, "Call", [callablec], {
  call: funcc
  callArgs: arrc
 })
-##calllazyc =  consNewx(def, "CallLazy", callc)
-//and or assign
-//&& || =
 
-##calldicc =  consNewx(def, "DicCall", dicc)
-##callarrc =  consNewx(def, "ArrCall", arrc)
+##diccallablec =  consNewx(def, "DicCallable", dicc)
+##arrcallablec =  consNewx(def, "ArrCallable", arrc)
 
-##idc =  classNewx(def, "Id", [objc], {
- id: strc,
+##idc = classNewx(def, "Id", [objc])
+##sidc =  classNewx(def, "Sid", [idc], {
+ sid: strc,
 })
-##idlocalc =  consNewx(def, "IdLocal", idc)
-##idglobalc =  consNewx(def, "IdGlobal", idc)
-##idlibc =  consNewx(def, "IdLib", idc, {
- idLib: scopec
+##sidlocalc =  consNewx(def, "SidLocal", sidc)
+##sidglobalc =  consNewx(def, "SidGlobal", sidc)
+##sidlibc =  classNewx(def, "SidLib", [sidc], {
+ sidLib: scopec
 })
-##idobjc =  consNewx(def, "IdObj", idc, {
- idObj: objc
+##sidobjc =  classNewx(def, "SidObj", [sidc], {
+ sidObj: objc
 })
-##iddic =  consNewx(def, "IdDic", idc, {
- idDic: dicc
+##siddic = classNewx(def, "SidDic", [sidc], {
+ sidDic: dicc
 })
-##arridc = classNewx(def, "Arrid", [objc], {
- arrid: numc
- arridArr: arrc
+##aidc = classNewx(def, "Aid", [idc], {
+ aid: numc
+ aidArr: arrc
 })
+
 
 ##confidc = classNewx(def, "Confid", [objc], {
  confidName: strc,
@@ -233,6 +234,25 @@ scopec.classSchema = {
 })
 ##confidargc = consNewx(def, "ConfidArg", confid)
 ##confidlocalc = consNewx(def, "ConfidLocal", confid)
+
+##assignc = classNewx(def, "Assign", [objc], {
+ assignLeft: idc
+ assignRight: objc
+})
+
+##opc = classNewx(def, "Op", [objc])
+##op1c = classNewx(def, "Op1", [opc], {
+ op1: objc
+})
+##op2c = classNewx(def, "Op2", [opc], {
+ op2Left: objc
+ op2Right: objc 
+})
+##notc = consNewx(def, "Not", op1c)
+##definedc = consNewx(def, "Defined", op1c)
+##plusc = consNewx(def, "Plus", op2c)
+##splusc = consNewx(def, "Splus", op2c)
+
 
 ##ctrlc = classNewx(def, "Ctrl", [objc], {
  ctrlArgs: arrc
@@ -262,6 +282,22 @@ callNewx = &(func, args){
  innateSet(x, "obj", callc)
  @return x;
 }
+
+//predefined basic function, like c header
+scopeGetx = &()
+idExecx = &()
+execx = &()
+callx = &()
+
+/////////define bridge internal function 
+##logf = fnNewx(def, "log", repr(&(env, x){
+ log(x)
+}))
+##assignf = fnNewx(def, "assign", repr(&(env, l, r){
+ #left = idExecx(l, env)
+ 
+}))
+
 
 ////////define basic function
 
@@ -358,7 +394,34 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "assign"){
-  
+  #leftt = v[0][0] 
+  #rightt = v[1][0]  
+  @if(leftt == "id"){
+   #leftname = v[0][1]
+   @if(rightt == "class" || rightt == "cons" || \
+    rightt == "scope" || rightt == "tpl" || rightt == "obj"){
+    #r = ast2objx(scope, gscope, v[1])
+    routex(r, scope, leftname)
+    innateSet(r, "isdef", 1)    
+    @return r
+   }
+   @if(rightt == "func"){
+    #prefunc = objNew(funcblockc, {})
+    routex(prefunc, scope, leftname)
+    #actfunc = ast2objx(scope, gscope, v[1])
+    prefunc.func = actfunc.func
+    prefunc.funcArgts = actfunc.funcArgts
+    prefunc.funcReturn = actfunc.funcReturn
+    innateSet(prefunc, "isdef", 1)
+    @return prefunc;
+   }
+  }
+  #left = ast2objx(scope, gscope, v[0]);
+  #right = ast2objx(scope, gscope, v[1]);  
+  @return objNew(calllazyc, {
+   callFunc: assignf,
+   callArgs: [left, right]
+  })
  }
  @if(t == "get"){
  }
@@ -367,31 +430,46 @@ ast2objx = &(scope, gscope, ast){
  
  @if(t == "id"){
   @if(scopeGetLocal(scope, v)){
-   @return objNew(idlocalc, {id: v})
+   @return objNew(sidlocalc, {id: v})
   }
   @if(scopeGetLocal(gscope, v)){
-   @return objNew(idglobalc, {id: v})
+   @return objNew(sidglobalc, {id: v})
   }  
   #r = scopeGetx(scope, v)
   @if(!?r){
-   die(v^"not defined")
+   die(v^" not defined")
   }
-  @return r;
+  @return objNew(sidlibc, {
+   id: v
+   idLib: innateGet(r, "scope")
+  })
  }
  @if(t == "idlib"){
   #r = scopeGetx(scope, v)
   @if(!?r){
-   die(v^"not defined")
-  }  
+   @return;
+  }
+  @return objNew(sidlibc, {
+   id: v
+   idLib: innateGet(r, "scope")
+  })  
   @return r;
  }
  @if(t == "idglobal"){
-  //varnew 
-  @return objNew(idglobalc, {id: v}) 
+  #x = objNew(confidargc, {
+   confidName: v
+//    confidType: a.argtType
+  })
+  scopeSet(gscope, v, x)   
+  @return objNew(sidglobalc, {id: v}) 
  }
  @if(t == "idlocal"){
-  //varnew
-  @return objNew(idlocalc, {id: v}) 
+  #x = objNew(confidargc, {
+   confidName: v
+//    confidType: a.argtType
+  })
+  scopeSet(scope, v, x)
+  @return objNew(sidlocalc, {id: v}) 
  }
 
  @if(t == "arr"){
@@ -482,6 +560,8 @@ ast2objx = &(scope, gscope, ast){
  }
  @if(t == "tpl"){
   @return objNew(functplc, {func: v})
+ } 
+ @if(t == "op"){
  }
  @if(t == "class"){
  }
@@ -505,7 +585,12 @@ progl2objx = &(scope, gscope, str){
 
 blockExecx = &(){
 }
-idExecx = &(){
+idExecx = &(o, env){
+ #t = typex(o)
+ @if(istypex(t, "Id")){
+  @return o;
+ }
+ @return execx(o, env)
 }
 execGetx = &(t, env, cache){
  @if(?env[t]){
@@ -577,9 +662,6 @@ execx = &(o, env){
 ////////////////////define call objs
 
 ##execsp = scopeNewx(root, "exec");
-##logf = fnNewx(def, "log", repr(&(env, x){
- log(x)
-}))
 fnNewx(execsp, "Obj", repr(&(env, o){
  @return o
 }))
@@ -589,7 +671,11 @@ fnNewx(execsp, "Call", repr(&(env, o){
  @foreach e o.callArgs{
   push(args, execx(e, env))
  }
- callx(func, args, env);
+ @return callx(func, args, env);
+}))
+fnNewx(execsp, "CallLazy", repr(&(env, o){
+ #func = execx(o.callFunc, env)
+ @return callx(func, o.callArgs, env);
 }))
 
 ////////////////////test
@@ -604,7 +690,7 @@ fnNewx(execsp, "Call", repr(&(env, o){
 
 #testc = progl2objx(deftmp, globaltmp, fileRead(##$argv[0]))
 
-log(testc.func)
+log(testc)
 
 #env = @ReprEnvx {
  envDefScope: deftmp

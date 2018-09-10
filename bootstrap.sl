@@ -155,9 +155,10 @@ consNewx = &(scope, name, class, cons){
 })
 ##blockc = classNewx(def, "Block", [objc], {
  block: arrc,
- blockLabels: consInitx(arrc, {itemsType: strc})
- blockNovar: numc
+ blockLabels: consInitx(arrc, {itemsType: numc})
 })
+##blocknovarc = consNewx(def, "BlockNovar", blockc)
+
 ##funcnativec = classNewx(def, "FuncNative", [funcc], {
  func: funcvc
 })
@@ -253,18 +254,22 @@ scopec.classSchema = {
 ##plusc = consNewx(def, "Plus", op2c)
 ##splusc = consNewx(def, "Splus", op2c)
 
-
-##ctrlc = classNewx(def, "Ctrl", [objc], {
+##ctrlc = classNewx(def, "Ctrl", [objc])
+##ctrlArgsc = classNewx(def, "CtrlArgs", [], {
  ctrlArgs: arrc
 })
-##ctrlreturnc = consNewx(def, "CtrlReturn", ctrlc)
+
 ##ctrlbreakc = consNewx(def, "CtrlBreak", ctrlc)
 ##ctrlcontinuec = consNewx(def, "CtrlContinue", ctrlc)
-##ctrlgotoc = consNewx(def, "CtrlGoto", ctrlc)
-##ctrlifc = consNewx(def, "CtrlIf", ctrlc)
-##ctrlforc = consNewx(def, "CtrlFor", ctrlc)
 
-##returnc = classNewx(def, "Return", [objc], {
+##ctrlreturnc = consNewx(def, "CtrlReturn", ctrlargsc)
+##ctrlgotoc = consNewx(def, "CtrlGoto", ctrlargsc)
+
+##ctrlifc = consNewx(def, "CtrlIf", ctrlargsc)
+##ctrlforc = consNewx(def, "CtrlFor", ctrlargsc)
+##ctrleachc = consNewx(def, "CtrlEach", ctrlargsc)
+
+##returnc = classNewx(def, "Return", [ctrlc], {
  return: objc
 })
 
@@ -310,10 +315,16 @@ istypex = &(o, t){
   @return 1
  }
  @if(typex(c) == "Cons"){
-  @return istypex(c, t);
+  @return istypex(c.consClass, t);
  }
  @each k v c.classParents{
-  @if(istypex(o, k)){
+  @if(k == "Obj"){
+   @return 0
+  }
+  @if(k == t){
+   @return 1;
+  }
+  @if(istypex(v, t)){
    @return 1
   }
  }
@@ -418,9 +429,9 @@ ast2objx = &(scope, gscope, ast){
   }
   #left = ast2objx(scope, gscope, v[0]);
   #right = ast2objx(scope, gscope, v[1]);  
-  @return objNew(calllazyc, {
-   callFunc: assignf,
-   callArgs: [left, right]
+  @return objNew(assignc, {
+   assignLeft: left,
+   assignRight: right
   })
  }
  @if(t == "get"){
@@ -429,19 +440,20 @@ ast2objx = &(scope, gscope, ast){
  } 
  
  @if(t == "id"){
-  @if(scopeGetLocal(scope, v)){
-   @return objNew(sidlocalc, {id: v})
+  #lv = scopeGetLocal(scope, v)
+  @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
+   @return objNew(sidlocalc, {sid: v})
   }
   @if(scopeGetLocal(gscope, v)){
-   @return objNew(sidglobalc, {id: v})
+   @return objNew(sidglobalc, {sid: v})
   }  
   #r = scopeGetx(scope, v)
   @if(!?r){
    die(v^" not defined")
   }
   @return objNew(sidlibc, {
-   id: v
-   idLib: innateGet(r, "scope")
+   sid: v
+   sidLib: innateGet(r, "scope")
   })
  }
  @if(t == "idlib"){
@@ -450,26 +462,26 @@ ast2objx = &(scope, gscope, ast){
    @return;
   }
   @return objNew(sidlibc, {
-   id: v
-   idLib: innateGet(r, "scope")
+   sid: v
+   sidLib: innateGet(r, "scope")
   })  
   @return r;
  }
  @if(t == "idglobal"){
-  #x = objNew(confidargc, {
+  #x = objNew(confidc, {
    confidName: v
 //    confidType: a.argtType
   })
   scopeSet(gscope, v, x)   
-  @return objNew(sidglobalc, {id: v}) 
+  @return objNew(sidglobalc, {sid: v}) 
  }
  @if(t == "idlocal"){
-  #x = objNew(confidargc, {
+  #x = objNew(confidlocalc, {
    confidName: v
 //    confidType: a.argtType
   })
   scopeSet(scope, v, x)
-  @return objNew(sidlocalc, {id: v}) 
+  @return objNew(sidlocalc, {sid: v}) 
  }
 
  @if(t == "arr"){
@@ -479,7 +491,7 @@ ast2objx = &(scope, gscope, ast){
   @if(!?tt){
    #kall = 1;
    @each k va v{
-    @if(?va[1]){
+    @if(!?va[1]){
      kall = 0;
      @break
     }
@@ -500,10 +512,9 @@ ast2objx = &(scope, gscope, ast){
     }
    }
    @if(tt == "BlockNovar"){
-    @return objNew(blockc, {
+    @return objNew(blocknovarc, {
      block: arr
      blockLabels: labels
-     blockNovar: 1     
     })
    }
    @return objNew(blockc, {
@@ -583,7 +594,19 @@ progl2objx = &(scope, gscope, str){
 
 //////////////define call function
 
-blockExecx = &(){
+blockExecx = &(block, env, sttlabel){
+ @if(sttlabel){
+  #stt = block.labels[sttlabel]
+ }
+ @each i v block.block{
+  @if(sttlabel && stt < i){
+   @continue
+  }
+  #r = execx(v, env)
+  @if(r && istypex(r, "Ctrl")){
+   @return r;
+  }
+ }
 }
 idExecx = &(o, env){
  #t = typex(o)
@@ -638,8 +661,15 @@ tplCallx = &(str, args, env){
   envGlobal: env.envGlobal,
   envStack: [], 
  }
- 
- 
+  
+}
+stateNewx = &(argts, args){
+ #state = {}
+ @each i v args{
+  state[i] = state[argts[i].argtName] = v
+ }
+ state["$arglen"] = len(args);
+ @return state
 }
 callx = &(func, args, env){
  #t = typex(func);
@@ -649,6 +679,18 @@ callx = &(func, args, env){
  @if(t == "FuncTpl"){
   @return tplCallx(func.func, args, env);
  }
+ @if(t == "FuncBlock"){
+  #state = stateNewx(func.funcArgts, args)
+  push(env.envStack, env.envState)
+  env.envState = state;
+  #r = blockExecx(func.func, env)
+  @if(r && typex(r) == "Return"){
+   r = r.return
+  }
+  env.envState = pop(env.envStack)
+  @return r;
+ }
+ die(t^": exec not defined")
 }
 execx = &(o, env){
  #t = typex(o)
@@ -673,11 +715,15 @@ fnNewx(execsp, "Call", repr(&(env, o){
  }
  @return callx(func, args, env);
 }))
-fnNewx(execsp, "CallLazy", repr(&(env, o){
- #func = execx(o.callFunc, env)
- @return callx(func, o.callArgs, env);
+fnNewx(execsp, "SidLib", repr(&(env, o){
+ @return o.sidLib[o.sid]
 }))
-
+fnNewx(execsp, "SidLocal", repr(&(env, o){
+ @return env.envState[o.sid]
+}))
+fnNewx(execsp, "SidGlobal", repr(&(env, o){
+ @return env.envGlobal[o.sid]
+}))
 ////////////////////test
 
 ##globalsp = scopeNewx(root, "global");
@@ -688,7 +734,7 @@ fnNewx(execsp, "CallLazy", repr(&(env, o){
 #globaltmp = scopeNewx(globalsp)
 
 
-#testc = progl2objx(deftmp, globaltmp, fileRead(##$argv[0]))
+#testc = progl2objx(deftmp, globaltmp, "{"^fileRead(##$argv[0])^"}")
 
 log(testc)
 
@@ -704,4 +750,4 @@ log(testc)
 }
 
 
-//log(execx(testc, env))
+log(blockExecx(testc, env))

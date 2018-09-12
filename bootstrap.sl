@@ -12,28 +12,11 @@ ReprConsx = % Struct {
  cons: Dic,
  consClass: Class
 }
-ReprFuncx = % Struct {
- func: Class
- funcArgts: Arr
- funcReturn: Class
-}
-ReprCallx = % Struct {
- callFunc: ReprFuncx,
- callArgs: Arr
-}
-ReprEnvx = % Struct {
- envDefScope: ReprScope
- envGlobalScope: ReprScope
- envExecScope: ReprScope
- envExecCache: Dic
- envState: Dic
- envGlobal: Dic
- envStack: Arr 
-}
 
 ////////define basic class/cons
 
-routex = &(o, scope, name){
+routex = &(oo, scope, name){
+ #o = asobj(oo)
  @if(!innateGet(o, "index")){
   innateSet(o, "index", 0)
  }
@@ -268,6 +251,8 @@ scopec.classSchema = {
 ##ctrlifc = consNewx(def, "CtrlIf", ctrlargsc)
 ##ctrlforc = consNewx(def, "CtrlFor", ctrlargsc)
 ##ctrleachc = consNewx(def, "CtrlEach", ctrlargsc)
+##ctrlforeachc = consNewx(def, "CtrlForeach", ctrlargsc)
+##ctrlwhilec = consNewx(def, "CtrlWhile", ctrlargsc)
 
 ##returnc = classNewx(def, "Return", [ctrlc], {
  return: objc
@@ -280,10 +265,10 @@ fnNewx = &(scope, name, fn){
  @return fn
 }
 callNewx = &(func, args){
- #x = @ReprCallx {
+ #x = objNew(callc, {
   callFunc: func
   callArgs: args
- }
+ })
  innateSet(x, "obj", callc)
  @return x;
 }
@@ -295,8 +280,15 @@ execx = &()
 callx = &()
 
 /////////define bridge internal function 
-##logf = fnNewx(def, "log", repr(&(env, x){
+fnNewx(def, "log", repr(&(env, x){
  log(x)
+}))
+fnNewx(def, "push", repr(&(env, a, e){
+ push(asval(a), asval(e))
+ @return e;
+}))
+fnNewx(def, "join", repr(&(env, a, s){
+ @return join(asval(a), asval(s)) 
 }))
 ##assignf = fnNewx(def, "assign", repr(&(env, l, r){
  #left = idExecx(l, env)
@@ -306,10 +298,12 @@ callx = &()
 
 ////////define basic function
 
-typex = &(o){
+typex = &(oo){
+ #o = asobj(oo)
  @return innateGet(innateGet(o, "obj"), "id")
 }
-istypex = &(o, t){
+istypex = &(oo, t){
+ #o = asobj(oo)
  #c = innateGet(o, "obj")
  @if(innateGet(c, "id") == t){
   @return 1
@@ -389,13 +383,13 @@ ast2objx = &(scope, gscope, ast){
  #t = ast[0]
  #v = ast[1]
  @if(t == "str"){
-  @return objNew(strc, {val: v});
+  @return asobj(v);
  }
  @if(t == "num"){
-  @return objNew(numc, {val: num(v)}); 
+  @return asobj(num(v)); 
  }
  @if(t == "null"){
-  @return objNew(nullc, {val: null()});  
+  @return asobj(null());  
  }
  
  @if(t == "call"){
@@ -435,8 +429,36 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "get"){
+  
  }
  @if(t == "ctrl"){
+  #args = ast[2]
+  @if(v == "foreach"){
+   #x = objNew(confidlocalc, {
+    confidName: args[0]
+ //    confidType: a.argtType
+   })
+   args[2][2] = "BlockNovar"
+   @return objNew(ctrlforeachc, {
+    ctrlArgs: [
+     asobj(args[0])
+     ast2objx(scope, gscope, args[1])
+     ast2objx(scope, gscope, args[2])     
+    ]
+   })
+  }
+  @if(v == "if"){
+   
+  }
+  @if(v == "return"){
+   @return objNew(ctrlreturnc, {
+    ctrlArgs: [ast2objx(scope, gscope, args[0])]
+   })  
+  }
+  @if(v == "break"){
+   @return objNew(ctrlbreakc, {})
+  }
+  
  } 
  
  @if(t == "id"){
@@ -485,6 +507,9 @@ ast2objx = &(scope, gscope, ast){
  }
 
  @if(t == "arr"){
+  #arr = ast2arrx(scope, gscope, v)
+  #arrx = objNew(arrcallablec, arr)
+  @return arrx;
  }
  @if(t == "dic"){
   #tt = ast[2]
@@ -608,7 +633,8 @@ blockExecx = &(block, env, sttlabel){
   }
  }
 }
-idExecx = &(o, env){
+idExecx = &(oo, env){
+ #o = asobj(oo)
  #t = typex(o)
  @if(istypex(t, "Id")){
   @return o;
@@ -651,17 +677,24 @@ tplCallx = &(str, args, env){
  #tstr = tplParse(str);
  #tscope = scopeNewx(def) 
  #o = progl2objx(tscope, env.envGlobalScope, tstr);
- #nenv = @ReprEnvx {
+ #s = {}
+ s["$env"] = env;
+ s["$arglen"] = args.length
+ @each i v args{
+  s[i] = v;
+ }
+ #nenv = objNew(envc,  {
   envDefScope: tscope
   envGlobalScope: env.envGlobalScope
  
   envExecScope: execsp
   envExecCache: ##defExecCache,
-  envState: {},
+  envState: s,
   envGlobal: env.envGlobal,
   envStack: [], 
- }
-  
+ })
+ #r = blockExecx(o, env);
+ @return r.return;  
 }
 stateNewx = &(argts, args){
  #state = {}
@@ -692,7 +725,8 @@ callx = &(func, args, env){
  }
  die(t^": exec not defined")
 }
-execx = &(o, env){
+execx = &(oo, env){
+ #o = asobj(oo)
  #t = typex(o)
  #ex = execGetx(t, env)
  @if(!?ex){
@@ -711,9 +745,40 @@ fnNewx(execsp, "Call", repr(&(env, o){
  #func = execx(o.callFunc, env)
  #args = []
  @foreach e o.callArgs{
-  push(args, execx(e, env))
+  push(args, asobj(execx(e, env)))
  }
  @return callx(func, args, env);
+}))
+fnNewx(execsp, "Assign", repr(&(env, o){
+ #l = o.assignLeft
+ #t = typex(l)
+ #v = execx(o.assignRight, env);
+ @if(t == "SidGlobal"){
+  @return env.envGlobal[l.sid] = v
+ }
+ @if(t == "SidLocal"){
+  @return env.envState[l.sid] = v
+ }
+ @if(t == "SidLib"){
+  @return l.sidLib[l.sid] = v
+ }
+ @if(t == "SidObj"){
+ }
+ @if(t == "SidDic"){
+ }
+}))
+fnNewx(execsp, "CtrlReturn", repr(&(env, o){
+ @return objNew(returnc, {
+  return: execx(o.ctrlArgs[0], env)
+ })
+}))
+fnNewx(execsp, "ArrCallable", repr(&(env, o){
+ #newo = objNew(arrc, [])
+ @each i v o{
+  newo[i] = execx(v, env)  
+ }
+ innateSet(newo, "notval", 1)
+ @return newo;
 }))
 fnNewx(execsp, "SidLib", repr(&(env, o){
  @return o.sidLib[o.sid]
@@ -736,9 +801,7 @@ fnNewx(execsp, "SidGlobal", repr(&(env, o){
 
 #testc = progl2objx(deftmp, globaltmp, "{"^fileRead(##$argv[0])^"}")
 
-log(testc)
-
-#env = @ReprEnvx {
+#env = objNew(envc, {
  envDefScope: deftmp
  envGlobalScope: globaltmp
  
@@ -747,7 +810,7 @@ log(testc)
  envState: {},
  envGlobal: {},
  envStack: [],
-}
+})
 
 
 log(blockExecx(testc, env))

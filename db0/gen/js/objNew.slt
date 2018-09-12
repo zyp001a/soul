@@ -1,3 +1,7 @@
-initx({~@each k v #1 {~
+~@if(isdic(#1)){
+~initx({~@each k v #1 {~
 ~=ind(val(k))~: ~=exec(v, #$conf)~,~}~
-}, {obj: &0})
+}, {obj: &0})~
+}@else{
+~initx(&1, {obj: &0})~
+}~

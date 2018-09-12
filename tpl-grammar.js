@@ -34,7 +34,7 @@ var grammar = {
 };
 var options = {};
 var code = new jison.Generator(grammar, options).generate();
-var filename = "tplparser.js";
+var filename = "tpl-parser.js";
 fs.writeFileSync(filename, code);
 
 

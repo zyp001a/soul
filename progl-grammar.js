@@ -177,8 +177,8 @@ var grammar = {
 			["If", "$$ = ['ctrl', 'if', $1]"],
 			["WHILE Expr Dic", "$$ = ['ctrl', 'while', [$2, $3]]"],
 			["FOR Expr , Expr , Expr Dic", "$$ = ['ctrl', 'for', [$2, $4, $6, $7]]"],
-			["FOREACH ID Expr Dic", "$$ = ['ctrl', 'foreach', [['str',$2], $3, $4]]"],
-			["EACH ID ID Expr Dic", "$$ = ['ctrl', 'each', [['str', $2], ['str', $3], $4, $5]]"],
+			["FOREACH ID Expr Dic", "$$ = ['ctrl', 'foreach', [$2, $3, $4]]"],
+			["EACH ID ID Expr Dic", "$$ = ['ctrl', 'each', [$2, $3, $4, $5]]"],
 			["RETURN Expr", "$$ = ['ctrl', 'return', [$2]]"],
 			["RETURN", "$$ = ['ctrl', 'return', []]"],			
 			["BREAK", "$$ = ['ctrl', 'break']"],
@@ -325,5 +325,5 @@ for(var k in grammar.bnf){
 }
 var options = {};
 var code = new jison.Generator(grammar, options).generate();
-var filename = "proglparser.js";
+var filename = "progl-parser.js";
 fs.writeFileSync(filename, code);

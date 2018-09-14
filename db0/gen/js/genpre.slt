@@ -7,7 +7,7 @@
 process.argv.shift();
 process.argv.shift();
 global._$argv = process.argv;
-global._$env = process.env;
+global._$sysenv = process.env;
 var fs = require("fs");
 var proglParser = require("./progl-parser")
 var tplParser = require("./tpl-parser")
@@ -78,7 +78,17 @@ function asval(o){
     return o;
   }
   if(o.__.isval)
-    return o.val  
+    return o.val
+  var tid = o.__.obj.__.id;
+	if(tid == "SidDic"){
+	 return asval(o.sidDic[o.sid])
+	}
+	if(tid == "SidObj"){
+	 return asval(o.sidObj[o.sid])
+	}
+	if(tid == "Aid"){
+	 return asval(o.aidArr[o.aid])
+	}
   return o;
 }
 function asobj(o){

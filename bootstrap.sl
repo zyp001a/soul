@@ -201,7 +201,7 @@ scopec.classSchema = {
 ##sidobjc =  classNewx(def, "SidObj", [sidc], {
  sidObj: objc
 })
-##siddic = classNewx(def, "SidDic", [sidc], {
+##siddicc = classNewx(def, "SidDic", [sidc], {
  sidDic: dicc
 })
 ##aidc = classNewx(def, "Aid", [idc], {
@@ -282,15 +282,29 @@ fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
 fnNewx(def, "push", repr(&(env, a, e){
- push(asval(a), asval(e))
+ push(a, e)
  @return e;
 }))
 fnNewx(def, "join", repr(&(env, a, s){
- @return join(asval(a), asval(s)) 
+ @return join(a, s) 
 }))
-##assignf = fnNewx(def, "assign", repr(&(env, l, r){
- #left = idExecx(l, env)
- 
+fnNewx(def, "dicGet", repr(&(env, dic, key){
+ @return objNew(siddicc, {
+  sid: key
+	sidDic: dic
+ })
+}))
+fnNewx(def, "objGet", repr(&(env, obj, key){
+ @return objNew(sidobjc, {
+  sid: key
+	sidObj: obj
+ })
+}))
+fnNewx(def, "scopeGet", repr(&(env, obj, key){
+ @return scopeGetx(obj, key)
+}))
+fnNewx(def, "call", repr(&(env, func, args, env){
+ @return callx(func, args, env)
 }))
 
 
@@ -334,7 +348,7 @@ dbPath = &(x){
  @return ns^"/"^replaceAll(innateGet(x, "id"), "_", "/")
 }
 dbGetx = &(scope, key){
- #p = ##$env["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/")
+ #p = ##$sysenv["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/")
  log(p)
  @if(fileExists(p^".sl")){
   @return fileRead(p^".sl")
@@ -422,8 +436,9 @@ ast2objx = &(scope, gscope, ast){
 	  die("call func not defined for unknown reason")	 
 	 }
    #f = objNew(funcblockc, {})
-	 #pscope = innateGet(scope, "scope")	 
-   routex(f, pscope, v[0][1])
+	 #pscope = innateGet(scope, "scope")
+   routex(f, pscope, v[1])
+	 innateSet(f, "predefined", 1)	 
 	}
   @return objNew(callc, {
    callFunc: f
@@ -450,7 +465,8 @@ ast2objx = &(scope, gscope, ast){
 	  #prefunc = scopeGetLocal(scope, leftname);
 		@if(!?prefunc){
      prefunc = objNew(funcblockc, {})
-     routex(prefunc, scope, leftname)		 
+     routex(prefunc, scope, leftname)
+		 innateSet(prefunc, "predefined", 1)
 		}
     #actfunc = ast2objx(scope, gscope, v[1])
     prefunc.func = actfunc.func
@@ -473,7 +489,16 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "get"){
-  
+  #a0 = ast2objx(scope, gscope, v)
+  #a1 = ast2objx(scope, gscope, ast[2])
+	#v3 = ast[3]
+	@if(ast[3] == "items"){
+	 v3 = "dic" //TODO check dic or arr
+	}
+	@return objNew(callc, {
+	 callFunc: scopeGetLocal(def, v3^"Get")
+	 callArgs: [a0, a1]
+	})
  }
  @if(t == "ctrl"){
   #args = ast[2]
@@ -793,15 +818,23 @@ fnNewx(execsp, "Main", repr(&(env, o){
 }))
 fnNewx(execsp, "Call", repr(&(env, o){
  #func = execx(o.callFunc, env)
+ @if(innateGet(func, "predefined")){
+  log(innateGet(o.callFunc, "id"))
+  die("func not defined");
+ }  
  #args = []
  @foreach e o.callArgs{
-  push(args, asobj(execx(e, env)))
+  push(args, asval(execx(e, env)))
  }
  @return callx(func, args, env);
 }))
 fnNewx(execsp, "Assign", repr(&(env, o){
  #l = o.assignLeft
  #t = typex(l)
+ @if(t == "Call"){
+  l = execx(o.assignLeft, env);
+	t = typex(l)
+ }
  #v = execx(o.assignRight, env);
  @if(t == "SidGlobal"){
   @return env.envGlobal[l.sid] = v
@@ -810,9 +843,16 @@ fnNewx(execsp, "Assign", repr(&(env, o){
   @return env.envState[l.sid] = v
  }
  @if(t == "SidObj"){
+  @return l.sidObj[l.sid] = v 
  }
  @if(t == "SidDic"){
+  @return l.sidDic[l.sid] = v 
  }
+ @if(t == "Aid"){
+  @return l.aidArr[l.aid] = v  
+ }
+ log(l)
+ die("left not assignable");
 }))
 fnNewx(execsp, "CtrlReturn", repr(&(env, o){
  @return objNew(returnc, {
@@ -850,6 +890,7 @@ fnNewx(execsp, "SidGlobal", repr(&(env, o){
  envGlobalScope: globaltmp
  
  envExecScope: scopeGetx(gensp, "soul"),
+ //envExecScope: scopeNewx(execsp), 
  envExecCache: {},
  envState: {},
  envGlobal: {},

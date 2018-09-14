@@ -1,0 +1,4 @@
+@Lang {
+ abbr: "sl",
+ langIndent: "  ",
+}

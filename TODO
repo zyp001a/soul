@@ -1,3 +1,5 @@
+"get" ast
+fnNew scopeGet 
 gen
 
 

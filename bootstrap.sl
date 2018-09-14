@@ -44,16 +44,19 @@ routex = &(oo, scope, name){
  innateSet(o, "scope", scope)
  @return o;
 }
+parentSetx = &(p, k, parents){
+ @foreach e parents{
+  //TODO reduce
+  p[k][innateGet(e, "id")] = e;
+ }
+}
 scopeInitx = &(scope, name, parents){
  #x = @ReprScopex {
   scope: {}
   scopeParents: {}
  }
  @if parents {
-  @foreach e parents{
-   //TODO reduce
-   x.scopeParents[innateGet(e, "id")] = e;
-  }
+  parentSetx(x, "scopeParents", parents)
  }
  routex(x, scope, name);
  @return x;
@@ -64,10 +67,7 @@ classInitx = &(scope, name, parents, schema){
   classParents: {}
  }
  @if parents {
-  @foreach e parents{
-   //TODO reduce
-   x.classParents[innateGet(e, "id")] = e;
-  }
+  parentSetx(x, "classParents", parents) 
  }
  routex(x, scope, name);
  @return x;
@@ -322,8 +322,20 @@ istypex = &(oo, t){
  }
  @return 0;
 }
+dbPath = &(x){
+ @if(!innateGet(x, "ns")){
+  #ns = ""
+ }@else{
+  #ns = "/" + innateGet(x, "ns")
+ }
+ @if(!innateGet(x, "id")){
+  @return ns
+ }
+ @return ns^"/"^replaceAll(innateGet(x, "id"), "_", "/")
+}
 dbGetx = &(scope, key){
- #p = ##$env["HOME"]^"/soul/db"
+ #p = ##$env["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/")
+ log(p)
  @if(fileExists(p^".sl")){
   @return fileRead(p^".sl")
  }
@@ -334,19 +346,24 @@ dbGetx = &(scope, key){
   @return "<<>>"
  }
 }
+progl2objx = &()
 scopeGetSubx = &(scope, key, cache){
- #r = scopeGetLocal(scope, key)
+//  TODO scope get sub
+ #nscope = scope;
+ #nkey = key; 
+ #r = scopeGetLocal(nscope, nkey)
  @if(?r){
   @return r
  }
- @if(!?innateGet(scope, noname)){
+ @if(!?innateGet(scope, "noname")){
   #str = dbGetx(scope, key);
   @if(?str){
-   //TODO scope get sub
-   str = key^"="^str;
-   @return
+   str = nkey^"="^str;
+	 r = progl2objx(nscope, {}, str)
+   @return r;
   }  
  }
+ 
  @each k v scope.scopeParents {
   @if(cache[k]){ @continue };
   cache[k] = 1;
@@ -414,8 +431,19 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "assign"){
-  #left = ast2objx(scope, gscope, v[0]);	
-  @if(v[0][0] == "id" && !istypex(left, "Id")){
+	#lexdef = 0
+  @if(v[0][0] == "id"){
+	 #vv = v[0][1]
+   #lv = scopeGetLocal(scope, vv)
+   @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
+    lexdef = 0
+   }@elif(scopeGetLocal(gscope, vv)){
+    lexdef = 0
+   }@else{
+    lexdef = 1	 
+	 }
+  }
+	@if(lexdef){
    #leftname = v[0][1]
    @if(v[1][0] == "func"){
 	 //func need predefined
@@ -618,8 +646,11 @@ ast2objx = &(scope, gscope, ast){
   @return objNew(c, ast2objx(scope, gscope, ast[2]))
  }
  @if(t == "scope"){
+  #parents = ast2arrx(scope, gscope, v)
+	#x = objNew(scopec, {})
+  parentSetx(x, "scopeParents", parents) 	
+	@return x
  }
- 
  die("ast: unknown type, "^t)
 }
 
@@ -705,7 +736,7 @@ tplCallx = &(str, args, env){
   envGlobal: env.envGlobal,
   envStack: [], 
  })
- #r = blockExecx(o, env);
+ #r = blockExecx(o, nenv);
  @return r.return;  
 }
 stateNewx = &(argts, args){
@@ -818,7 +849,7 @@ fnNewx(execsp, "SidGlobal", repr(&(env, o){
  envDefScope: deftmp
  envGlobalScope: globaltmp
  
- envExecScope: execsp,
+ envExecScope: scopeGetx(gensp, "soul"),
  envExecCache: {},
  envState: {},
  envGlobal: {},

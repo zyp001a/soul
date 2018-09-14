@@ -84,7 +84,7 @@ function asval(o){
 function asobj(o){
   var t = typeof o;
   if(t == "undefined"){
-    return initx({val: undefined}, {obj: global._undefined, isval:1});  
+    return initx({val: undefined}, {obj: global._undfc, isval:1});  
   }
   if(t == "object"){
     if(!t) return initx({val: null}, {obj: global._nullc, isval:1});

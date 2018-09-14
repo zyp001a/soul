@@ -261,9 +261,9 @@ var grammar = {
 			["% ID { }", "$$ = ['cons', ['idlib', $2], ['dic', [], 'Dic']];"],			
 		],
 		"Obj": [
-			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', [], 'Dic']];"],
+			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],
 //			["@ ID", "$$ = ['obj', ['idlib', $2], ['dic', [], 'Dic']];"],
-			["@ ID { Elems }", "$$ = ['obj', ['idlib', $2], ['dic', $4, 'Dic']];"],
+			["@ ID { Elems }", "$$ = ['obj', ['idlib', $2], ['dic', $4]];"],
 			["@ ID Func", "$$ = ['obj', ['idlib', $2], $3];"],      
 		],
 		"CallArgs": [

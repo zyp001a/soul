@@ -1,1 +1,13 @@
-123
+~
+#r = scopeGet(#$env.envExecScope, "var")
+@each k v #0.scope {
+ @if (istype(v, "ConfidLocal")) {
+~~=call(r, [k, v], #$conf)~
+~
+ }
+}
+@foreach e #0.block {
+~~=exec(e, #$env)~
+~
+}
+~

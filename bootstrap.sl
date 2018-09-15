@@ -271,12 +271,13 @@ callNewx = &(func, args){
  @return x;
 }
 
-//predefined basic function, like c header
+//predefined basic function, like c header, TODO delete
 scopeGetx = &()
 idExecx = &()
 execx = &()
 callx = &()
-
+istypex = &()
+typex = &()
 /////////define bridge internal function 
 fnNewx(def, "log", repr(&(env, x){
  log(x)
@@ -306,7 +307,21 @@ fnNewx(def, "scopeGet", repr(&(env, obj, key){
 fnNewx(def, "call", repr(&(env, func, args, env){
  @return callx(func, args, env)
 }))
-
+fnNewx(def, "exec", repr(&(env, o, env){
+ @return execx(o, env)
+}))
+fnNewx(def, "istype", repr(&(env, o){
+ @return istypex(o)
+}))
+fnNewx(def, "type", repr(&(env, o){
+ @return typex(o)
+}))
+fnNewx(def, "innateGet", repr(&(env, o, k){
+ @return innateGet(o, k)
+}))
+fnNewx(def, "innateSet", repr(&(env, o, k, v){
+ @return innateSet(o, k, v)
+}))
 
 ////////define basic function
 
@@ -349,7 +364,6 @@ dbPath = &(x){
 }
 dbGetx = &(scope, key){
  #p = ##$sysenv["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/")
- log(p)
  @if(fileExists(p^".sl")){
   @return fileRead(p^".sl")
  }
@@ -503,21 +517,55 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "ctrl"){
   #args = ast[2]
   @if(v == "foreach"){
-   #x = objNew(confidlocalc, {
+   scopeSet(scope, args[0], objNew(confidlocalc, {
     confidName: args[0]
  //    confidType: a.argtType
-   })
+   }))
    args[2][2] = "BlockNovar"
    @return objNew(ctrlforeachc, {
     ctrlArgs: [
-     asobj(args[0])
+     args[0]
      ast2objx(scope, gscope, args[1])
      ast2objx(scope, gscope, args[2])     
     ]
    })
   }
+  @if(v == "each"){
+   scopeSet(scope, args[0], objNew(confidlocalc, {
+    confidName: args[0]
+ //    confidType: a.argtType
+   }))
+   scopeSet(scope, args[1], objNew(confidlocalc, {
+    confidName: args[1]
+ //    confidType: a.argtType
+   }))
+   args[3][2] = "BlockNovar"
+   @return objNew(ctrleachc, {
+    ctrlArgs: [
+     args[0]
+     args[1]     
+     ast2objx(scope, gscope, args[2])
+     ast2objx(scope, gscope, args[3])     
+    ]
+   })
+  }
   @if(v == "if"){
-   
+   #l = len(args)
+   @for #i=1;i<l;i+=2{
+    args[i][2] = "BlockNovar"
+   }
+   @if(l%2 == 1){
+    args[l-1][2] = "BlockNovar"
+   }
+   @return objNew(ctrlifc, {ctrlArgs: ast2arrx(scope, gscope, args)})
+  }
+  @if(v == "for"){
+   args[3][2] = "BlockNovar"
+   @return objNew(ctrlforc, {ctrlArgs: ast2arrx(scope, gscope, args)})   
+  }
+  @if(v == "while"){
+   args[1][2] = "BlockNovar"
+   @return objNew(ctrlwhilec, {ctrlArgs: ast2arrx(scope, gscope, args)})
   }
   @if(v == "return"){
    @return objNew(ctrlreturnc, {
@@ -527,8 +575,11 @@ ast2objx = &(scope, gscope, ast){
   @if(v == "break"){
    @return objNew(ctrlbreakc, {})
   }
+  @if(v == "continue"){
+   @return objNew(ctrlcontinuec, {})
+  }
   
- } 
+ }
  
  @if(t == "id"){
   #lv = scopeGetLocal(scope, v)
@@ -859,6 +910,56 @@ fnNewx(execsp, "CtrlReturn", repr(&(env, o){
   return: execx(o.ctrlArgs[0], env)
  })
 }))
+fnNewx(execsp, "CtrlEach", repr(&(env, o){
+ #dic = asval(execx(o.ctrlArgs[2], env))
+ #k = o.ctrlArgs[0]
+ #v = o.ctrlArgs[1] 
+ @each key val dic{
+  env.envState[k] = key;
+  env.envState[v] = val;
+  #r = blockExecx(o.ctrlArgs[3], env)
+  @if(r && istypex(r, "Ctrl")){
+   @return r;
+  }  
+ }
+}))
+fnNewx(execsp, "CtrlForeach", repr(&(env, o){
+ #arr = asval(execx(o.ctrlArgs[1], env))
+ #k = o.ctrlArgs[0]
+ @foreach e arr{
+  env.envState[k] = e;
+  #r = blockExecx(o.ctrlArgs[2], env)
+  @if(?r){
+   @if(typex(r) == "Return"){
+    @return r
+   }
+   @if(typex(r) == "CtrlBreak"){
+    @break
+   }
+   @if(typex(r) == "CtrlContinue"){
+    @continue
+   }
+  }
+ }
+}))
+fnNewx(execsp, "CtrlFor", repr(&(env, o){
+ execx(o.ctrlArgs[0], env)
+}))
+fnNewx(execsp, "CtrlIf", repr(&(env, o){
+ #l = len(o.ctrlArgs)
+ @for #i=0;i<l-1;i+=2 {
+  #c = execx(o.ctrlArgs[i], env)
+  @if(asval(c)){
+   @return blockExecx(o.ctrlArgs[i+1], env)
+  }
+ }
+ @if(l%2 == 1){
+  @return blockExecx(o.ctrlArgs[l-1], env)
+ }
+}))
+
+fnNewx(execsp, "CtrlWhile", repr(&(env, o){
+}))
 fnNewx(execsp, "ArrCallable", repr(&(env, o){
  #newo = objNew(arrc, [])
  @each i v o{
@@ -890,12 +991,13 @@ fnNewx(execsp, "SidGlobal", repr(&(env, o){
  envGlobalScope: globaltmp
  
  envExecScope: scopeGetx(gensp, "soul"),
- //envExecScope: scopeNewx(execsp), 
+
  envExecCache: {},
  envState: {},
  envGlobal: {},
  envStack: [],
 })
-
-
+@if(##$argv[1]){
+ env.envExecScope = scopeNewx(execsp)
+}
 log(execx(testc, env))

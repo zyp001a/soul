@@ -299,6 +299,7 @@ var grammar = {
 			["Expr - Expr", "$$ = ['minus', [$1, $3]]"],
 			["Expr * Expr", "$$ = ['times', [$1, $3]]"],
 			["Expr / Expr", "$$ = ['obelus', [$1, $3]]"],
+			["Expr % Expr", "$$ = ['mod', [$1, $3]]"],      
 			["Expr >= Expr", "$$ = ['ge', [$1, $3]]"],
 			["Expr <= Expr", "$$ = ['le', [$1, $3]]"],
 			["Expr == Expr", "$$ = ['eq', [$1, $3]]"],

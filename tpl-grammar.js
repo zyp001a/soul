@@ -26,7 +26,7 @@ var grammar = {
 		"E": [
 			["GET", "$$ = '`);push(#$arr, ' + $1 + ');push(#$arr, `'"],
 			["INS", "$$ = '`);' + $1 + ';push(#$arr, `'"],
-			["EXEC", "$$ = '`);push(#$arr, exec(#' + $1 + ', #$conf));push(#$arr, `'"],
+			["EXEC", "$$ = '`);push(#$arr, exec(#' + $1 + ', #$env));push(#$arr, `'"],
 //			["MACRO", "$$ = '`);' + $1 + ';push(#$arr, `'"],
 			["RAW", "$$ = $1"],
 		],

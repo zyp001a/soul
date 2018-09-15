@@ -211,10 +211,10 @@ var grammar = {
 		Get: [
 			["Id . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
 			["Get . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
-			["( Expr ) . ID", "$$ = ['get', $2, ['str', $5], 'obj']"],
-			["Id [ Expr ]", "$$ = ['get', $1, $3, 'items']"],		
-			["Get [ Expr ]", "$$ = ['get', $1, $3, 'items']"],	
-			["( Expr ) [ Expr ]", "$$ = ['get', $2, $5, 'items']"],
+			["Call . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
+//			["Id [ Expr ]", "$$ = ['get', $1, $3, 'items']"],		
+//			["Get [ Expr ]", "$$ = ['get', $1, $3, 'items']"],	
+			["Expr [ Expr ]", "$$ = ['get', $1, $3, 'items']"],
 		],
 		"FUNC": [
 			["& Dic", "$$ = [$2, [[]]]"],

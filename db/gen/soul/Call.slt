@@ -1,1 +1,26 @@
-1
+~
+#f = #0.callFunc
+#a = #0.callArgs
+#printargs = 0
+@if(istype(f, "Func")){
+ #n = innateGet(f, "id")
+ #r = scopeGet(#$env.envExecScope, n)
+ @if(r){
+  ~~=call(r, a, $env)~~
+ }@else{
+  printargs = 1
+  ##$funcs[n] = f
+  ~~=n~~
+ }
+}@else{
+ printargs = 1
+ ~~=exec(f, $env)~~
+}
+#arr = []
+@if printargs {
+ @foreach e a{ 
+  push(arr, exec(e, $env))
+ }
+ ~(~=join(arr, ", ")~)~
+}
+~

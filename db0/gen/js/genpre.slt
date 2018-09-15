@@ -115,6 +115,24 @@ function asobj(o){
   }
   die(t + " not defined, asobj")
 }
+function objget(o, k){
+  if(k == "scopeParents"){
+    return o.__.parents
+  }
+  if(k == "scope"){
+    return o[k]
+  }
+  return o[k]
+}
+function objset(o, k, v){
+  if(k == "scopeParents"){
+    return o.__.parents = v
+  }
+  if(k == "scope"){
+    return o[k] = v
+  }
+  return o[k] = v
+}
 function log(str){
   console.log(__line+":"+__file+":"+__function+":"+__line2);
   console.log(str);

@@ -99,7 +99,7 @@ case 5:
 this.$ = '`);' + $$[$0] + ';push(#$arr, `'
 break;
 case 6:
-this.$ = '`);push(#$arr, exec(#' + $$[$0] + ', #$conf));push(#$arr, `'
+this.$ = '`);push(#$arr, exec(#' + $$[$0] + ', #$env));push(#$arr, `'
 break;
 }
 },

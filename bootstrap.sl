@@ -47,7 +47,7 @@ routex = &(oo, scope, name){
 parentSetx = &(p, k, parents){
  @foreach e parents{
   //TODO reduce
-  p[k][innateGet(e, "id")] = e;
+  objGet(p, k)[innateGet(e, "id")] = e;
  }
 }
 scopeInitx = &(scope, name, parents){
@@ -273,7 +273,6 @@ callNewx = &(func, args){
 
 //predefined basic function, like c header, TODO delete
 scopeGetx = &()
-idExecx = &()
 execx = &()
 callx = &()
 istypex = &()
@@ -310,8 +309,8 @@ fnNewx(def, "call", repr(&(env, func, args, env){
 fnNewx(def, "exec", repr(&(env, o, env){
  @return execx(o, env)
 }))
-fnNewx(def, "istype", repr(&(env, o){
- @return istypex(o)
+fnNewx(def, "istype", repr(&(env, o, s){
+ @return istypex(o, s)
 }))
 fnNewx(def, "type", repr(&(env, o){
  @return typex(o)
@@ -321,6 +320,12 @@ fnNewx(def, "innateGet", repr(&(env, o, k){
 }))
 fnNewx(def, "innateSet", repr(&(env, o, k, v){
  @return innateSet(o, k, v)
+}))
+fnNewx(def, "asval", repr(&(env, o){
+ @return asval(o)
+}))
+fnNewx(def, "asobj", repr(&(env, o){
+ @return asobj(o)
 }))
 
 ////////define basic function
@@ -723,8 +728,12 @@ ast2objx = &(scope, gscope, ast){
  }
  @if(t == "scope"){
   #parents = ast2arrx(scope, gscope, v)
-	#x = objNew(scopec, {})
-  parentSetx(x, "scopeParents", parents) 	
+  #x = @ReprScopex {
+   scope: {}
+   scopeParents: {}
+  }
+  parentSetx(x, "scopeParents", parents)
+  innateSet(x, "obj", scopec)    
 	@return x
  }
  die("ast: unknown type, "^t)
@@ -752,14 +761,6 @@ blockExecx = &(block, env, sttlabel){
   }
  }
 }
-idExecx = &(oo, env){
- #o = asobj(oo)
- #t = typex(o)
- @if(istypex(t, "Id")){
-  @return o;
- }
- @return execx(o, env)
-}
 execGetx = &(t, env, cache){
  @if(?env[t]){
   @return env[t];
@@ -774,7 +775,11 @@ execGetx = &(t, env, cache){
  }
  #deft = scopeGetx(env.envDefScope, t)
  @if(typex(deft) == "Cons"){
-  exect = execGetx(innateGet(deft.consClass, "id"), env, cache);
+  #k = innateGet(deft.consClass, "id")
+  @if(cache[k]){ @return; }
+  cache[k] = 1;
+
+  exect = execGetx(k, env, cache);
   @if(?exect){
    env[t] = exect;	
    @return exect;
@@ -794,7 +799,11 @@ execGetx = &(t, env, cache){
 tplCallx = &(str, args, env){
  @if(!str){ @return ""}
  #tstr = tplParse(str);
- #tscope = scopeNewx(def) 
+ #tscope = scopeNewx(def)
+ scopeSet(tscope, "$env", objNew(confidlocalc, {
+  confidName: "$env"
+  confidType: envc
+ }))
  #o = progl2objx(tscope, env.envGlobalScope, tstr);
  #s = {}
  s["$env"] = env;
@@ -962,6 +971,14 @@ fnNewx(execsp, "CtrlWhile", repr(&(env, o){
 }))
 fnNewx(execsp, "ArrCallable", repr(&(env, o){
  #newo = objNew(arrc, [])
+ @each i v o{
+  newo[i] = execx(v, env)  
+ }
+ innateSet(newo, "notval", 1)
+ @return newo;
+}))
+fnNewx(execsp, "DicCallable", repr(&(env, o){
+ #newo = objNew(dicc, {})
  @each i v o{
   newo[i] = execx(v, env)  
  }

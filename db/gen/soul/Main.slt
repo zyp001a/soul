@@ -1,8 +1,10 @@
 ~
-log("soul")
+log(">>")
+
+##$funcs = {}
 #execsp = #$env.envExecScope
 #bf = scopeGet(execsp, "Block")
 #main = call(bf, [#0], #$env)
 log(main)
-log("He")
+log("<<")
 ~

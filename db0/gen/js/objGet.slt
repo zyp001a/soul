@@ -3,6 +3,8 @@
 ~&0.__.parents~
 }@elif(val(#1) == "scope"){
 ~&0~
+}@elif(type(#1) == "Str"){
+~&0.~=val(#1)~~
 }@else{
-~&0[&1]~
+~objget(&0, &1)~
 }~

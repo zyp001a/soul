@@ -275,12 +275,27 @@ callNewx = &(func, args){
 //predefined basic function, like c header, TODO delete
 scopeGetx = &()
 execx = &()
+blockExecx = &()
 callx = &()
 istypex = &()
 typex = &()
+progl2objx = &()
 /////////define bridge internal function
-fnNewx(def, "import", repr(&(env, x){
- log(x)
+fnNewx(def, "import", repr(&(env, s){
+ #imported = env.envGlobal[s]
+ @if(?imported){
+  @return
+ }
+ env.envGlobal[s] = 1
+ @if(fileExists(s)){
+  #f = s
+ }@elif(fileExists(s^".sl")){
+  #f = s^".sl"
+ }@else{
+  die("import: file "^s^" not defined")
+ }
+ #o = progl2objx(env.envDefScope, env.envGlobalScope, "{"^fileRead(f)^"}")
+ blockExecx(o, env)
 }))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
@@ -1016,7 +1031,7 @@ scopeSet(globalsptmp, "$imports", objNew(confidlocalc, {
  $argv: ##$argv
 }
 
-#testc = progl2objx(defsptmp, globalsptmp, "@Main {"^fileRead(##$argv[0])^"}")
+#objmain = progl2objx(defsptmp, globalsptmp, "@Main {"^fileRead(##$argv[0])^"}")
 
 #env = objNew(envc, {
  envDefScope: defsptmp
@@ -1032,4 +1047,4 @@ scopeSet(globalsptmp, "$imports", objNew(confidlocalc, {
 @if(##$argv[1]){
  env.envExecScope = scopeNewx(execsp)
 }
-log(execx(testc, env))
+log(execx(objmain, env))

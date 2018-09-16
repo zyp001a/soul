@@ -1,3 +1,10 @@
+# generate step
+ti jssl ti2soulgen.sl bootstrap.sl //run 1min for old computer
+
+
+
+
+
 # Simulation of human minds
 
 ## Programming

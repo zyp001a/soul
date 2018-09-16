@@ -6,6 +6,7 @@ object/class system
 self generated
 -
  intellegence system
+ pseudo natural language 
  event system:
  think system:
  obj -> rec -> mem -> binary corr
@@ -30,5 +31,4 @@ self generated
  debug support(line number, memory check)
 -
  multiple scoping
- pseudo natural language
  natural language

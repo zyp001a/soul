@@ -214,8 +214,9 @@ scopec.classSchema = {
  confidName: strc,
  confidType: classc, 
 })
-##confidargc = consNewx(def, "ConfidArg", confid)
-##confidlocalc = consNewx(def, "ConfidLocal", confid)
+##confidargc = consNewx(def, "ConfidArg", confidc)
+##confidlocalc = consNewx(def, "ConfidLocal", confidc)
+//##confidsystemc = consNewx(def, "ConfidSystem", confidc)
 
 ##assignc = classNewx(def, "Assign", [objc], {
  assignLeft: idc
@@ -277,7 +278,10 @@ execx = &()
 callx = &()
 istypex = &()
 typex = &()
-/////////define bridge internal function 
+/////////define bridge internal function
+fnNewx(def, "import", repr(&(env, x){
+ log(x)
+}))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
@@ -997,21 +1001,32 @@ fnNewx(execsp, "SidGlobal", repr(&(env, o){
 ##gensp = scopeNewx(root, "gen");
 ##defExecCache = {}
 
-#deftmp = scopeNewx(def),
-#globaltmp = scopeNewx(globalsp)
+#defsptmp = scopeNewx(def),
+#globalsptmp = scopeNewx(globalsp)
+scopeSet(globalsptmp, "$argv", objNew(confidlocalc, {
+ configName: "$argv",
+ configType: arrc
+}))
+scopeSet(globalsptmp, "$imports", objNew(confidlocalc, {
+ configName: "$imports"
+ configType: dicc
+}))
+#globaltmp = {
+ $imports: {}
+ $argv: ##$argv
+}
 
-
-#testc = progl2objx(deftmp, globaltmp, "@Main {"^fileRead(##$argv[0])^"}")
+#testc = progl2objx(defsptmp, globalsptmp, "@Main {"^fileRead(##$argv[0])^"}")
 
 #env = objNew(envc, {
- envDefScope: deftmp
- envGlobalScope: globaltmp
+ envDefScope: defsptmp
+ envGlobalScope: globalsptmp
  
- envExecScope: scopeGetx(gensp, "soul"),
+ envExecScope: scopeGetx(gensp, "js"),
 
  envExecCache: {},
+ envGlobal: globaltmp 
  envState: {},
- envGlobal: {},
  envStack: [],
 })
 @if(##$argv[1]){

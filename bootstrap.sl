@@ -282,20 +282,20 @@ typex = &()
 progl2objx = &()
 /////////define bridge internal function
 fnNewx(def, "import", repr(&(env, s){
- #imported = env.envGlobal[s]
+ @if(!match(s, "\.sl$")){
+  s+=".sl"
+ }
+ #imported = env.envGlobal[pathResolve(s)]
  @if(?imported){
   @return
  }
  env.envGlobal[s] = 1
  @if(fileExists(s)){
-  #f = s
- }@elif(fileExists(s^".sl")){
-  #f = s^".sl"
+  #o = progl2objx(env.envDefScope, env.envGlobalScope, "{"^fileRead(s)^"}")
+  blockExecx(o, env)  
  }@else{
   die("import: file "^s^" not defined")
  }
- #o = progl2objx(env.envDefScope, env.envGlobalScope, "{"^fileRead(f)^"}")
- blockExecx(o, env)
 }))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
@@ -387,7 +387,7 @@ dbPath = &(x){
  @return ns^"/"^replaceAll(innateGet(x, "id"), "_", "/")
 }
 dbGetx = &(scope, key){
- #p = ##$sysenv["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/")
+ #p = pathResolve(##$sysenv["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/"))
  @if(fileExists(p^".sl")){
   @return fileRead(p^".sl")
  }

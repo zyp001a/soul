@@ -290,7 +290,7 @@ scopec.classSchema = {
 })
 
 ##ctrlc = classNewx(def, "Ctrl", [objc])
-##ctrlArgsc = classNewx(def, "CtrlArgs", [], {
+##ctrlargsc = classNewx(def, "CtrlArgs", [], {
  ctrlArgs: arrc
 })
 
@@ -353,6 +353,12 @@ fnNewx(def, "import", repr(&(env, s){
 }))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
+}))
+fnNewx(def, "len", repr(&(env, x){
+ @return len(x)
+}))
+fnNewx(def, "strlen", repr(&(env, x){
+ @return strlen(x)
 }))
 fnNewx(def, "push", repr(&(env, a, e){
  push(a, e)
@@ -1119,9 +1125,17 @@ fnNewx(execsp, "CtrlEach", repr(&(env, o){
   env.envState[k] = key;
   env.envState[v] = val;
   #r = blockExecx(o.ctrlArgs[3], env)
-  @if(r && istypex(r, "Ctrl")){
-   @return r;
-  }  
+  @if(?r){
+   @if(typex(r) == "Return"){
+    @return r
+   }
+   @if(typex(r) == "CtrlBreak"){
+    @break
+   }
+   @if(typex(r) == "CtrlContinue"){
+    @continue
+   }
+  }
  }
 }))
 fnNewx(execsp, "CtrlForeach", repr(&(env, o){
@@ -1145,6 +1159,42 @@ fnNewx(execsp, "CtrlForeach", repr(&(env, o){
 }))
 fnNewx(execsp, "CtrlFor", repr(&(env, o){
  execx(o.ctrlArgs[0], env)
+ @while(1){
+  #c = execx(o.ctrlArgs[1], env)
+	@if(c){
+	 #r = blockExecx(o.ctrlArgs[3], env)
+   @if(?r){
+    @if(typex(r) == "Return"){
+     @return r
+    }
+    @if(typex(r) == "CtrlBreak"){
+     @break
+    }
+    @if(typex(r) == "CtrlContinue"){
+     @continue
+    }
+   }	 
+	}@else{
+	 @break
+	}
+  execx(o.ctrlArgs[2], env)	
+ }
+}))
+fnNewx(execsp, "CtrlWhile", repr(&(env, o){
+ @while(execx(o.ctrlArgs[0], env)){
+  #r = blockExecx(o.ctrlArgs[1], env)
+  @if(?r){
+   @if(typex(r) == "Return"){
+    @return r
+   }
+   @if(typex(r) == "CtrlBreak"){
+    @break
+   }
+   @if(typex(r) == "CtrlContinue"){
+    @continue
+   }
+  }	
+ }
 }))
 fnNewx(execsp, "CtrlIf", repr(&(env, o){
  #l = len(o.ctrlArgs)
@@ -1159,8 +1209,6 @@ fnNewx(execsp, "CtrlIf", repr(&(env, o){
  }
 }))
 
-fnNewx(execsp, "CtrlWhile", repr(&(env, o){
-}))
 fnNewx(execsp, "ArrCallable", repr(&(env, o){
  #newo = objNew(arrc, [])
  @each i v o{
@@ -1196,10 +1244,10 @@ fnNewx(execsp, "OpTimes", repr(&(env, o){
  @return asval(execx(o.op2Left, env)) * asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpObelus", repr(&(env, o){
- @return asval(execx(o.op2Left, env)) * asval(execx(o.op2Right, env))
+ @return asval(execx(o.op2Left, env)) / asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpMod", repr(&(env, o){
- @return asval(execx(o.op2Left, env)) / asval(execx(o.op2Right, env))
+ @return asval(execx(o.op2Left, env)) % asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpAnd", repr(&(env, o){
  @if(?asval(execx(o.op2Left, env))){ @return 1 }

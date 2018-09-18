@@ -1,0 +1,3 @@
+@if &ctrlArgs[0] {
+~=ind(exec(#0.ctrlArgs[1], $env))~
+}

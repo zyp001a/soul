@@ -1,0 +1,22 @@
+~
+#a = #0.ctrlArgs;
+@for #i=0;i<len(a)-1;i+=2 {
+ @if i == 0 {
+  ~if~
+ }@else{
+  ~else if~
+ }
+ 
+~(~=exec(a[i], $env)~){
+~=ind(exec(a[i+1], $env))~
+}~
+
+}
+@if len(a) % 2 == 1 {
+
+~else{
+~=ind(exec(a[len(a)-1], $env))~
+}~
+
+}
+~

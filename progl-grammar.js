@@ -26,6 +26,7 @@ var grammar = {
 //       "yytext = yytext.replace(/^\<\\s*/, '').replace(/\\s*\>$/, ''); return 'PARENTS';"],
       ["\\\\[\\r\\n;]+", "return"],//allow \ at end of line
 			["\\b\\_\\b", "return 'NULL'"],
+			["\\b\\__\\b", "return 'UNDF'"],
 			["\\$?[a-zA-Z_][a-zA-Z0-9_]*\\$?", "return 'ID'"],
 //			["\\#[0-9]+", "yytext = yytext.substr(1);return 'LOCAL'"],			
 //TODO bignumber
@@ -121,6 +122,7 @@ var grammar = {
 		],
 		Expr: [
 			"Null",
+			"Undf",			
 			"Char",
 			"Num",
 			"Str",
@@ -141,6 +143,7 @@ var grammar = {
 			["( Expr )", "$$ = $2"]			
 		],		
 		Null: "$$ = ['null', null]",
+		Undf: "$$ = ['undf', undfined]",		
 		Char: "$$ = ['char', $1]",
 		Num: "$$ = ['num', $1]",
 		Str: "$$ = ['str', $1]",

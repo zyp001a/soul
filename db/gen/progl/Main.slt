@@ -1,6 +1,6 @@
 ~
 log(">>")
-
+##$indent = "  "
 ##$funcs = {}
 #execsp = #$env.envExecScope
 #bf = scopeGet(execsp, "Block")

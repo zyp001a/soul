@@ -500,7 +500,10 @@ ast2objx = &(scope, gscope, ast){
   @return asobj(num(v)); 
  }
  @if(t == "null"){
-  @return asobj(null());  
+  @return asobj(_);  
+ }
+ @if(t == "undf"){
+  @return asobj(__);  
  }
  
  @if(t == "call"){
@@ -788,12 +791,12 @@ ast2objx = &(scope, gscope, ast){
 	#args = ast[2]
 	@if(len(args) == 1){
    @return objNew(class, {
-	  Op1: ast2objx(scope, gscope, args[0])		
+	  op1: ast2objx(scope, gscope, args[0])		
    })
 	}@else{
    @return objNew(class, {
-	  Op2Left: ast2objx(scope, gscope, args[0])
-	  Op2Right: ast2objx(scope, gscope, args[1])
+	  op2Left: ast2objx(scope, gscope, args[0])
+	  op2Right: ast2objx(scope, gscope, args[1])
    })
 	}
  }
@@ -856,15 +859,16 @@ blockExecx = &(block, env, sttlabel){
  }
 }
 execGetx = &(t, env, cache){
- @if(?env[t]){
-  @return env[t];
+ #e = env.envExecScope
+ @if(?e[t]){
+  @return e[t];
  }
  @if(!cache){
   cache = {};
  }
- #exect = scopeGetx(env.envExecScope, t)
+ #exect = scopeGetx(e, t)
  @if(?exect){
-  env[t] = exect;
+  e[t] = exect;
   @return exect
  }
  #deft = scopeGetx(env.envDefScope, t)
@@ -875,7 +879,7 @@ execGetx = &(t, env, cache){
 
   exect = execGetx(k, env, cache);
   @if(?exect){
-   env[t] = exect;	
+   e[t] = exect;	
    @return exect;
   } 
  }@else{
@@ -884,7 +888,7 @@ execGetx = &(t, env, cache){
    cache[k] = 1;
    exect = execGetx(k, env, cache);
    @if(?exect){
-    env[t] = exect;	
+    e[t] = exect;	
     @return exect;
    }
   }
@@ -965,6 +969,22 @@ execx = &(oo, env){
 
 ##execsp = scopeNewx(root, "exec");
 fnNewx(execsp, "Obj", repr(&(env, o){
+ log("Obj to be defined: "^o->obj->id)
+ @return o
+}))
+fnNewx(execsp, "Str", repr(&(env, o){
+ @return asval(o)
+}))
+fnNewx(execsp, "Num", repr(&(env, o){
+ @return asval(o)
+}))
+fnNewx(execsp, "Undf", repr(&(env, o){
+ @return __
+}))
+fnNewx(execsp, "Null", repr(&(env, o){
+ @return _
+}))
+fnNewx(execsp, "FuncNative", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Main", repr(&(env, o){
@@ -1085,6 +1105,24 @@ fnNewx(execsp, "SidLocal", repr(&(env, o){
 fnNewx(execsp, "SidGlobal", repr(&(env, o){
  @return env.envGlobal[o.sid]
 }))
+fnNewx(execsp, "OpSplus", repr(&(env, o){
+ @return execx(o.op2Left, env) + execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpPlus", repr(&(env, o){
+ @return execx(o.op2Left, env) + execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpMinus", repr(&(env, o){
+ @return execx(o.op2Left, env) - execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpAnd", repr(&(env, o){
+ @if(?execx(o.op2Left, env)){ @return 1 }
+ @return execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpOr", repr(&(env, l, r){
+ @if(!?execx(o.op2Left, env)){ @return 0 }
+ @return execx(o.op2Right, env)
+}))
+
 ////////////////////test
 
 ##globalsp = scopeNewx(root, "global");

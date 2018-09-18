@@ -65,7 +65,13 @@ Object.defineProperty(global, '__file', {
 });
 function initx(p, o){
   if(!p) p = {};
-  p.__ = o || {}
+	if(p.__){
+	 for(var k in o){
+	  p.__[k] = o[k]
+	 }
+	}else{
+   p.__ = o || {}
+	}
   Object.defineProperty(p, '__', {
     enumerable: false,
     configurable: false

@@ -354,6 +354,9 @@ fnNewx(def, "import", repr(&(env, s){
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
+fnNewx(def, "logx", repr(&(env, x){
+ logx(x)
+}))
 fnNewx(def, "len", repr(&(env, x){
  @return len(x)
 }))
@@ -805,15 +808,18 @@ ast2objx = &(scope, gscope, ast){
     }
    }
    @if(tt == "BlockNovar"){
-    @return objNew(blocknovarc, {
+    #x = objNew(blocknovarc, {
+     block: arr
+     blockLabels: labels
+    })	 
+   }@else{
+    #x = objNew(blockc, {
      block: arr
      blockLabels: labels
     })
-   }
-   @return objNew(blockc, {
-    block: arr
-    blockLabels: labels
-   })
+	 }
+	 x->scope = scope
+	 @return x
   }
   @if(tt == "Dic"){
    #dic = ast2dicx(scope, gscope, v)
@@ -1231,6 +1237,8 @@ fnNewx(execsp, "SidLocal", repr(&(env, o){
 fnNewx(execsp, "SidGlobal", repr(&(env, o){
  @return env.envGlobal[o.sid]
 }))
+
+
 fnNewx(execsp, "OpSplus", repr(&(env, o){
  @return asval(execx(o.op2Left, env)) + asval(execx(o.op2Right, env))
 }))
@@ -1253,7 +1261,7 @@ fnNewx(execsp, "OpAnd", repr(&(env, o){
  @if(?asval(execx(o.op2Left, env))){ @return 1 }
  @return asval(execx(o.op2Right, env))
 }))
-fnNewx(execsp, "OpOr", repr(&(env, l, r){
+fnNewx(execsp, "OpOr", repr(&(env, o){
  @if(!?asval(execx(o.op2Left, env))){ @return 0 }
  @return asval(execx(o.op2Right, env))
 }))

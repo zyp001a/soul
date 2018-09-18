@@ -5,7 +5,12 @@ log(">>")
 ##$varPrefix = "_"
 ##$funcPrefix = "$"
 
+
 #execsp = #$env.envExecScope
+#mp = scopeGet(execsp, "MainPre")
+#mainpre = mp()
+//log(mainpre)
+
 #bf = scopeGet(execsp, "Block")
 #main = call(bf, [#0], #$env)
 log(main)

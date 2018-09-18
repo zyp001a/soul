@@ -3,14 +3,14 @@
 #a = #0.callArgs
 #printargs = 0
 @if(istype(f, "Func")){
- #n = innateGet(f, "id")
+ #n = f->id
  #r = scopeGet(#$env.envExecScope, n)
  @if(r){
   ~~=call(r, a, $env)~~
  }@else{
   printargs = 1
   ##$funcs[n] = f
-  ~~=n~~
+  ~~=$funcPrefix^n~~
  }
 }@else{
  printargs = 1

@@ -2,6 +2,9 @@
 log(">>")
 ##$indent = "  "
 ##$funcs = {}
+##$varPrefix = "_"
+##$funcPrefix = "$"
+
 #execsp = #$env.envExecScope
 #bf = scopeGet(execsp, "Block")
 #main = call(bf, [#0], #$env)

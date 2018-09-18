@@ -1,17 +1,17 @@
 ~
 #block = #0.func
-#argdef = #0.funcArgts
+#argts = #0.funcArgts
 #str = exec(block, #$env);
 
 #x = "";
-@each i v argdef{
+@each i v argts{
  @if (i != 0) {x ^= ", "}
- #vv = "_" ^ v[0]
+ #vv = "_" ^ v.argtName
  x ^= vv;
 }
 @if(block){
- #nn = #0->id;
- @if(nn){ nn = " "^nn }
+ #nn = #0->id
+ @if(nn){ nn = " "^$funcPrefix^nn }
 ~function~=nn~(~=x~){
 ~=ind(str)~}~
 }~

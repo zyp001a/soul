@@ -1184,51 +1184,51 @@ fnNewx(execsp, "SidGlobal", repr(&(env, o){
  @return env.envGlobal[o.sid]
 }))
 fnNewx(execsp, "OpSplus", repr(&(env, o){
- @return execx(o.op2Left, env) + execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) + asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpPlus", repr(&(env, o){
- @return execx(o.op2Left, env) + execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) + asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpMinus", repr(&(env, o){
- @return execx(o.op2Left, env) - execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) - asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpTimes", repr(&(env, o){
- @return execx(o.op2Left, env) * execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) * asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpObelus", repr(&(env, o){
- @return execx(o.op2Left, env) / execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) * asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpMod", repr(&(env, o){
- @return execx(o.op2Left, env) % execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) / asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpAnd", repr(&(env, o){
- @if(?execx(o.op2Left, env)){ @return 1 }
- @return execx(o.op2Right, env)
+ @if(?asval(execx(o.op2Left, env))){ @return 1 }
+ @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpOr", repr(&(env, l, r){
- @if(!?execx(o.op2Left, env)){ @return 0 }
- @return execx(o.op2Right, env)
+ @if(!?asval(execx(o.op2Left, env))){ @return 0 }
+ @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpNot", repr(&(env, o){
- @return !execx(o.op1, env)
+ @return !asval(execx(o.op1, env))
 }))
 fnNewx(execsp, "OpNe", repr(&(env, o){
- @return execx(o.op2Left, env) != execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) != asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpEq", repr(&(env, o){
- @return execx(o.op2Left, env) == execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) == asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpGt", repr(&(env, o){
- @return execx(o.op2Left, env) > execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) > asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpLt", repr(&(env, o){
- @return execx(o.op2Left, env) < execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) < asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpGe", repr(&(env, o){
- @return execx(o.op2Left, env) >= execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) >= asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpLe", repr(&(env, o){
- @return execx(o.op2Left, env) <= execx(o.op2Right, env)
+ @return asval(execx(o.op2Left, env)) <= asval(execx(o.op2Right, env))
 }))
 
 

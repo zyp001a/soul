@@ -116,6 +116,8 @@ consNewx = &(scope, name, class, cons){
  @return x;
 }
 
+
+
 ##nullc = consNewx(def, "Null", valc)
 ##undfc = consNewx(def, "Undf", valc)
 ##numc = consNewx(def, "Num", valc)
@@ -223,7 +225,9 @@ scopec.classSchema = {
  assignRight: objc
 })
 
-##opc = classNewx(def, "Op", [objc])
+##opc = classNewx(def, "Op", [objc], {
+ opPrecedence: numc
+})
 ##op1c = classNewx(def, "Op1", [opc], {
  op1: objc
 })
@@ -231,23 +235,59 @@ scopec.classSchema = {
  op2Left: objc
  op2Right: objc 
 })
-##notc = consNewx(def, "OpNot", op1c)
-##definedc = consNewx(def, "OpDefined", op1c)
-##plusc = consNewx(def, "OpPlus", op2c)
-##splusc = consNewx(def, "OpSplus", op2c)
-##splusc = consNewx(def, "OpMinus", op2c)
-##splusc = consNewx(def, "OpTimes", op2c)
-##splusc = consNewx(def, "OpObelus", op2c)
-##splusc = consNewx(def, "OpMod", op2c)
-##splusc = consNewx(def, "OpGe", op2c)
-##splusc = consNewx(def, "OpLe", op2c)
-##splusc = consNewx(def, "OpEq", op2c)
-##splusc = consNewx(def, "OpNe", op2c)
-##splusc = consNewx(def, "OpGt", op2c)
-##splusc = consNewx(def, "OpLt", op2c)
-##splusc = consNewx(def, "OpAnd", op2c)
-##splusc = consNewx(def, "OpOr", op2c)
-##splusc = consNewx(def, "OpDefinedor", op2c)
+//https://en.cppreference.com/w/c/language/operator_precedence
+//remove unused
+//get and assign are not operators in Soul
+##notc = consNewx(def, "OpNot", op1c, {
+ opPrecedence: 10
+})
+##definedc = consNewx(def, "OpDefined", op1c, {
+ opPrecedence: 10
+})
+##splusc = consNewx(def, "OpTimes", op2c, {
+ opPrecedence: 20
+})
+##splusc = consNewx(def, "OpObelus", op2c, {
+ opPrecedence: 20
+})
+##splusc = consNewx(def, "OpMod", op2c, {
+ opPrecedence: 20
+})
+##plusc = consNewx(def, "OpPlus", op2c, {
+ opPrecedence: 30
+})
+##plusc = consNewx(def, "OpSplus", op2c, {
+ opPrecedence: 30
+})
+##splusc = consNewx(def, "OpMinus", op2c, {
+ opPrecedence: 30
+})
+##splusc = consNewx(def, "OpGe", op2c, {
+ opPrecedence: 40
+})
+##splusc = consNewx(def, "OpLe", op2c, {
+ opPrecedence: 40
+})
+##splusc = consNewx(def, "OpGt", op2c, {
+ opPrecedence: 40
+})
+##splusc = consNewx(def, "OpLt", op2c, {
+ opPrecedence: 40
+})
+
+##splusc = consNewx(def, "OpEq", op2c, {
+ opPrecedence: 50
+})
+##splusc = consNewx(def, "OpNe", op2c, {
+ opPrecedence: 50
+})
+
+##splusc = consNewx(def, "OpAnd", op2c, {
+ opPrecedence: 60
+})
+##splusc = consNewx(def, "OpOr", op2c, {
+ opPrecedence: 70
+})
 
 ##ctrlc = classNewx(def, "Ctrl", [objc])
 ##ctrlArgsc = classNewx(def, "CtrlArgs", [], {
@@ -293,6 +333,7 @@ callx = &()
 istypex = &()
 typex = &()
 progl2objx = &()
+ccGetx = &()
 /////////define bridge internal function
 fnNewx(def, "import", repr(&(env, s){
  @if(!match(s, "\.sl$")){
@@ -330,7 +371,18 @@ fnNewx(def, "escape", repr(&(env, s){
   @if(x == "\r"){ @return "\\r" }	
  })
 }))
+fnNewx(def, "opp", repr(&(env, subo, o, nenv){
+//op with parenthesis or not
+ @if(!istypex(subo, "Op")){
+  @return execx(subo, nenv)
+ }
+ @if(ccGetx(subo->obj, "opPrecedence") > ccGetx(o->obj, "opPrecedence")){
+  @return "(" + execx(subo, nenv) + ")"
+ }
+ @return execx(subo, nenv)  
+}))
 fnNewx(def, "ind", repr(&(env, x){
+//indent text
  #indent = env.envGlobal["$indent"]
  #arr = split(x, "\n")
  @for #i =0;i<len(arr);i+=1 {
@@ -385,10 +437,44 @@ fnNewx(def, "asobj", repr(&(env, o){
 }))
 
 ////////define basic function
-
+ccGetx = &(c, t){
+ @if(typex(c) == "Cons"){
+  #x = c.cons[t]
+  @if(?x){
+	 @return x 
+	}
+	@return ccGetx(c.consClass, t)
+ }
+ @if(typex(c) == "Class"){
+  #x = objGet(c.classSchema, t)
+	@if(?x){
+	 @return x;
+	}
+	@each k v c.classParents{
+	 #x = ccGetx(v, t)
+	 @if(?x){
+	  @return x
+	 }
+	}
+ }
+ die("ccget: type error, "^typex(c))
+}
 typex = &(oo){
  #o = asobj(oo)
  @return innateGet(innateGet(o, "obj"), "id")
+}
+isclassx = &(c, t){
+ @each k v c.classParents{
+  @if(k == "Obj"){
+   @return 0
+  }
+  @if(k == t){
+   @return 1;
+  }
+  @if(isclassx(v, t)){
+   @return 1
+  }
+ }
 }
 istypex = &(oo, t){
  #o = asobj(oo)
@@ -397,20 +483,9 @@ istypex = &(oo, t){
   @return 1
  }
  @if(typex(c) == "Cons"){
-  @return istypex(c.consClass, t);
+  @return isclassx(c.consClass, t);
  }
- @each k v c.classParents{
-  @if(k == "Obj"){
-   @return 0
-  }
-  @if(k == t){
-   @return 1;
-  }
-  @if(istypex(v, t)){
-   @return 1
-  }
- }
- @return 0;
+ @return isclassx(c, t);
 }
 dbPath = &(x){
  @if(!innateGet(x, "ns")){
@@ -544,7 +619,6 @@ ast2objx = &(scope, gscope, ast){
 		@if(!?prefunc){
      prefunc = objNew(funcblockc, {})
      routex(prefunc, scope, leftname)
-		 innateSet(prefunc, "predefined", 1)
 		}
     #actfunc = ast2objx(scope, gscope, v[1])
     prefunc.func = actfunc.func
@@ -568,6 +642,9 @@ ast2objx = &(scope, gscope, ast){
 		 callFunc: concatf
 		 callArgs: [left, right]
 		})
+	 }@elif(op == "definedor"){
+	  #leftx = ["op", "defined", [v[0]]]
+		right = ast2objx(scope, gscope, ["op", "or", [leftx, v[1]]])
 	 }@else{
     right = ast2objx(scope, gscope, ["op", op, [v[0], v[1]]])
    }
@@ -984,7 +1061,7 @@ fnNewx(execsp, "Undf", repr(&(env, o){
 fnNewx(execsp, "Null", repr(&(env, o){
  @return _
 }))
-fnNewx(execsp, "FuncNative", repr(&(env, o){
+fnNewx(execsp, "Func", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Main", repr(&(env, o){
@@ -993,7 +1070,8 @@ fnNewx(execsp, "Main", repr(&(env, o){
 fnNewx(execsp, "Call", repr(&(env, o){
  #func = execx(o.callFunc, env)
  @if(innateGet(func, "predefined")){
-  log(innateGet(o.callFunc, "id"))
+  log(o.callFunc->scope) 
+  log(o.callFunc->id)
   die("func not defined");
  }  
  #args = []
@@ -1114,6 +1192,15 @@ fnNewx(execsp, "OpPlus", repr(&(env, o){
 fnNewx(execsp, "OpMinus", repr(&(env, o){
  @return execx(o.op2Left, env) - execx(o.op2Right, env)
 }))
+fnNewx(execsp, "OpTimes", repr(&(env, o){
+ @return execx(o.op2Left, env) * execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpObelus", repr(&(env, o){
+ @return execx(o.op2Left, env) / execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpMod", repr(&(env, o){
+ @return execx(o.op2Left, env) % execx(o.op2Right, env)
+}))
 fnNewx(execsp, "OpAnd", repr(&(env, o){
  @if(?execx(o.op2Left, env)){ @return 1 }
  @return execx(o.op2Right, env)
@@ -1122,6 +1209,28 @@ fnNewx(execsp, "OpOr", repr(&(env, l, r){
  @if(!?execx(o.op2Left, env)){ @return 0 }
  @return execx(o.op2Right, env)
 }))
+fnNewx(execsp, "OpNot", repr(&(env, o){
+ @return !execx(o.op1, env)
+}))
+fnNewx(execsp, "OpNe", repr(&(env, o){
+ @return execx(o.op2Left, env) != execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpEq", repr(&(env, o){
+ @return execx(o.op2Left, env) == execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpGt", repr(&(env, o){
+ @return execx(o.op2Left, env) > execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpLt", repr(&(env, o){
+ @return execx(o.op2Left, env) < execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpGe", repr(&(env, o){
+ @return execx(o.op2Left, env) >= execx(o.op2Right, env)
+}))
+fnNewx(execsp, "OpLe", repr(&(env, o){
+ @return execx(o.op2Left, env) <= execx(o.op2Right, env)
+}))
+
 
 ////////////////////test
 

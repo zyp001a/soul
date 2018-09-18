@@ -231,10 +231,23 @@ scopec.classSchema = {
  op2Left: objc
  op2Right: objc 
 })
-##notc = consNewx(def, "Not", op1c)
-##definedc = consNewx(def, "Defined", op1c)
-##plusc = consNewx(def, "Plus", op2c)
-##splusc = consNewx(def, "Splus", op2c)
+##notc = consNewx(def, "OpNot", op1c)
+##definedc = consNewx(def, "OpDefined", op1c)
+##plusc = consNewx(def, "OpPlus", op2c)
+##splusc = consNewx(def, "OpSplus", op2c)
+##splusc = consNewx(def, "OpMinus", op2c)
+##splusc = consNewx(def, "OpTimes", op2c)
+##splusc = consNewx(def, "OpObelus", op2c)
+##splusc = consNewx(def, "OpMod", op2c)
+##splusc = consNewx(def, "OpGe", op2c)
+##splusc = consNewx(def, "OpLe", op2c)
+##splusc = consNewx(def, "OpEq", op2c)
+##splusc = consNewx(def, "OpNe", op2c)
+##splusc = consNewx(def, "OpGt", op2c)
+##splusc = consNewx(def, "OpLt", op2c)
+##splusc = consNewx(def, "OpAnd", op2c)
+##splusc = consNewx(def, "OpOr", op2c)
+##splusc = consNewx(def, "OpDefinedor", op2c)
 
 ##ctrlc = classNewx(def, "Ctrl", [objc])
 ##ctrlArgsc = classNewx(def, "CtrlArgs", [], {
@@ -306,6 +319,30 @@ fnNewx(def, "push", repr(&(env, a, e){
 }))
 fnNewx(def, "join", repr(&(env, a, s){
  @return join(a, s) 
+}))
+fnNewx(def, "split", repr(&(env, a, s){
+ @return split(a, s) 
+}))
+fnNewx(def, "escape", repr(&(env, s){
+ @return replaceAll(s, "[\n\t\r]", &(x){
+  @if(x == "\n"){ @return "\\n" }
+  @if(x == "\t"){ @return "\\t" }
+  @if(x == "\r"){ @return "\\r" }	
+ })
+}))
+fnNewx(def, "ind", repr(&(env, x){
+ #indent = env.envGlobal["$indent"]
+ #arr = split(x, "\n")
+ @for #i =0;i<len(arr);i+=1 {
+  @if arr[i] != "" {
+   arr[i] = indent + arr[i]
+  }
+ }
+ #r = join(arr, "\n")
+ @return r
+}))
+##concatf = fnNewx(def, "concat", repr(&(env, l, r){
+ @return l+r
 }))
 fnNewx(def, "dicGet", repr(&(env, dic, key){
  @return objNew(siddicc, {
@@ -520,7 +557,18 @@ ast2objx = &(scope, gscope, ast){
    }
   }
   #left = ast2objx(scope, gscope, v[0]);
-  #right = ast2objx(scope, gscope, v[1]);  
+  #right = ast2objx(scope, gscope, v[1]);
+	#op = ast[2]
+	@if(?op){
+	 @if(op == "splus"){
+	  right = objNew(callc, {
+		 callFunc: concatf
+		 callArgs: [left, right]
+		})
+	 }@else{
+    right = ast2objx(scope, gscope, ["op", op, [v[0], v[1]]])
+   }
+	}	
   @return objNew(assignc, {
    assignLeft: left,
    assignRight: right
@@ -735,10 +783,37 @@ ast2objx = &(scope, gscope, ast){
   @return objNew(functplc, {func: v})
  } 
  @if(t == "op"){
+  #cname = "Op"^ucfirst(v)
+	#class = scopeGetLocal(def, cname)
+	#args = ast[2]
+	@if(len(args) == 1){
+   @return objNew(class, {
+	  Op1: ast2objx(scope, gscope, args[0])		
+   })
+	}@else{
+   @return objNew(class, {
+	  Op2Left: ast2objx(scope, gscope, args[0])
+	  Op2Right: ast2objx(scope, gscope, args[1])
+   })
+	}
  }
  @if(t == "class"){
+  #parents = ast2arrx(scope, gscope, v);
+	#schema = ast2objx(scope, gscope, ast[2])
+  #x = @ReprClassx {
+   classSchema: schema || {}
+   classParents: {}
+  }
+  @if parents {
+   parentSetx(x, "classParents", parents) 
+  }
+  innateSet(x, "obj", classc)	
+	@return x
  }
  @if(t == "cons"){
+  #class = ast2objx(scope, gscope, v)
+	#dic = ast2objx(scope, gscope, ast[2])
+	@return consInitx(class, dic)
  }
  @if(t == "obj"){
  //TODO func, dic, arr with spec class

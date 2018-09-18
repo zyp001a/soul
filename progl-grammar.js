@@ -12,14 +12,16 @@ var grammar = {
     "rules": [
 			["\\/\\*[^\\*]*\\*\\/", "return;"],//COMMENT
 			["\\\/\\\/[^\\n\\r]+", "return;"],//COMMENT
-//			["#[^\\n\\r]+[\\n\\r]*", "return;"],			
+			//			["#[^\\n\\r]+[\\n\\r]*", "return;"],
+			["\\/(\\\\.|[^\\\\/\\s])*\\/", 
+			 "yytext = yytext.substr(2, yyleng-3).replace(/\\\\(\\/)/g, '$1'); return 'REGEX';"],
 			["\\@`(\\\\.|[^\\\\`])*`", 
 			 "yytext = yytext.substr(2, yyleng-3).replace(/\\\\([~\\&])/g, '$1'); return 'TPL';"],
 			["@\'(\\\\.|\\.)\'", "yytext = yytext.substr(2, yyleng-3); return 'CHAR'"],
 			["`(\\\\.|[^\\\\`])*`",
 			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\`/g, '`'); return 'STR';"], 			
 			["\'(\\\\.|[^\\\\\'])*\'|\"(\\\\.|[^\\\\\"])*\"",
-			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\u([0-9a-fA-F]{4})/, function(m, n){ return String.fromCharCode(parseInt(n, 16)) }).replace(/\\\\(.)/g, function(m, n){ if(n == 'n') return '\\n';if(n == 'r') return '\\r';if(n == 't') return '\\t'; return n;}); return 'STR';"], 
+			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\u([0-9a-fA-F]{4})/, function(m, n){ return String.fromCharCode(parseInt(n, 16)) }).replace(/\\\\(.)/g, function(m, n){ if(n == 'n') return '\\n';if(n == 'r') return '\\r';if(n == 't') return '\\t'; if(n == '\\\\') return \"\\\\\\\\\"; return n;}); return 'STR';"], 
 //			["\<[a-zA-Z0-9_\\\/\\s]*\>",
 //       "yytext = yytext.replace(/^\<\\s*/, '').replace(/\\s*\>$/, ''); return 'PARENTS';"],
       ["\\\\[\\r\\n;]+", "return"],//allow \ at end of line
@@ -88,7 +90,6 @@ var grammar = {
   },
 	"operators": [
 		["right", "~"],
-		["right", "=>"],
 		["left", ","],
     ["right", "??", "::", "?", ":"],				
     ["right", "=", "+=", "-=", "*=", "/=", "^=", "?="],
@@ -212,6 +213,9 @@ var grammar = {
 			["Id . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
 			["Get . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
 			["Call . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
+			["Id -> ID", "$$ = ['get', $1, ['str', $3], 'innate']"],
+			["Get -> ID", "$$ = ['get', $1, ['str', $3], 'innate']"],
+			["Call -> ID", "$$ = ['get', $1, ['str', $3], 'innate']"],
 //			["Id [ Expr ]", "$$ = ['get', $1, $3, 'items']"],		
 //			["Get [ Expr ]", "$$ = ['get', $1, $3, 'items']"],	
 			["Expr [ Expr ]", "$$ = ['get', $1, $3, 'items']"],
@@ -286,7 +290,7 @@ var grammar = {
 			["Expr ?= Expr",  "$$ = [$1, $3, 'definedor']"],
 			["Expr ^= Expr",  "$$ = [$1, $3, 'splus']"],	      
 		],
-		"Op": "$$ = ['call', ['idlib', $1[0]], $1[1]]",
+		"Op": "$$ = ['op', $1[0], $1[1]]",
 		"OP": [
 			["! Expr", "$$ = ['not', [$2]]"],
 			["? Expr", "$$ = ['defined', [$2]]"],			

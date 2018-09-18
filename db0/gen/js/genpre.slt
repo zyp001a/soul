@@ -12,6 +12,11 @@ var fs = require("fs");
 var path = require("path");
 var proglParser = require("./progl-parser")
 var tplParser = require("./tpl-parser")
+function ucfirst(str){
+  str += '';
+  var f = str.charAt(0).toUpperCase();
+  return f + str.substr(1);
+}
 function die(){
   for(var i in arguments){
     console.error(arguments[i]);

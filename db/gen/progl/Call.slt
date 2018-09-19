@@ -7,13 +7,22 @@
  #r = scopeGet(#$env.envExecScope, n)
  @if(r){
   ~~=call(r, a, $env)~~
- }@elif(type(f) == "FuncInternal" || type(f) == "FuncNative"){
+ }@elif(type(f) == "FuncInternal" || f->isdef){
   printargs = 1 
   ~~=f->name~~
- }@else{ 
+ }@elif(type(f) == "FuncNative" && f->mainpre){
+  printargs = 1 
+  ~~=f->name~~
+ }@elif(type(f) == "Call"){
+  printargs = 1
+  ~~=execx(f, $env)~~	
+ }@else{
+  log(type(f))
+  log(f->id)	
+  die("Call gen: func not defined")
   printargs = 1
   ##$funcs[n] = f
-  ~~=$funcPrefix^n~~
+  ~~=n~~
  }
 }@else{
  printargs = 1

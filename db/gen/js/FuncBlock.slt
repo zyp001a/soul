@@ -10,8 +10,13 @@
  x ^= vv;
 }
 @if(block){
- #nn = #0->id
- @if(nn){ nn = " "^$funcPrefix^nn }
+ @if(#0->isdef){
+  #nn = #0->name
+ }@else{
+  #nn = #0->id 
+ }
+ @if(nn){ nn = " "^nn }
 ~function~=nn~(~=x~){
-~=ind(str)~}~
+~=ind(str)~
+}~
 }~

@@ -2,8 +2,6 @@
 log(">>")
 ##$indent = "  "
 ##$funcs = {}
-##$varPrefix = "_"
-##$funcPrefix = "$"
 
 
 #execsp = #$env.envExecScope

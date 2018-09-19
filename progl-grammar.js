@@ -100,7 +100,7 @@ var grammar = {
     ["left", "*", "/", "%"],//2
     ["right", "!", "?"], //1
     ["right", "&", "#", "##"],
-		["left", "(", ")", "[", "]", "{", "}"],
+		["left", "(", ")", "[", "]", "{", "}", ".", "->", "=>"],
 	],
   "start": "Start",
 //	"parseParams": ["xp"],
@@ -208,15 +208,14 @@ var grammar = {
 			["Exprs ,", "$$ = $1"],			//allow additional ,;
 		],		
 		Get: [
-			["Id . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
-			["Get . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
-			["Call . ID", "$$ = ['get', $1, ['str', $3], 'obj']"],
-			["Id -> ID", "$$ = ['get', $1, ['str', $3], 'innate']"],
-			["Get -> ID", "$$ = ['get', $1, ['str', $3], 'innate']"],
-			["Call -> ID", "$$ = ['get', $1, ['str', $3], 'innate']"],
-//			["Id [ Expr ]", "$$ = ['get', $1, $3, 'items']"],		
-//			["Get [ Expr ]", "$$ = ['get', $1, $3, 'items']"],	
+			["Expr . Getkey", "$$ = ['get', $1, $3, 'obj']"],
+			["Expr -> Getkey", "$$ = ['get', $1, $3, 'innate']"],
+			["Expr => Getkey", "$$ = ['get', $1, $3, 'scope']"],			
 			["Expr [ Expr ]", "$$ = ['get', $1, $3, 'items']"],
+		],
+		Getkey: [	
+			["ID", "$$ = ['str', $1]"],
+			["( Expr )", "$$ = $2"],
 		],
 		"FUNC": [
 			["& Dic", "$$ = [$2, [[]]]"],

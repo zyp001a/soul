@@ -98,6 +98,9 @@ function asval(o){
 	if(tid == "SidObj"){
 	 return asval(o.sidObj[o.sid])
 	}
+	if(tid == "SidInnate"){
+	 return asval(o.sidInnate.__[o.sid])
+	}
 	if(tid == "Aid"){
 	 return asval(o.aidArr[o.aid])
 	}

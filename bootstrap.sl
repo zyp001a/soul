@@ -203,6 +203,9 @@ scopec.classSchema = {
 ##sidobjc =  classNewx(def, "SidObj", [sidc], {
  sidObj: objc
 })
+##sidinnatec =  classNewx(def, "SidInnate", [sidc], {
+ sidInnate: objc
+})
 ##siddicc = classNewx(def, "SidDic", [sidc], {
  sidDic: dicc
 })
@@ -357,6 +360,9 @@ fnNewx(def, "log", repr(&(env, x){
 fnNewx(def, "logx", repr(&(env, x){
  logx(x)
 }))
+fnNewx(def, "die", repr(&(env, x){
+ die(x)
+}))
 fnNewx(def, "len", repr(&(env, x){
  @return len(x)
 }))
@@ -405,6 +411,12 @@ fnNewx(def, "ind", repr(&(env, x){
 ##concatf = fnNewx(def, "concat", repr(&(env, l, r){
  @return l+r
 }))
+fnNewx(def, "str", repr(&(env, o){
+ @return str(o)
+}))
+fnNewx(def, "num", repr(&(env, o){
+ @return num(o)
+}))
 fnNewx(def, "dicGet", repr(&(env, dic, key){
  @return objNew(siddicc, {
   sid: key
@@ -417,8 +429,20 @@ fnNewx(def, "objGet", repr(&(env, obj, key){
 	sidObj: obj
  })
 }))
-fnNewx(def, "scopeGet", repr(&(env, obj, key){
- @return scopeGetx(obj, key)
+fnNewx(def, "innateGet", repr(&(env, o, k){
+ @return objNew(sidinnatec, {
+  sid: k
+	sidInnate: o
+ })
+}))
+fnNewx(def, "scopeGet", repr(&(env, s, key){
+ @return scopeGetx(s, key)
+}))
+fnNewx(def, "scopeGetLocal", repr(&(env, s, key){
+ @return scopeGetLocal(s, key)
+}))
+fnNewx(def, "scopeSet", repr(&(env, s, key, v){
+ @return scopeSet(s, key, v)
 }))
 fnNewx(def, "call", repr(&(env, func, args, env){
  @return callx(func, args, env)
@@ -431,12 +455,6 @@ fnNewx(def, "istype", repr(&(env, o, s){
 }))
 fnNewx(def, "type", repr(&(env, o){
  @return typex(o)
-}))
-fnNewx(def, "innateGet", repr(&(env, o, k){
- @return innateGet(o, k)
-}))
-fnNewx(def, "innateSet", repr(&(env, o, k, v){
- @return innateSet(o, k, v)
 }))
 fnNewx(def, "asval", repr(&(env, o){
  @return asval(o)
@@ -644,7 +662,7 @@ ast2objx = &(scope, gscope, ast){
   }
   #left = ast2objx(scope, gscope, v[0]);
   #right = ast2objx(scope, gscope, v[1]);
-	#op = ast[2]
+	#op = v[2]
 	@if(?op){
 	 @if(op == "splus"){
 	  right = objNew(callc, {
@@ -1099,7 +1117,7 @@ fnNewx(execsp, "Assign", repr(&(env, o){
   l = execx(o.assignLeft, env);
 	t = typex(l)
  }
- #v = execx(o.assignRight, env);
+ #v = asval(execx(o.assignRight, env))
  @if(t == "SidGlobal"){
   @return env.envGlobal[l.sid] = v
  }
@@ -1107,7 +1125,10 @@ fnNewx(execsp, "Assign", repr(&(env, o){
   @return env.envState[l.sid] = v
  }
  @if(t == "SidObj"){
-  @return l.sidObj[l.sid] = v 
+  @return l.sidObj.(l.sid) = v 
+ }
+ @if(t == "SidInnate"){
+  @return (l.sidInnate)->(l.sid) = v 
  }
  @if(t == "SidDic"){
   @return l.sidDic[l.sid] = v 
@@ -1237,6 +1258,15 @@ fnNewx(execsp, "SidLocal", repr(&(env, o){
 fnNewx(execsp, "SidGlobal", repr(&(env, o){
  @return env.envGlobal[o.sid]
 }))
+fnNewx(execsp, "SidInnate", repr(&(env, o){
+ @return o.sidInnate->(o.sid)
+}))
+fnNewx(execsp, "SidObj", repr(&(env, o){
+ @return o.sidObj.(o.sid)
+}))
+fnNewx(execsp, "SidDic", repr(&(env, o){
+ @return o.sidDic[o.sid]
+}))
 
 
 fnNewx(execsp, "OpSplus", repr(&(env, o){
@@ -1258,11 +1288,11 @@ fnNewx(execsp, "OpMod", repr(&(env, o){
  @return asval(execx(o.op2Left, env)) % asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpAnd", repr(&(env, o){
- @if(?asval(execx(o.op2Left, env))){ @return 1 }
+ @if(!asval(execx(o.op2Left, env))){ @return 0 }
  @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpOr", repr(&(env, o){
- @if(!?asval(execx(o.op2Left, env))){ @return 0 }
+ @if(asval(execx(o.op2Left, env))){ @return 1 }
  @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpNot", repr(&(env, o){

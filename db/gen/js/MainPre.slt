@@ -1,5 +1,7 @@
 ~
-asobj = @FuncInternal {}
+asobj->mainpre = 1
+
+tplParse = @FuncInternal {}
 ~
 function die(){
   for(var i in arguments){

@@ -1,0 +1,4 @@
+~#a = #0.ctrlArgs~
+for(let _~=asval(a[0])~ of ~=exec(a[1], $env)~){
+~=ind(exec(a[2], $env))~
+}

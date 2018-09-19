@@ -37,6 +37,9 @@ routex = &(oo, scope, name){
  }@elif(id == "."){
   innateSet(o, "id", name)
   innateSet(o, "ns", innateGet(scope, "ns"))
+ }@elif(scope->noname){
+  o->id = name
+  o->ns = scope->ns^"/"^id
  }@else{
   innateSet(o, "id", id^"_"^name)
   innateSet(o, "ns", innateGet(scope, "ns"))
@@ -769,6 +772,9 @@ ast2objx = &(scope, gscope, ast){
    @return objNew(sidglobalc, {sid: v})
   }  
   #r = scopeGetx(scope, v)
+	@if(!?r){
+	 die("ast2obj: id is not defined, "^v)
+	}
 	@return r;
  }
  @if(t == "idlib"){
@@ -990,6 +996,9 @@ execGetx = &(t, env, cache){
    @return exect;
   } 
  }@else{
+  @if(!?deft){
+	 die("execGet: type not defined, "^t)
+	}
   @each k v deft.classParents{
    @if(cache[k]){ @return; }
    cache[k] = 1;

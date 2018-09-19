@@ -15,7 +15,7 @@
   ~~=f->name~~
  }@elif(type(f) == "Call"){
   printargs = 1
-  ~~=execx(f, $env)~~	
+  ~~=exec(f, $env)~~	
  }@else{
   log(type(f))
   log(f->id)	

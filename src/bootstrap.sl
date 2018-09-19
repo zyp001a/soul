@@ -1,14 +1,14 @@
 ////////define structure
 
-ReprScopex = <> {
+ReprScopex = <Obj> {
  val: Dic
  scopeParents: Dic
 }
-ReprClassx = <> {
+ReprClassx = <Obj> {
  classSchema: Dic
  classParents: Dic
 }
-ReprConsx = <> {
+ReprConsx = <Obj> {
  cons: Dic,
  consClass: Class
 }
@@ -35,6 +35,9 @@ routex = &(oo, scope, name){
  }@elif(id == "."){
   o->id = name
 	o->ns = scope->ns
+ }@elif(scope->noname){
+  o->id = name
+	o->ns = scope->ns^"/"^id
  }@else{
   o->id = id^"_"^name
 	o->ns = scope->ns
@@ -42,3 +45,32 @@ routex = &(oo, scope, name){
  o->scope = scope
  @return o;
 }
+parentSetx = &(p, k, parents){
+ @foreach e parents{
+  //TODO reduce
+  p.(k)[e->id] = e;
+ }
+}
+scopePresetx = &(scope, name, parents){
+ #x = @ReprScopex {
+  scope: {}
+  scopeParents: {}
+ }
+ @if parents {
+  parentSetx(x, "scopeParents", parents)
+ }
+ routex(x, scope, name);
+ @return x;
+}
+classPresetx = &(scope, name, parents, schema){
+ #x = @ReprClassx {
+  classSchema: schema || {}
+  classParents: {}
+ }
+ @if parents {
+  parentSetx(x, "classParents", parents)
+ }
+ routex(x, scope, name);
+ @return x;
+}
+

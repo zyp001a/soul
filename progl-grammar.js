@@ -210,7 +210,7 @@ var grammar = {
 		Get: [
 			["Expr . Getkey", "$$ = ['get', $1, $3, 'obj']"],
 			["Expr -> Getkey", "$$ = ['get', $1, $3, 'innate']"],
-			["Expr => Getkey", "$$ = ['get', $1, $3, 'scope']"],			
+//			["Expr => Getkey", "$$ = ['get', $1, $3, 'scope']"],			
 			["Expr [ Expr ]", "$$ = ['get', $1, $3, 'items']"],
 		],
 		Getkey: [	

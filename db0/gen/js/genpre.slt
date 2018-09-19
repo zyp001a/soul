@@ -3,6 +3,7 @@
 ##tplParse = @FuncInternal {}
 ##asobj = @FuncInternal {}
 ##asval = @FuncInternal {}
+##objNew = @FuncInternal {}
 ~
 process.argv.shift();
 process.argv.shift();
@@ -77,6 +78,16 @@ function initx(p, o){
     configurable: false
   });
   return p;
+}
+function objNew(c, d){
+  if(typex(c) == "Cons"){
+	  for(var k in c.cons){
+		  if(d[k] == undefined){
+   		  d[k] = c.cons[k]
+			}				
+		}
+	}
+	return initx(d, {obj: c})
 }
 function haskey(x, k){
   return Object.getOwnPropertyDescriptor(x, k);

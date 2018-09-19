@@ -1,3 +1,8 @@
+~@if(type(#0) == "Cons"){
+ @each k #0.cons{
+  
+ }
+}~
 ~@if(isdic(#1)){
 ~initx({~@each k v #1 {~
 ~=ind(val(k))~: ~=exec(v, #$conf)~,~}~

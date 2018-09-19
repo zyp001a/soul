@@ -391,7 +391,7 @@ fnNewx(def, "opp", repr(&(env, subo, o, nenv){
  @if(!istypex(subo, "Op")){
   @return execx(subo, nenv)
  }
- @if(ccGetx(subo->obj, "opPrecedence") > ccGetx(o->obj, "opPrecedence")){
+ @if(subo.opPrecedence > o.opPrecedence){
   @return "(" + execx(subo, nenv) + ")"
  }
  @return execx(subo, nenv)  

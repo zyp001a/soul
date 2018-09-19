@@ -74,3 +74,9 @@ classPresetx = &(scope, name, parents, schema){
  @return x;
 }
 
+##root = scopePresetx()
+##def = scopePresetx(root, "def")
+
+##objc = classPresetx(def, "Obj")
+##classc = classPresetx(def, "Class", [objc])
+##scopec = classPresetx(def, "Scope", [objc])

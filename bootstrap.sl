@@ -12,7 +12,6 @@ ReprConsx = % Struct {
  cons: Dic,
  consClass: Class
 }
-
 ////////define basic class/cons
 
 routex = &(oo, scope, name){
@@ -1327,41 +1326,43 @@ fnNewx(execsp, "OpLe", repr(&(env, o){
 }))
 
 
-////////////////////test
+////////////////////utils function
 
 ##globalsp = scopeNewx(root, "global");
 ##gensp = scopeNewx(root, "gen");
 ##defExecCache = {}
 
-#defsptmp = scopeNewx(def),
-#globalsptmp = scopeNewx(globalsp)
-scopeSet(globalsptmp, "$argv", objNew(confidlocalc, {
- configName: "$argv",
- configType: arrc
-}))
-scopeSet(globalsptmp, "$imports", objNew(confidlocalc, {
- configName: "$imports"
- configType: dicc
-}))
-#globaltmp = {
- $imports: {}
- $argv: ##$argv
-}
 
-#objmain = progl2objx(defsptmp, globalsptmp, "@Main {"^fileRead(##$argv[0])^"}")
-
-#env = objNew(envc, {
- envDefScope: defsptmp
- envGlobalScope: globalsptmp
+envInitx = &(){
+ #defsptmp = scopeNewx(def),
+ #globalsptmp = scopeNewx(globalsp)
+ scopeSet(globalsptmp, "$argv", objNew(confidlocalc, {
+  configName: "$argv",
+  configType: arrc
+ }))
+ scopeSet(globalsptmp, "$imports", objNew(confidlocalc, {
+  configName: "$imports"
+  configType: dicc
+ }))
+ #globaltmp = {
+  $imports: {}
+  $argv: ##$argv
+ }
+ @return objNew(envc, {
+  envDefScope: defsptmp
+  envGlobalScope: globalsptmp
  
- envExecScope: scopeGetx(gensp, "js"),
+  envExecScope: scopeGetx(gensp, "js"),
 
- envExecCache: {},
- envGlobal: globaltmp 
- envState: {},
- envStack: [],
-})
-@if(##$argv[1]){
- env.envExecScope = scopeNewx(execsp)
+  envExecCache: {},
+  envGlobal: globaltmp 
+  envState: {},
+  envStack: [],
+ })
 }
+
+//////////test
+
+#env = envInitx()
+#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(##$argv[0])^"}")
 log(execx(objmain, env))

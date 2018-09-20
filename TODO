@@ -1,6 +1,7 @@
 try catch?
 type checking
 method
+cons class?
 
 complete self-generation
 cache include

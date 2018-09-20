@@ -88,8 +88,9 @@ function objNew(c, d){
 	}
   if(typex(c) == "Cons"){
 	  for(var k in c.cons){
-		  if(objGet(o, k) == undefined){
-   		  objSet(o, k, c.cons[k])
+		  var v = c.cons[k]
+		  if(objGet(o, k) == undefined && istypex(v, "Val")){
+   		  objSet(o, k, v)
 			}
 		}
 	}

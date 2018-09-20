@@ -126,12 +126,7 @@ consNewx = &(scope, name, class, cons){
 ##sizetc = consNewx(def, "Sizet", numc)
 ##strc = consNewx(def, "Str", valc)
 ##funcvc = consNewx(def, "Funcv", valc)
-##itemsc =  classNewx(def, "Items", [valc], {
- itemsType: classc
-})
-##arrc = consNewx(def, "Arr", itemsc)
-##dicc = consNewx(def, "Dic", itemsc)
-##diccallablec =  consNewx(def, "DicClass", dicc)
+
 
 ##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
@@ -160,9 +155,16 @@ consNewx = &(scope, name, class, cons){
 ##funcinternalc = classNewx(def, "FuncInternal", [funcc], {
 })
 
+
+##itemsc =  classNewx(def, "Items", [valc], {
+ itemsType: classc
+})
+##arrc = consNewx(def, "Arr", itemsc)
+##dicc = consNewx(def, "Dic", itemsc)
+##diccallablec =  consNewx(def, "DicClass", dicc)
+
+
 classc.classSchema = {
- classGetter: dicc
- classSetter: dicc
  classParents: dicc
  classSchema: dicc
 }
@@ -197,14 +199,20 @@ scopec.classSchema = {
 ##diccallablec =  consNewx(def, "DicCallable", dicc, {
  itemsType: callablec
 })
-##arrcallablec =  consNewx(def, "ArrCallable", arrc)
+##arrcallablec =  consNewx(def, "ArrCallable", arrc, {
+ itemsType: callablec
+})
 
 ##idc = classNewx(def, "Id", [objc])
 ##sidc =  classNewx(def, "Sid", [idc], {
  sid: strc,
 })
-##sidlocalc =  consNewx(def, "SidLocal", sidc)
-##sidglobalc =  consNewx(def, "SidGlobal", sidc)
+##sidlocalc =  classNewx(def, "SidLocal", [sidc], {
+ sidLocal: scopec
+})
+##sidglobalc =  classNewx(def, "SidGlobal", [sidc], {
+ sidGlobal: scopec
+})
 ##sidobjc =  classNewx(def, "SidObj", [sidc], {
  sidObj: objc
 })
@@ -410,6 +418,9 @@ fnNewx(def, "str", repr(&(env, o){
 fnNewx(def, "num", repr(&(env, o){
  @return num(o)
 }))
+##ccgetf = fnNewx(def, "ccGet", repr(&(env, obj, key){
+ @return ccGetx(obj, key)
+}))
 fnNewx(def, "dicGet", repr(&(env, dic, key){
  @return objNew(siddicc, {
   sid: key
@@ -494,6 +505,26 @@ ccGetx = &(c, t){
 typex = &(oo){
  #o = asobj(oo)
  @return innateGet(innateGet(o, "obj"), "id")
+}
+typepredx = &(oo){
+//type prediction
+ #o = asobj(oo)
+ #t = typex(o)
+ @if(t == "Call"){
+  @return o.callFunc.funcReturn
+ }@elif(t == "SidLocal"){
+  @return scopeGetLocal(o.sidLocal, o.sid).confidType
+ }@elif(t == "SidGlobal"){
+  @return scopeGetLocal(o.sidGlobal, o.sid).confidType
+ }@elif(t == "SidObj"){
+  @return ccGetx(o.sidObj->obj, o.sid)
+ }@elif(t == "SidDic"){
+  @return o.sidDic.itemsTypes
+ }@elif(t == "Aid"){
+  @return o.aidArr.itemsTypes
+ }@else{
+  @return o->obj
+ }
 }
 isclassrx = &(c, t){
  @each k v c.classParents{
@@ -624,14 +655,28 @@ ast2objx = &(scope, gscope, ast){
     log(v)
 	  die("call func not defined for unknown reason")	 
 	 }
+	//func not defined, if v[0] is id, do predefine	 
    #f = objNew(funcblockc, {})
 	 #pscope = innateGet(scope, "scope")
    routex(f, pscope, v[1])
 	 innateSet(f, "predefined", 1)	 
 	}
+	#arr = ast2arrx(scope, gscope, ast[2])
+	@if(v[0] == "get" && v[3] == "obj"){
+	 #oo = f.funcArgs[0]	
+	 unshift(arr, oo)
+	 #tt = typepredx(oo)
+	 @if(!?tt){
+	  tt = objc
+	 }
+	 f = objNew(callc, {
+	  callFunc: ccgetf,
+		callArgs: [tt, f.funcArgs[1]]
+	 })
+	}
   @return objNew(callc, {
    callFunc: f
-   callArgs: ast2arrx(scope, gscope, ast[2])
+   callArgs: arr
   })
  }
  @if(t == "assign"){
@@ -644,7 +689,7 @@ ast2objx = &(scope, gscope, ast){
    }@elif(scopeGetLocal(gscope, vv)){
     lexdef = 0
    }@else{
-    lexdef = 1	 
+    lexdef = 1	 //is not global or local var
 	 }
   }
 	@if(lexdef){
@@ -789,10 +834,16 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "id"){
   #lv = scopeGetLocal(scope, v)
   @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
-   @return objNew(sidlocalc, {sid: v})
+   @return objNew(sidlocalc, {
+	  sid: v
+		sidLocal: scope
+	 })
   }
   @if(scopeGetLocal(gscope, v)){
-   @return objNew(sidglobalc, {sid: v})
+   @return objNew(sidglobalc, {
+	  sid: v
+		sidGlobal: gscope
+	 })
   }  
   #r = scopeGetx(scope, v)
 	@if(!?r){
@@ -813,7 +864,10 @@ ast2objx = &(scope, gscope, ast){
 //    confidType: a.argtType
   })
   scopeSet(gscope, v, x)   
-  @return objNew(sidglobalc, {sid: v}) 
+  @return objNew(sidglobalc, {
+	 sid: v
+	 sidGlobal: gscope
+	}) 
  }
  @if(t == "idlocal"){
   #x = objNew(confidlocalc, {
@@ -821,7 +875,10 @@ ast2objx = &(scope, gscope, ast){
 //    confidType: a.argtType
   })
   scopeSet(scope, v, x)
-  @return objNew(sidlocalc, {sid: v}) 
+  @return objNew(sidlocalc, {
+	 sid: v
+	 sidLocal: scope
+	}) 
  }
 
  @if(t == "arr"){
@@ -1144,9 +1201,17 @@ fnNewx(execsp, "Assign", repr(&(env, o){
  }
  #v = asval(execx(o.assignRight, env))
  @if(t == "SidGlobal"){
+  #confid = l.sidGlobal[l.sid] 
+	@if(!?confid.confidType){
+	 confid.confidType = asobj(v)->obj
+	} 
   @return env.envGlobal[l.sid] = v
  }
  @if(t == "SidLocal"){
+  #confid = l.sidLocal[l.sid]
+	@if(!?confid.confidType){
+	 confid.confidType = asobj(v)->obj
+	}
   @return env.envState[l.sid] = v
  }
  @if(t == "SidObj"){

@@ -43,6 +43,7 @@ var grammar = {
 			["@for", "return 'FOR'"],
 			["@each", "return 'EACH'"],
 			["@while", "return 'WHILE'"],
+			["@include", "return 'INCLUDE'"],			
 			["\\=\\>", "return '=>'"],
 			["\\-\\>", "return '->'"], 
       ["\\(", "return '('"],
@@ -168,7 +169,7 @@ var grammar = {
 		Elem: [
 			["Expr", "$$ = [$1]"],
 			["Ctrl", "$$ = [$1]"],
-			["Natl", "$$ = [$1]"],
+			["Include", "$$ = [$1]"],
 		  ["KeyColon Expr", "$$ = [$2, $1]"],
 		  ["KeyColon , Expr", "$$ = [$3, $1]"],						
 		],
@@ -182,6 +183,11 @@ var grammar = {
 			["RETURN", "$$ = ['ctrl', 'return', []]"],			
 			["BREAK", "$$ = ['ctrl', 'break']"],
 			["CONTINUE", "$$ = ['ctrl', 'continue']"],
+			["GOTO ID", "$$ = ['ctrl', 'goto', [$2]]"],
+		],
+		"Include": [
+			["INCLUDE ID", "$$ = ['include', $2]"],
+			["INCLUDE STR", "$$ = ['include', $2]"],			
 		],
 		"If": [
 			["IF Expr Dic", "$$ = [$2, $3]"],

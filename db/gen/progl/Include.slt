@@ -1,0 +1,8 @@
+~
+#x = $includes[#0.include]
+@if(!?x){
+ #o = progl2obj($env.envDefScope, $env.envGlobalScope, "{"^fileRead(#0.include)^"}")
+ #r = exec(o, $env)
+ $includes[#0.include] = r
+}
+~

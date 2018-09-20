@@ -1,0 +1,1 @@
+fs.writeFileSync(&0, &1)

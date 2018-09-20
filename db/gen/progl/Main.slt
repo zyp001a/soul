@@ -7,9 +7,12 @@
 #mp = scopeGet(execsp, "MainPre")
 #mainpre = mp()
 //log(mainpre)
-
+~~=mainpre~~
 #bf = scopeGet(execsp, "Block")
 #main = call(bf, [#0], #$env)
+
+@each k v $includes{
+ ~~=v~~
+}
 ~
-~=mainpre~
 ~=main~

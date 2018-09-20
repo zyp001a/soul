@@ -294,6 +294,10 @@ scopec.classSchema = {
  opPrecedence: 70
 })
 
+##includec = classNewx(def, "Include", [objc], {
+ include: strc
+})
+
 ##ctrlc = classNewx(def, "Ctrl", [objc])
 ##ctrlargsc = classNewx(def, "CtrlArgs", [], {
  ctrlArgs: arrc
@@ -340,22 +344,6 @@ typex = &()
 progl2objx = &()
 ccGetx = &()
 /////////define bridge internal function
-fnNewx(def, "import", repr(&(env, s){
- @if(!match(s, "\.sl$")){
-  s+=".sl"
- }
- #imported = env.envGlobal[pathResolve(s)]
- @if(?imported){
-  @return
- }
- env.envGlobal[s] = 1
- @if(fileExists(s)){
-  #o = progl2objx(env.envDefScope, env.envGlobalScope, "{"^fileRead(s)^"}")
-  blockExecx(o, env)  
- }@else{
-  die("import: file "^s^" not defined")
- }
-}))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
@@ -451,6 +439,18 @@ fnNewx(def, "call", repr(&(env, func, args, env){
 }))
 fnNewx(def, "exec", repr(&(env, o, env){
  @return execx(o, env)
+}))
+fnNewx(def, "fileRead", repr(&(env, f){
+ @return fileRead(f)
+}))
+fnNewx(def, "fileWrite", repr(&(env, f, str){
+ @return fileWrite(f, str)
+}))
+fnNewx(def, "fileExists", repr(&(env, f){
+ @return fileExists(f)
+}))
+fnNewx(def, "progl2obj", repr(&(env, scope, gscope, str){
+ @return progl2objx(scope, gscope, str)
 }))
 fnNewx(def, "istype", repr(&(env, o, s){
  @return istypex(o, s)
@@ -695,6 +695,19 @@ ast2objx = &(scope, gscope, ast){
 	 callArgs: [a0, a1]
 	})
  }
+ @if(t == "include"){
+  @if(!match(v, "\.sl$")){
+   v+=".sl"
+  }
+  #ss = pathResolve(v);
+  @if(!fileExists(ss)){
+   die("import: file "^s^" not defined")
+  }
+	@return objNew(includec, {
+	 include: ss
+	})    
+ }
+ 
  @if(t == "ctrl"){
   #args = ast[2]
   @if(v == "foreach"){
@@ -759,7 +772,11 @@ ast2objx = &(scope, gscope, ast){
   @if(v == "continue"){
    @return objNew(ctrlcontinuec, {})
   }
-  
+  @if(v == "goto"){
+   @return objNew(ctrlgotoc, {
+    ctrlArgs: [ast2objx(scope, gscope, args[0])]	 
+	 })
+  }
  }
  
  @if(t == "id"){
@@ -1147,6 +1164,17 @@ fnNewx(execsp, "Assign", repr(&(env, o){
  log(l)
  die("left not assignable");
 }))
+fnNewx(execsp, "Include", repr(&(env, inc){
+ #s = inc.include
+ #gscope = env.envGlobalScope
+ #x = gscope["$includes"][s]
+ @if(?x){
+  @return
+ }
+ gscope["$includes"][ss] = 1
+ #o = progl2objx(env.envDefScope, gscope, "{"^fileRead(s)^"}")
+ blockExecx(o, env)
+}))
 fnNewx(execsp, "CtrlReturn", repr(&(env, o){
  @return objNew(returnc, {
   return: execx(o.ctrlArgs[0], env)
@@ -1306,6 +1334,9 @@ fnNewx(execsp, "OpOr", repr(&(env, o){
 fnNewx(execsp, "OpNot", repr(&(env, o){
  @return !asval(execx(o.op1, env))
 }))
+fnNewx(execsp, "OpDefined", repr(&(env, o){
+ @return ?asval(execx(o.op1, env))
+}))
 fnNewx(execsp, "OpNe", repr(&(env, o){
  @return asval(execx(o.op2Left, env)) != asval(execx(o.op2Right, env))
 }))
@@ -1340,29 +1371,32 @@ envInitx = &(){
   configName: "$argv",
   configType: arrc
  }))
- scopeSet(globalsptmp, "$imports", objNew(confidlocalc, {
-  configName: "$imports"
+ scopeSet(globalsptmp, "$includes", objNew(confidlocalc, {
+  configName: "$includes"
   configType: dicc
  }))
  #globaltmp = {
-  $imports: {}
+  $includes: {}
   $argv: ##$argv
  }
+ #deftmp = {}
  @return objNew(envc, {
-  envDefScope: defsptmp
   envGlobalScope: globalsptmp
+  envDefScope: defsptmp	
  
-  envExecScope: scopeGetx(gensp, "js"),
-
-  envExecCache: {},
   envGlobal: globaltmp 
-  envState: {},
+  envState: deftmp,
   envStack: [],
+
+  envExecScope: scopeGetx(gensp, "js"),
+  envExecCache: {},
  })
 }
 
 //////////test
-
 #env = envInitx()
+@if(##$argv[1]){
+ env.envExecScope = execsp
+}
 #objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(##$argv[0])^"}")
 log(execx(objmain, env))

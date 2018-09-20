@@ -131,6 +131,7 @@ consNewx = &(scope, name, class, cons){
 })
 ##arrc = consNewx(def, "Arr", itemsc)
 ##dicc = consNewx(def, "Dic", itemsc)
+##diccallablec =  consNewx(def, "DicClass", dicc)
 
 ##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
@@ -193,7 +194,9 @@ scopec.classSchema = {
  callArgs: arrc
 })
 
-##diccallablec =  consNewx(def, "DicCallable", dicc)
+##diccallablec =  consNewx(def, "DicCallable", dicc, {
+ itemsType: callablec
+})
 ##arrcallablec =  consNewx(def, "ArrCallable", arrc)
 
 ##idc = classNewx(def, "Id", [objc])
@@ -492,7 +495,7 @@ typex = &(oo){
  #o = asobj(oo)
  @return innateGet(innateGet(o, "obj"), "id")
 }
-isclassx = &(c, t){
+isclassrx = &(c, t){
  @each k v c.classParents{
   @if(k == "Obj"){
    @return 0
@@ -500,21 +503,25 @@ isclassx = &(c, t){
   @if(k == t){
    @return 1;
   }
-  @if(isclassx(v, t)){
+  @if(isclassrx(v, t)){
    @return 1
   }
  }
+ @return 0
 }
-istypex = &(oo, t){
- #o = asobj(oo)
- #c = innateGet(o, "obj")
- @if(innateGet(c, "id") == t){
+isclassx = &(c, t){
+ 
+ @if(c->id == t){
   @return 1
  }
  @if(typex(c) == "Cons"){
   @return isclassx(c.consClass, t);
  }
- @return isclassx(c, t);
+ @return isclassrx(c, t);
+}
+istypex = &(oo, t){
+ #o = asobj(oo)
+ @return isclassx(o->obj, t)
 }
 dbPath = &(x){
  @if(!innateGet(x, "ns")){
@@ -581,14 +588,14 @@ scopeGetx = &(scope, key){
 //////////////define parser function
 ast2objx = &(scope, gscope, ast)
 ast2arrx = &(scope, gscope, arr){
- #arrx = []
+ #arrx = objNew(arrcallablec, [])
  @foreach v arr{
   push(arrx, ast2objx(scope, gscope, v))
  }
  @return arrx
 }
 ast2dicx = &(scope, gscope, dic){
- #dicx = {}
+ #dicx = objNew(diccallablec, {})
  @foreach v dic{
   dicx[v[1]] = ast2objx(scope, gscope, v[0])
  }
@@ -819,8 +826,7 @@ ast2objx = &(scope, gscope, ast){
 
  @if(t == "arr"){
   #arr = ast2arrx(scope, gscope, v)
-  #arrx = objNew(arrcallablec, arr)
-  @return arrx;
+  @return arr;
  }
  @if(t == "dic"){
   #tt = ast[2]
@@ -863,8 +869,7 @@ ast2objx = &(scope, gscope, ast){
   }
   @if(tt == "Dic"){
    #dic = ast2dicx(scope, gscope, v)
-   #dicx = objNew(diccallablec, dic)
-   @return dicx;
+   @return dic;
   }
   die("cannot determine dic or block");
  }
@@ -1102,21 +1107,16 @@ execx = &(oo, env){
 ##execsp = scopeNewx(root, "exec");
 fnNewx(execsp, "Obj", repr(&(env, o){
  log("Obj to be defined: "^o->obj->id)
+ log(o)
  @return o
 }))
-fnNewx(execsp, "Str", repr(&(env, o){
+fnNewx(execsp, "Val", repr(&(env, o){
  @return asval(o)
-}))
-fnNewx(execsp, "Num", repr(&(env, o){
- @return asval(o)
-}))
-fnNewx(execsp, "Undf", repr(&(env, o){
- @return __
-}))
-fnNewx(execsp, "Null", repr(&(env, o){
- @return _
 }))
 fnNewx(execsp, "Func", repr(&(env, o){
+ @return o
+}))
+fnNewx(execsp, "Class", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Main", repr(&(env, o){
@@ -1277,7 +1277,7 @@ fnNewx(execsp, "ArrCallable", repr(&(env, o){
  @each i v o{
   newo[i] = execx(v, env)  
  }
- innateSet(newo, "notval", 1)
+// innateSet(newo, "notval", 1)
  @return newo;
 }))
 fnNewx(execsp, "DicCallable", repr(&(env, o){
@@ -1285,7 +1285,7 @@ fnNewx(execsp, "DicCallable", repr(&(env, o){
  @each i v o{
   newo[i] = execx(v, env)  
  }
- innateSet(newo, "notval", 1)
+// innateSet(newo, "notval", 1)
  @return newo;
 }))
 fnNewx(execsp, "SidLocal", repr(&(env, o){

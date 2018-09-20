@@ -80,14 +80,20 @@ function initx(p, o){
   return p;
 }
 function objNew(c, d){
+  var o
+	if(isclassx(c, "Items")){
+		o = initx(d, {obj: c, prop: {}})		
+	}else{
+  	o = initx(d, {obj: c})
+	}
   if(typex(c) == "Cons"){
 	  for(var k in c.cons){
-		  if(d[k] == undefined){
-   		  d[k] = c.cons[k]
-			}				
+		  if(objGet(o, k) == undefined){
+   		  objSet(o, k, c.cons[k])
+			}
 		}
 	}
-	return initx(d, {obj: c})
+	return o;
 }
 function haskey(x, k){
   return Object.getOwnPropertyDescriptor(x, k);
@@ -102,6 +108,7 @@ function asval(o){
   }
   if(o.__.isval)
     return o.val
+
   var tid = o.__.obj.__.id;
 	if(tid == "SidDic"){
 	 return asval(o.sidDic[o.sid])
@@ -126,9 +133,9 @@ function asobj(o){
     if(!t) return initx({val: null}, {obj: global._nullc, isval:1});
     if(!o.__){
       if(Array.isArray(o)){
-        return initx(o, {obj: global._arrc});
+        return initx(o, {obj: global._arrc, prop:{}});
       }else{
-        return initx(o, {obj: global._dicc});      
+        return initx(o, {obj: global._dicc, prop:{}});      
       }
     }
     return o;
@@ -141,22 +148,28 @@ function asobj(o){
   }
   die(t + " not defined, asobj")
 }
-function objget(o, k){
+function objGet(o, k){
   if(k == "scopeParents"){
     return o.__.parents
   }
   if(k == "scope"){
     return o[k]
   }
+	if(o.__ && o.__.prop){
+	  return o.__.prop[k]
+	}
   return o[k]
 }
-function objset(o, k, v){
+function objSet(o, k, v){
   if(k == "scopeParents"){
     return o.__.parents = v
   }
   if(k == "scope"){
     return o[k] = v
   }
+	if(o.__ && o.__.prop){
+	  return o.__.prop[k] = v
+	}	
   return o[k] = v
 }
 function log(str){

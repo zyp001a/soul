@@ -4,52 +4,53 @@ ReprScopex = % Struct {
  val: Dic
  scopeParents: Dic
 }
+ReprCurryx = % Struct {
+ curry: Dic,
+ curryClass: Class
+}
 ReprClassx = % Struct {
+ classCurry: Dic,
  classSchema: Dic
  classParents: Dic
 }
-ReprConsx = % Struct {
- cons: Dic,
- consClass: Class
-}
-////////define basic class/cons
-
+////////define basic class/curry
 routex = &(oo, scope, name){
  #o = asobj(oo)
- @if(!innateGet(o, "index")){
-  innateSet(o, "index", 0)
+ @if(!o->index){
+  o->index = 0
  }
  @if(!scope){
   @return o
  }
  @if(!?name){
-  name = str(innateGet(o, "index"))
-  innateSet(o, "index", innateGet(o, "index") + 1);
-  innateSet(o, "noname", 1)
+  name = str(o->index)
+  o->index ++
+  o->noname = 1
  }
  scopeSet(scope, name, o);
- innateSet(o, "name", name)
- #id = innateGet(scope, "id")
+ o->name = name
+ #id = scope->id
  @if(!?id){
-  innateSet(o, "id", ".")
-  innateSet(o, "ns", name)
+  o->id = "."
+  o->ns = name
  }@elif(id == "."){
-  innateSet(o, "id", name)
-  innateSet(o, "ns", innateGet(scope, "ns"))
+  o->id = name
+  o->ns = scope->ns
  }@elif(scope->noname){
   o->id = name
   o->ns = scope->ns^"/"^id
  }@else{
-  innateSet(o, "id", id^"_"^name)
-  innateSet(o, "ns", innateGet(scope, "ns"))
+  o->id = id^"_"^name
+  o->ns = scope->ns
  }
- innateSet(o, "scope", scope)
+ o->scope = scope
  @return o;
 }
+
 parentSetx = &(p, k, parents){
  @foreach e parents{
   //TODO reduce
-  objGet(p, k)[innateGet(e, "id")] = e;
+	p.(k)[e->id] = e;
  }
 }
 scopeInitx = &(scope, name, parents){
@@ -65,6 +66,7 @@ scopeInitx = &(scope, name, parents){
 }
 classInitx = &(scope, name, parents, schema){
  #x = @ReprClassx {
+  classCurry: {}
   classSchema: schema || {}
   classParents: {}
  }
@@ -100,32 +102,32 @@ classNewx = &(scope, name, parents, schema){
  @return x
 }
 
-##consc = classNewx(def, "Cons", [objc])
+##curryc = classNewx(def, "Curry", [objc])
 ##valc = classNewx(def, "Val", [objc])
 
-consInitx = &(class, cons){
- #x = @ReprConsx {
-  cons: cons || {}
-  consClass: class
+curryInitx = &(class, curry){
+ #x = @ReprCurryx {
+  curry: curry || {}
+  curryClass: class
  }
- innateSet(x, "obj", consc)
+ innateSet(x, "obj", curryc)
  @return x
 }
-consNewx = &(scope, name, class, cons){
- //TODO class cannot be def.Cons
- #x = consInitx(class, cons)
+curryNewx = &(scope, name, class, curry){
+ //TODO class cannot be def.Curry
+ #x = curryInitx(class, curry)
  routex(x, scope, name)
  @return x;
 }
 
 
 
-##nullc = consNewx(def, "Null", valc)
-##undfc = consNewx(def, "Undf", valc)
-##numc = consNewx(def, "Num", valc)
-##sizetc = consNewx(def, "Sizet", numc)
-##strc = consNewx(def, "Str", valc)
-##funcvc = consNewx(def, "Funcv", valc)
+##nullc = curryNewx(def, "Null", valc)
+##undfc = curryNewx(def, "Undf", valc)
+##numc = curryNewx(def, "Num", valc)
+##sizetc = curryNewx(def, "Sizet", numc)
+##strc = curryNewx(def, "Str", valc)
+##funcvc = curryNewx(def, "Funcv", valc)
 
 
 ##argtc = classNewx(def, "Argt", [objc], {
@@ -133,15 +135,15 @@ consNewx = &(scope, name, class, cons){
  argtType: classc
 })
 ##funcc = classNewx(def, "Func", [objc], {
- funcArgts: consInitx(arrc, {itemsType: argtc})
+ funcArgts: curryInitx(arrc, {itemsType: argtc})
  funcReturn: classc
 })
 ##blockc = classNewx(def, "Block", [objc], {
  block: arrc,
- blockLabels: consInitx(arrc, {itemsType: numc})
+ blockLabels: curryInitx(arrc, {itemsType: numc})
 })
-##blocknovarc = consNewx(def, "BlockNovar", blockc)
-##mainc = consNewx(def, "Main", blockc)
+##blocknovarc = curryNewx(def, "BlockNovar", blockc)
+##mainc = curryNewx(def, "Main", blockc)
 
 ##funcnativec = classNewx(def, "FuncNative", [funcc], {
  func: funcvc
@@ -159,25 +161,25 @@ consNewx = &(scope, name, class, cons){
 ##itemsc =  classNewx(def, "Items", [valc], {
  itemsType: classc
 })
-##arrc = consNewx(def, "Arr", itemsc)
-##dicc = consNewx(def, "Dic", itemsc)
-##diccallablec =  consNewx(def, "DicClass", dicc)
+##arrc = curryNewx(def, "Arr", itemsc)
+##dicc = curryNewx(def, "Dic", itemsc)
+##diccallablec =  curryNewx(def, "DicClass", dicc)
 
 
 classc.classSchema = {
  classParents: dicc
  classSchema: dicc
 }
-consc.classSchema = {
- cons: dicc
- consClass: classc
+curryc.classSchema = {
+ curry: dicc
+ curryClass: classc
 }
 scopec.classSchema = {
  scope: dicc
  scopeParents: dicc
 }
 
-////////define call class/cons
+////////define call class/curry
 
 ##envc = classNewx(def, "Env", [objc], {
  envDefScope: scopec
@@ -196,10 +198,10 @@ scopec.classSchema = {
  callArgs: arrc
 })
 
-##diccallablec =  consNewx(def, "DicCallable", dicc, {
+##diccallablec =  curryNewx(def, "DicCallable", dicc, {
  itemsType: callablec
 })
-##arrcallablec =  consNewx(def, "ArrCallable", arrc, {
+##arrcallablec =  curryNewx(def, "ArrCallable", arrc, {
  itemsType: callablec
 })
 
@@ -232,9 +234,9 @@ scopec.classSchema = {
  confidName: strc,
  confidType: classc, 
 })
-##confidargc = consNewx(def, "ConfidArg", confidc)
-##confidlocalc = consNewx(def, "ConfidLocal", confidc)
-//##confidsystemc = consNewx(def, "ConfidSystem", confidc)
+##confidargc = curryNewx(def, "ConfidArg", confidc)
+##confidlocalc = curryNewx(def, "ConfidLocal", confidc)
+//##confidsystemc = curryNewx(def, "ConfidSystem", confidc)
 
 ##assignc = classNewx(def, "Assign", [objc], {
  assignLeft: idc
@@ -254,54 +256,54 @@ scopec.classSchema = {
 //https://en.cppreference.com/w/c/language/operator_precedence
 //remove unused
 //get and assign are not operators in Soul
-##notc = consNewx(def, "OpNot", op1c, {
+##notc = curryNewx(def, "OpNot", op1c, {
  opPrecedence: 10
 })
-##definedc = consNewx(def, "OpDefined", op1c, {
+##definedc = curryNewx(def, "OpDefined", op1c, {
  opPrecedence: 10
 })
-##splusc = consNewx(def, "OpTimes", op2c, {
+##splusc = curryNewx(def, "OpTimes", op2c, {
  opPrecedence: 20
 })
-##splusc = consNewx(def, "OpObelus", op2c, {
+##splusc = curryNewx(def, "OpObelus", op2c, {
  opPrecedence: 20
 })
-##splusc = consNewx(def, "OpMod", op2c, {
+##splusc = curryNewx(def, "OpMod", op2c, {
  opPrecedence: 20
 })
-##plusc = consNewx(def, "OpPlus", op2c, {
+##plusc = curryNewx(def, "OpPlus", op2c, {
  opPrecedence: 30
 })
-##plusc = consNewx(def, "OpSplus", op2c, {
+##plusc = curryNewx(def, "OpSplus", op2c, {
  opPrecedence: 30
 })
-##splusc = consNewx(def, "OpMinus", op2c, {
+##splusc = curryNewx(def, "OpMinus", op2c, {
  opPrecedence: 30
 })
-##splusc = consNewx(def, "OpGe", op2c, {
+##splusc = curryNewx(def, "OpGe", op2c, {
  opPrecedence: 40
 })
-##splusc = consNewx(def, "OpLe", op2c, {
+##splusc = curryNewx(def, "OpLe", op2c, {
  opPrecedence: 40
 })
-##splusc = consNewx(def, "OpGt", op2c, {
+##splusc = curryNewx(def, "OpGt", op2c, {
  opPrecedence: 40
 })
-##splusc = consNewx(def, "OpLt", op2c, {
+##splusc = curryNewx(def, "OpLt", op2c, {
  opPrecedence: 40
 })
 
-##splusc = consNewx(def, "OpEq", op2c, {
+##splusc = curryNewx(def, "OpEq", op2c, {
  opPrecedence: 50
 })
-##splusc = consNewx(def, "OpNe", op2c, {
+##splusc = curryNewx(def, "OpNe", op2c, {
  opPrecedence: 50
 })
 
-##splusc = consNewx(def, "OpAnd", op2c, {
+##splusc = curryNewx(def, "OpAnd", op2c, {
  opPrecedence: 60
 })
-##splusc = consNewx(def, "OpOr", op2c, {
+##splusc = curryNewx(def, "OpOr", op2c, {
  opPrecedence: 70
 })
 
@@ -314,17 +316,17 @@ scopec.classSchema = {
  ctrlArgs: arrc
 })
 
-##ctrlbreakc = consNewx(def, "CtrlBreak", ctrlc)
-##ctrlcontinuec = consNewx(def, "CtrlContinue", ctrlc)
+##ctrlbreakc = curryNewx(def, "CtrlBreak", ctrlc)
+##ctrlcontinuec = curryNewx(def, "CtrlContinue", ctrlc)
 
-##ctrlreturnc = consNewx(def, "CtrlReturn", ctrlargsc)
-##ctrlgotoc = consNewx(def, "CtrlGoto", ctrlargsc)
+##ctrlreturnc = curryNewx(def, "CtrlReturn", ctrlargsc)
+##ctrlgotoc = curryNewx(def, "CtrlGoto", ctrlargsc)
 
-##ctrlifc = consNewx(def, "CtrlIf", ctrlargsc)
-##ctrlforc = consNewx(def, "CtrlFor", ctrlargsc)
-##ctrleachc = consNewx(def, "CtrlEach", ctrlargsc)
-##ctrlforeachc = consNewx(def, "CtrlForeach", ctrlargsc)
-##ctrlwhilec = consNewx(def, "CtrlWhile", ctrlargsc)
+##ctrlifc = curryNewx(def, "CtrlIf", ctrlargsc)
+##ctrlforc = curryNewx(def, "CtrlFor", ctrlargsc)
+##ctrleachc = curryNewx(def, "CtrlEach", ctrlargsc)
+##ctrlforeachc = curryNewx(def, "CtrlForeach", ctrlargsc)
+##ctrlwhilec = curryNewx(def, "CtrlWhile", ctrlargsc)
 
 ##returnc = classNewx(def, "Return", [ctrlc], {
  return: objc
@@ -353,7 +355,8 @@ callx = &()
 istypex = &()
 typex = &()
 progl2objx = &()
-ccGetx = &()
+curryGetx = &()
+classGetx = &()
 /////////define bridge internal function
 fnNewx(def, "log", repr(&(env, x){
  log(x)
@@ -418,8 +421,8 @@ fnNewx(def, "str", repr(&(env, o){
 fnNewx(def, "num", repr(&(env, o){
  @return num(o)
 }))
-##ccgetf = fnNewx(def, "ccGet", repr(&(env, obj, key){
- @return ccGetx(obj, key)
+##currygetf = fnNewx(def, "curryGet", repr(&(env, obj, key){
+ @return curryGetx(obj, key)
 }))
 fnNewx(def, "dicGet", repr(&(env, dic, key){
  @return objNew(siddicc, {
@@ -480,21 +483,39 @@ fnNewx(def, "asobj", repr(&(env, o){
 }))
 
 ////////define basic function
-ccGetx = &(c, t){
- @if(typex(c) == "Cons"){
-  #x = c.cons[t]
-  @if(?x){
-	 @return x 
-	}
-	@return ccGetx(c.consClass, t)
+classGetx = &(c, t){
+ @if(typex(c) == "Curry"){
+	@return classGetx(c.curryClass, t)
  }
  @if(typex(c) == "Class"){
-  #x = objGet(c.classSchema, t)
+  #x = c.classSchema[t]
 	@if(?x){
 	 @return x;
 	}
 	@each k v c.classParents{
-	 #x = ccGetx(v, t)
+	 #x = classGetx(v, t)
+	 @if(?x){
+	  @return x
+	 }
+	}
+ }
+ die("ccget: type error, "^typex(c)) 
+}
+curryGetx = &(c, t){
+ @if(typex(c) == "Curry"){
+  #x = c.curry[t]
+  @if(?x){
+	 @return x 
+	}
+	@return curryGetx(c.curryClass, t)
+ }
+ @if(typex(c) == "Class"){
+  #x = c.classCurry[t]
+	@if(?x){
+	 @return x;
+	}
+	@each k v c.classParents{
+	 #x = curryGetx(v, t)
 	 @if(?x){
 	  @return x
 	 }
@@ -517,7 +538,7 @@ typepredx = &(oo){
  }@elif(t == "SidGlobal"){
   @return scopeGetLocal(o.sidGlobal, o.sid).confidType
  }@elif(t == "SidObj"){
-  @return ccGetx(o.sidObj->obj, o.sid)
+  @return classGetx(o.sidObj->obj, o.sid)
  }@elif(t == "SidDic"){
   @return o.sidDic.itemsTypes
  }@elif(t == "Aid"){
@@ -545,8 +566,8 @@ isclassx = &(c, t){
  @if(c->id == t){
   @return 1
  }
- @if(typex(c) == "Cons"){
-  @return isclassx(c.consClass, t);
+ @if(typex(c) == "Curry"){
+  @return isclassx(c.curryClass, t);
  }
  @return isclassrx(c, t);
 }
@@ -1004,10 +1025,10 @@ ast2objx = &(scope, gscope, ast){
   innateSet(x, "obj", classc)	
 	@return x
  }
- @if(t == "cons"){
+ @if(t == "curry"){
   #class = ast2objx(scope, gscope, v)
 	#dic = ast2objx(scope, gscope, ast[2])
-	@return consInitx(class, dic)
+	@return curryInitx(class, dic)
  }
  @if(t == "obj"){
  //TODO func, dic, arr with spec class
@@ -1063,8 +1084,8 @@ execGetx = &(t, env, cache){
   @return exect
  }
  #deft = scopeGetx(env.envDefScope, t)
- @if(typex(deft) == "Cons"){
-  #k = innateGet(deft.consClass, "id")
+ @if(typex(deft) == "Curry"){
+  #k = innateGet(deft.curryClass, "id")
   @if(cache[k]){ @return; }
   cache[k] = 1;
 

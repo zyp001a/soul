@@ -64,6 +64,7 @@ scopePresetx = &(scope, name, parents){
 }
 classPresetx = &(scope, name, parents, schema){
  #x = @ReprClassx {
+  classCurry: {}
   classSchema: schema || {}
   classParents: {}
  }

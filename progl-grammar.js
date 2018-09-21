@@ -129,7 +129,7 @@ var grammar = {
 			"Dic",
 			"Obj",
 			"Class",
-			"Cons",			
+			"Curry",			
 //
 			"Id",
 			"Call",
@@ -263,9 +263,9 @@ var grammar = {
 			["SubClass", "$$ = $1"],
 			["ID", "$$ = ['idlib', $1]"]
 		],
-		"Cons": [
-			["% ID { Elems }", "$$ = ['cons', ['idlib', $2], ['dic', $4, 'Dic']];"],
-			["% ID { }", "$$ = ['cons', ['idlib', $2], ['dic', [], 'Dic']];"],			
+		"Curry": [
+			["% ID { Elems }", "$$ = ['curry', ['idlib', $2], ['dic', $4, 'Dic']];"],
+			["% ID { }", "$$ = ['curry', ['idlib', $2], ['dic', [], 'Dic']];"],			
 		],
 		"Obj": [
 			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],

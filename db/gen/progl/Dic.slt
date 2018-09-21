@@ -1,5 +1,5 @@
 {~
 @each k v #0 {~
-~=$indent~"~=asval(k)~": ~=exec(v, $env)~,~
+~=$indent~"~=asval(k)~": ~=ind(exec(v, $env))~,~
 }~
 }

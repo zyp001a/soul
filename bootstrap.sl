@@ -53,7 +53,7 @@ parentSetx = &(p, k, parents){
 	p.(k)[e->id] = e;
  }
 }
-scopeInitx = &(scope, name, parents){
+scopePresetx = &(scope, name, parents){
  #x = @ReprScopex {
   scope: {}
   scopeParents: {}
@@ -64,7 +64,7 @@ scopeInitx = &(scope, name, parents){
  routex(x, scope, name);
  @return x;
 }
-classInitx = &(scope, name, parents, schema){
+classPresetx = &(scope, name, parents, schema){
  #x = @ReprClassx {
   classCurry: {}
   classSchema: schema || {}
@@ -77,27 +77,27 @@ classInitx = &(scope, name, parents, schema){
  @return x;
 }
 
-##root = scopeInitx()
-##def = scopeInitx(root, "def")
+##root = scopePresetx()
+##def = scopePresetx(root, "def")
 
-##objc = classInitx(def, "Obj")
-##classc = classInitx(def, "Class", [objc])
-##scopec = classInitx(def, "Scope", [objc])
+##objc = classPresetx(def, "Obj")
+##classc = classPresetx(def, "Class", [objc])
+##scopec = classPresetx(def, "Scope", [objc])
 
-innateSet(root, "obj", scopec)
-innateSet(def, "obj", scopec)
-innateSet(objc, "obj", classc)
-innateSet(classc, "obj", classc)
-innateSet(scopec, "obj", classc)
+root->obj = scopec
+def->obj = scopec
+objc->obj = classc
+classc->obj = classc
+scopec->obj - classc
 
 scopeNewx = &(scope, name, parents){
 //TODO when key match "_"
- #x = scopeInitx(scope, name, parents)
+ #x = scopePresetx(scope, name, parents)
  innateSet(x, "obj", scopec)
  @return x
 }
 classNewx = &(scope, name, parents, schema){
- #x = classInitx(scope, name, parents, schema)
+ #x = classPresetx(scope, name, parents, schema)
  innateSet(x, "obj", classc)
  @return x
 }

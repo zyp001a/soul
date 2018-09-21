@@ -43,7 +43,8 @@ var grammar = {
 			["@for", "return 'FOR'"],
 			["@each", "return 'EACH'"],
 			["@while", "return 'WHILE'"],
-			["@include", "return 'INCLUDE'"],			
+			["@include", "return 'INCLUDE'"],
+//			["@package", "return 'PACKAGE'"],						
 			["\\=\\>", "return '=>'"],
 			["\\-\\>", "return '->'"], 
       ["\\(", "return '('"],
@@ -192,7 +193,9 @@ var grammar = {
 		],
 		"Include": [
 			["INCLUDE ID", "$$ = ['include', $2]"],
-			["INCLUDE STR", "$$ = ['include', $2]"],			
+			["INCLUDE STR", "$$ = ['include', $2]"],
+//			["PACKAGE ID", "$$ = ['package', $2]"],
+//			["PACKAGE STR", "$$ = ['package', $2]"],			
 		],
 		"If": [
 			["IF Expr Dic", "$$ = [$2, $3]"],

@@ -90,12 +90,27 @@ objc->obj = classc
 classc->obj = classc
 scopec->obj = classc
 
+
 scopeNewx = &(scope, name, parents){
 //TODO when key match "_"
  #x = scopePresetx(scope, name, parents)
  innateSet(x, "obj", scopec)
  @return x
 }
+scopeIntox = &(scope, key){
+ #nscope = scope
+ #arr = split(key, "_")
+ @each i e arr{
+  #xr = scopeGetLocal(scope, e)
+  @if(!?xr){
+   nscope = scopeNewx(nscope, e)
+  }@else{
+   nscope = xr;
+  }
+ }
+ @return nscope
+}
+
 classNewx = &(scope, name, parents, schema){
  #x = classPresetx(scope, name, parents, schema)
  innateSet(x, "obj", classc)
@@ -397,6 +412,12 @@ methodNewx(arrc, "get", repr(&(env, arr, key){
 fnNewx(def, "tilde", repr(&(env, x){
  @return "~"
 }))
+fnNewx(def, "genuid", repr(&(env){
+ #x = str(env.envState->index)
+ env.envState->index ++
+ @return x
+ log(x)
+}))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
@@ -645,9 +666,15 @@ dbGetx = &(scope, key){
 }
 progl2objx = &()
 scopeGetSubx = &(scope, key, cache){
-//  TODO scope get sub
- #nscope = scope;
- #nkey = key;
+ #nscope = scope
+ #nkey = key; 
+ #arr = match(key, "(\\S+)_([^_]+)$")
+// SCOPEINTO
+ @if(arr){
+  nscope = scopeIntox(scope, arr[1])
+  nkey = arr[2]
+ }
+ 
  #r = scopeGetLocal(nscope, nkey)
  @if(?r){
   @return r
@@ -655,11 +682,12 @@ scopeGetSubx = &(scope, key, cache){
  @if(!?scope->noname){
   #str = dbGetx(scope, key);
   @if(?str){
-   str = nkey^"="^str;
+   str = nkey^" = "^str;
    r = progl2objx(nscope, {}, str)
    @return r;
   }
  }
+
 
  @each k v scope.scopeParents {
   @if(cache[k]){ @continue };
@@ -675,7 +703,7 @@ scopeGetx = &(scope, key){
  @if(?r){
   @return r;
  }
- #pscope = innateGet(scope, "scope")
+ #pscope = scope->scope
  @if(?pscope){
   r = scopeGetx(pscope, key)
   @return r;
@@ -751,38 +779,52 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "assign"){
   #lexdef = 0
   @if(v[0][0] == "id"){
-   #vv = v[0][1]
-   #lv = scopeGetLocal(scope, vv)
+   #key = v[0][1]
+	 #nscope = scope
+	 #leftname = key
+   #arr = match(key, "(\\S+)_([^_]+)$")
+  // SCOPEINTO
+   @if(arr){
+    nscope = scopeIntox(scope, arr[1])
+    leftname = arr[2]
+   }
+   #lv = scopeIntox(nscope, leftname)
    @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
     lexdef = 0
-   }@elif(scopeGetLocal(gscope, vv)){
+   }@elif(scopeGetLocal(gscope, leftname)){
     lexdef = 0
    }@else{
     lexdef = 1   //is not global or local var
    }
-  }
-  @if(lexdef){
-   #leftname = v[0][1]
-   @if(v[1][0] == "func"){
+   @if(lexdef){
+    @if(v[1][0] == "func"){
    //func need predefined
-    #prefunc = scopeGetLocal(scope, leftname);
-    @if(!?prefunc){
-     prefunc = objNew(funcblockc, {})
-     routex(prefunc, scope, leftname)
+     #prefunc = scopeGetLocal(scope, leftname);
+     @if(!?prefunc){
+      prefunc = objNew(funcblockc, {})
+      routex(prefunc, scope, leftname)
+     }
+     #actfunc = ast2objx(scope, gscope, v[1])
+     prefunc.func = actfunc.func
+     prefunc.funcArgts = actfunc.funcArgts
+     prefunc.funcReturn = actfunc.funcReturn
+     innateSet(prefunc, "isdef", 1)
+     @return prefunc;
+    }@else{
+     #r = ast2objx(scope, gscope, v[1])
+     routex(r, scope, leftname)
+     innateSet(r, "isdef", 1)
+		 @if(v[1][0] == "class"){
+      @each k currye r.classCurry{
+       @if(typex(currye) == "FuncBlock"){
+		    methodNewx(r, k, currye)
+		   }
+			}
+		 }
+     @return r
     }
-    #actfunc = ast2objx(scope, gscope, v[1])
-    prefunc.func = actfunc.func
-    prefunc.funcArgts = actfunc.funcArgts
-    prefunc.funcReturn = actfunc.funcReturn
-    innateSet(prefunc, "isdef", 1)
-    @return prefunc;
-   }@else{
-    #r = ast2objx(scope, gscope, v[1])
-    routex(r, scope, leftname)
-    innateSet(r, "isdef", 1)
-    @return r
    }
-  }
+	}
   #left = ast2objx(scope, gscope, v[0]);
   #right = ast2objx(scope, gscope, v[1]);
   #op = v[2]
@@ -1084,9 +1126,13 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "class"){
   #parents = ast2arrx(scope, gscope, v);
   #schema = ast2objx(scope, gscope, ast[2])
+	@if(?ast[3]){
+   #curry = ast2objx(scope, gscope, ast[3])
+	}
   #x = @ReprClassx {
    classSchema: schema || {}
    classParents: {}
+	 classCurry: curry || {}
   }
   @if parents {
    parentSetx(x, "classParents", parents)
@@ -1524,8 +1570,8 @@ fnNewx(execsp, "OpLe", repr(&(env, o){
 ##defExecCache = {}
 
 
-envInitx = &(f){
- #defsptmp = scopeNewx(def),
+envInitx = &(defsp, execsp, f){
+ #defsptmp = scopeNewx(defsp),
  #globalsptmp = scopeNewx(globalsp)
  scopeSet(globalsptmp, "$argv", objNew(confidlocalc, {
   configName: "$argv",
@@ -1549,14 +1595,16 @@ envInitx = &(f){
   envState: deftmp,
   envStack: [],
 
-  envExecScope: scopeGetx(gensp, "expressjs"),
+  envExecScope: execsp
   envExecCache: {},
  })
 }
 
 //////////test
 #f = ##$argv[0]
-#env = envInitx(f)
+#defsptmp = scopeGetx(def, "web"),
+#execsptmp = scopeGetx(gensp, "expressjs"),
+#env = envInitx(defsptmp, execsptmp, f)
 @if(##$argv[1]){
  env.envExecScope = execsp
 }

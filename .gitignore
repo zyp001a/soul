@@ -6,4 +6,3 @@ test*
 !.gitignore
 !.gitmodules
 \#*\#
-db/project

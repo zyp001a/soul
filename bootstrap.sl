@@ -307,6 +307,9 @@ scopec.classSchema = {
 ##splusc = curryNewx(def, "OpOr", op2c, {
  opPrecedence: 70
 })
+##definedc = curryNewx(def, "OpDefinedor", op1c, {
+ opPrecedence: 80
+})
 
 ##includec = classNewx(def, "Include", [objc], {
  include: strc
@@ -384,7 +387,7 @@ methodNewx(dicc, "get", repr(&(env, dic, key){
  })
 }))
 methodNewx(arrc, "get", repr(&(env, arr, key){
- @return objNew(sidarrc, {
+ @return objNew(aidc, {
   aid: key
   aidArr: arr
  })
@@ -729,10 +732,8 @@ ast2objx = &(scope, gscope, ast){
    #oo = f.callArgs[0]
    #okey = f.callArgs[1]
    unshift(arr, oo)
-   #to = typepredx(oo)
-   @if(!?to){
-    to = objc
-   }
+	 
+   #to = typepredx(oo) || objc
    @if(typex(okey) == "Str"){
     f = curryGetx(to, asval(okey))
    }@else{
@@ -791,9 +792,6 @@ ast2objx = &(scope, gscope, ast){
      callFunc: concatf
      callArgs: [left, right]
     })
-   }@elif(op == "definedor"){
-    #leftx = ["op", "defined", [v[0]]]
-    right = ast2objx(scope, gscope, ["op", "or", [leftx, v[1]]])
    }@else{
     right = ast2objx(scope, gscope, ["op", op, [v[0], v[1]]])
    }
@@ -821,7 +819,11 @@ ast2objx = &(scope, gscope, ast){
   #a1 = ast2objx(scope, gscope, ast[2])
   #v3 = ast[3]
   @if(ast[3] == "items"){
-   v3 = "dic" //TODO check dic or arr
+   #to = typepredx(a0) || objc
+   @return objNew(callc, {
+    callFunc: curryGetx(to, "get")
+    callArgs: [a0, a1]
+   })	 
   }
   @return objNew(callc, {
    callFunc: scopeGetLocal(def, v3^"Get")
@@ -940,22 +942,26 @@ ast2objx = &(scope, gscope, ast){
   @return r;
  }
  @if(t == "idglobal"){
-  #x = objNew(confidc, {
-   confidName: v
-//    confidType: a.argtType
-  })
-  scopeSet(gscope, v, x)
+  @if(!scopeGetLocal(gscope, v)){
+   #x = objNew(confidc, {
+    confidName: v
+    //confidType: a.argtType
+   })
+   scopeSet(gscope, v, x)	 
+	}
   @return objNew(sidglobalc, {
    sid: v
    sidGlobal: gscope
   })
  }
  @if(t == "idlocal"){
-  #x = objNew(confidlocalc, {
-   confidName: v
-//    confidType: a.argtType
-  })
-  scopeSet(scope, v, x)
+  @if(!scopeGetLocal(scope, v)){ 
+   #x = objNew(confidlocalc, {
+    confidName: v
+    //confidType: a.argtType
+   })
+   scopeSet(scope, v, x)
+	}
   @return objNew(sidlocalc, {
    sid: v
    sidLocal: scope
@@ -1449,6 +1455,9 @@ fnNewx(execsp, "SidObj", repr(&(env, o){
 fnNewx(execsp, "SidDic", repr(&(env, o){
  @return o.sidDic[o.sid]
 }))
+fnNewx(execsp, "Aid", repr(&(env, o){
+ @return o.aidArr[o.aid]
+}))
 
 
 fnNewx(execsp, "OpSplus", repr(&(env, o){
@@ -1475,6 +1484,11 @@ fnNewx(execsp, "OpAnd", repr(&(env, o){
 }))
 fnNewx(execsp, "OpOr", repr(&(env, o){
  @if(asval(execx(o.op2Left, env))){ @return 1 }
+ @return asval(execx(o.op2Right, env))
+}))
+fnNewx(execsp, "OpDefinedor", repr(&(env, o){
+ #x = asval(execx(o.op2Left, env))
+ @if(?x){ @return x }
  @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpNot", repr(&(env, o){
@@ -1535,7 +1549,7 @@ envInitx = &(f){
   envState: deftmp,
   envStack: [],
 
-  envExecScope: scopeGetx(gensp, "js"),
+  envExecScope: scopeGetx(gensp, "expressjs"),
   envExecCache: {},
  })
 }

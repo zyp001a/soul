@@ -55,6 +55,7 @@ var grammar = {
 			["\\+\\+", "return '++'"],
 			["\\-\\-", "return '--'"],			
 			["\\?\\?", "return '??'"],
+			["\\?\\|", "return '?|'"],			
 			["\\:\\:", "return '::'"],      
 			["\\?\\=", "return '?='"],
 			["\\^\\=", "return '^='"],      
@@ -92,7 +93,8 @@ var grammar = {
   },
 	"operators": [
 		["right", "=", "+=", "-=", "*=", "/=", "^=", "?="],
-    ["left", "++", "--"],		
+    ["left", "++", "--"],
+    ["left", "??"], //8		
     ["left", "||"], //7
     ["left", "&&"], //6
 		["left", "==", "!="], //5
@@ -162,11 +164,11 @@ var grammar = {
 			["# ID", "$$ = ['idlocal', $2]"],//stack
 			["# NUM", "$$ = ['idlocal', $2]"],//stack						
 			["ID # ID ", "$$ = ['idlocal', $3, ['idlib', $1]]"],
-			["( SubClass ) # ID", "$$ = ['idlocal', $5, $2]"],
+			["Curry # ID", "$$ = ['idlocal', $3, $1]"],
 			
 			["## ID", "$$ = ['idglobal', $2]"],//heap
 			["ID ## ID ", "$$ = ['idglobal', $3, ['idlib', $1]]"],
-			["( SubClass ) ## ID", "$$ = ['idglobal', $5, $2]"],		
+			["Curry ## ID", "$$ = ['idglobal', $3, $1]"],		
 			
 		],
 		Elem: [
@@ -252,6 +254,7 @@ var grammar = {
 		],
 		"Class":[
 			["Parents Dic", "$2[2] = 'Dic';$$ = ['class', $1, $2]"],
+			["Parents Dic => Dic", "$2[2] = 'Dic';$$ = ['class', $1, $2, $4]"],
 			["< Parents >", "$$ = ['scope', $2]"],			
 		],
 		"Parents": [
@@ -263,12 +266,12 @@ var grammar = {
 			["Cns Cn", "$$ = $1; $1.push($2)"],			
 		],
 		"Cn": [
-			["SubClass", "$$ = $1"],
+			["Curry", "$$ = $1"],
 			["ID", "$$ = ['idlib', $1]"]
 		],
 		"Curry": [
-			["% ID { Elems }", "$$ = ['curry', ['idlib', $2], ['dic', $4, 'Dic']];"],
-			["% ID { }", "$$ = ['curry', ['idlib', $2], ['dic', [], 'Dic']];"],			
+			["=> ID { Elems }", "$$ = ['curry', ['idlib', $2], ['dic', $4, 'Dic']];"],
+			["=> ID { }", "$$ = ['curry', ['idlib', $2], ['dic', [], 'Dic']];"],			
 		],
 		"Obj": [
 			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],
@@ -318,6 +321,7 @@ var grammar = {
 			["Expr < Expr", "$$ = ['lt', [$1, $3]]"],
 			["Expr && Expr", "$$ = ['and', [$1, $3]]"],
 			["Expr || Expr", "$$ = ['or', [$1, $3]]"],
+			["Expr ?? Expr", "$$ = ['definedor', [$1, $3]]"],			
 		],
   }
 };

@@ -1,3 +1,25 @@
+`` raw str
+@`` tpl
+~ tpl lang
+@ keyword, objNew
+# local ## global
+& function
+^ string concat
+. Obj$get .(Expr)
+[] Items$get
+-> InnateGet ->(Expr)
+<> class
+=> curry
+<<>> scope
+? defined
+?= if defined =, similar to  ||=, so no ||=
+_ null
+__ undefined
+$ system var, method-Class spliter
+
+
+
+
 # generate step
 ti jssl ti2soulgen.sl bootstrap.sl //run 1min for old computer
 

@@ -1,1 +1,1 @@
-/*def class: ~=rget(#0, "id")~*/
+/*class #0->id*/

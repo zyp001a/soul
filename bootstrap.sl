@@ -50,7 +50,7 @@ routex = &(oo, scope, name){
 parentSetx = &(p, k, parents){
  @foreach e parents{
   //TODO reduce
-	p.(k)[e->id] = e;
+  p.(k)[e->id] = e;
  }
 }
 scopePresetx = &(scope, name, parents){
@@ -71,7 +71,7 @@ classPresetx = &(scope, name, parents, schema){
   classParents: {}
  }
  @if parents {
-  parentSetx(x, "classParents", parents) 
+  parentSetx(x, "classParents", parents)
  }
  routex(x, scope, name);
  @return x;
@@ -88,7 +88,7 @@ root->obj = scopec
 def->obj = scopec
 objc->obj = classc
 classc->obj = classc
-scopec->obj - classc
+scopec->obj = classc
 
 scopeNewx = &(scope, name, parents){
 //TODO when key match "_"
@@ -153,6 +153,7 @@ curryNewx = &(scope, name, class, curry){
 })
 ##functplc = classNewx(def, "FuncTpl", [funcc], {
  func: strc
+ funcTplFile: strc
 })
 ##funcinternalc = classNewx(def, "FuncInternal", [funcc], {
 })
@@ -182,13 +183,14 @@ scopec.classSchema = {
 ////////define call class/curry
 
 ##envc = classNewx(def, "Env", [objc], {
+ envFile: strc
  envDefScope: scopec
  envGlobalScope: scopec
  envExecScope: scopec,
  envExecCache: dicc,
  envState: dicc,
  envGlobal: dicc,
- envStack: arrc, 
+ envStack: arrc,
 })
 
 ##callablec = classNewx(def, "Callable", [objc])
@@ -232,11 +234,10 @@ scopec.classSchema = {
 
 ##confidc = classNewx(def, "Confid", [objc], {
  confidName: strc,
- confidType: classc, 
+ confidType: classc,
 })
 ##confidargc = curryNewx(def, "ConfidArg", confidc)
 ##confidlocalc = curryNewx(def, "ConfidLocal", confidc)
-//##confidsystemc = curryNewx(def, "ConfidSystem", confidc)
 
 ##assignc = classNewx(def, "Assign", [objc], {
  assignLeft: idc
@@ -251,7 +252,7 @@ scopec.classSchema = {
 })
 ##op2c = classNewx(def, "Op2", [opc], {
  op2Left: objc
- op2Right: objc 
+ op2Right: objc
 })
 //https://en.cppreference.com/w/c/language/operator_precedence
 //remove unused
@@ -331,9 +332,27 @@ scopec.classSchema = {
 ##returnc = classNewx(def, "Return", [ctrlc], {
  return: objc
 })
-
+typex = &()
+curryInitx = &()
+methodNewx = &(c, name, fn){
+ fn->name = name
+ fn->id = c->id^"$"^name
+ #t = typex(c)
+ @if(t == "Curry"){
+  c.curry[name] = fn;
+  @return fn
+ }
+ @if(t == "Class"){
+  c.classCurry[name] = fn
+  c.classSchema[name] = curryInitx(funcc, {
+   funcArgts: fn.funcArgts
+   funcReturn: fn.funcReturn
+  })
+  @return fn
+ }
+ die("methodNewx: type not defined, "^typex(c))
+}
 fnNewx = &(scope, name, fn){
- innateSet(fn, "obj", funcnativec)
  routex(fn, scope, name);
  //TODO if  raw
  @return fn
@@ -357,7 +376,24 @@ typex = &()
 progl2objx = &()
 curryGetx = &()
 classGetx = &()
+/////////define method
+methodNewx(dicc, "get", repr(&(env, dic, key){
+ @return objNew(siddicc, {
+  sid: key
+  sidDic: dic
+ })
+}))
+methodNewx(arrc, "get", repr(&(env, arr, key){
+ @return objNew(sidarrc, {
+  aid: key
+  aidArr: arr
+ })
+}))
+
 /////////define bridge internal function
+fnNewx(def, "tilde", repr(&(env, x){
+ @return "~"
+}))
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
@@ -378,16 +414,16 @@ fnNewx(def, "push", repr(&(env, a, e){
  @return e;
 }))
 fnNewx(def, "join", repr(&(env, a, s){
- @return join(a, s) 
+ @return join(a, s)
 }))
-fnNewx(def, "split", repr(&(env, a, s){
- @return split(a, s) 
+fnNewx(def, "split", repr(&Arr(env, a:Str, s){
+ @return split(a, s)
 }))
 fnNewx(def, "escape", repr(&(env, s){
  @return replaceAll(s, "[\n\t\r]", &(x){
   @if(x == "\n"){ @return "\\n" }
   @if(x == "\t"){ @return "\\t" }
-  @if(x == "\r"){ @return "\\r" }	
+  @if(x == "\r"){ @return "\\r" }
  })
 }))
 fnNewx(def, "opp", repr(&(env, subo, o, nenv){
@@ -398,8 +434,12 @@ fnNewx(def, "opp", repr(&(env, subo, o, nenv){
  @if(subo.opPrecedence > o.opPrecedence){
   @return "(" + execx(subo, nenv) + ")"
  }
- @return execx(subo, nenv)  
+ @return execx(subo, nenv)
 }))
+//TODO change ind to replace \n to \n__
+fnNewx(def, "indInline", repr(&(env, x){
+
+}));
 fnNewx(def, "ind", repr(&(env, x){
 //indent text
  #indent = env.envGlobal["$indent"]
@@ -427,19 +467,19 @@ fnNewx(def, "num", repr(&(env, o){
 fnNewx(def, "dicGet", repr(&(env, dic, key){
  @return objNew(siddicc, {
   sid: key
-	sidDic: dic
+  sidDic: dic
  })
 }))
 fnNewx(def, "objGet", repr(&(env, obj, key){
  @return objNew(sidobjc, {
   sid: key
-	sidObj: obj
+  sidObj: obj
  })
 }))
 fnNewx(def, "innateGet", repr(&(env, o, k){
  @return objNew(sidinnatec, {
   sid: k
-	sidInnate: o
+  sidInnate: o
  })
 }))
 fnNewx(def, "scopeGet", repr(&(env, s, key){
@@ -454,8 +494,8 @@ fnNewx(def, "scopeSet", repr(&(env, s, key, v){
 fnNewx(def, "call", repr(&(env, func, args, env){
  @return callx(func, args, env)
 }))
-fnNewx(def, "exec", repr(&(env, o, env){
- @return execx(o, env)
+fnNewx(def, "exec", repr(&(env, o, eenv){
+ @return execx(o, eenv)
 }))
 fnNewx(def, "fileRead", repr(&(env, f){
  @return fileRead(f)
@@ -485,47 +525,48 @@ fnNewx(def, "asobj", repr(&(env, o){
 ////////define basic function
 classGetx = &(c, t){
  @if(typex(c) == "Curry"){
-	@return classGetx(c.curryClass, t)
+  @return classGetx(c.curryClass, t)
  }
  @if(typex(c) == "Class"){
   #x = c.classSchema[t]
-	@if(?x){
-	 @return x;
-	}
-	@each k v c.classParents{
-	 #x = classGetx(v, t)
-	 @if(?x){
-	  @return x
-	 }
-	}
+  @if(?x){
+   @return x;
+  }
+  @each k v c.classParents{
+   #x = classGetx(v, t)
+   @if(?x){
+    @return x
+   }
+  }
  }
- die("ccget: type error, "^typex(c)) 
+ die("classGet: type error, "^typex(c))
 }
 curryGetx = &(c, t){
  @if(typex(c) == "Curry"){
   #x = c.curry[t]
   @if(?x){
-	 @return x 
-	}
-	@return curryGetx(c.curryClass, t)
+   @return x
+  }
+  @return curryGetx(c.curryClass, t)
  }
  @if(typex(c) == "Class"){
   #x = c.classCurry[t]
-	@if(?x){
-	 @return x;
-	}
-	@each k v c.classParents{
-	 #x = curryGetx(v, t)
-	 @if(?x){
-	  @return x
-	 }
-	}
+  @if(?x){
+   @return x;
+  }
+  @each k v c.classParents{
+   #x = curryGetx(v, t)
+   @if(?x){
+    @return x
+   }
+  }
+  die("curryGet: key not found, "^t)
  }
- die("ccget: type error, "^typex(c))
+ die("curryGet: type error, "^typex(c))
 }
 typex = &(oo){
  #o = asobj(oo)
- @return innateGet(innateGet(o, "obj"), "id")
+ @return o->obj->id
 }
 typepredx = &(oo){
 //type prediction
@@ -562,7 +603,7 @@ isclassrx = &(c, t){
  @return 0
 }
 isclassx = &(c, t){
- 
+
  @if(c->id == t){
   @return 1
  }
@@ -576,23 +617,24 @@ istypex = &(oo, t){
  @return isclassx(o->obj, t)
 }
 dbPath = &(x){
- @if(!innateGet(x, "ns")){
+ @if(!x->ns){
   #ns = ""
  }@else{
-  #ns = "/" + innateGet(x, "ns")
+  #ns = "/" + x->ns
  }
- @if(!innateGet(x, "id")){
+ @if(!x->id){
   @return ns
  }
- @return ns^"/"^replaceAll(innateGet(x, "id"), "_", "/")
+ @return ns^"/"^replaceAll(x->id, "_", "/")
 }
 dbGetx = &(scope, key){
  #p = pathResolve(##$sysenv["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/"))
+ p = replaceAll(p, "\\$", "-")
  @if(fileExists(p^".sl")){
   @return fileRead(p^".sl")
  }
  @if(fileExists(p^".slt")){
-  @return "@`"^fileRead(p^".slt")^"`"
+  @return "@`"^fileRead(p^".slt")^"` '"^p^"'"
  }
  @if(fileExists(p)){
   @return "<<>>"
@@ -602,20 +644,20 @@ progl2objx = &()
 scopeGetSubx = &(scope, key, cache){
 //  TODO scope get sub
  #nscope = scope;
- #nkey = key; 
+ #nkey = key;
  #r = scopeGetLocal(nscope, nkey)
  @if(?r){
   @return r
  }
- @if(!?innateGet(scope, "noname")){
+ @if(!?scope->noname){
   #str = dbGetx(scope, key);
   @if(?str){
    str = nkey^"="^str;
-	 r = progl2objx(nscope, {}, str)
+   r = progl2objx(nscope, {}, str)
    @return r;
-  }  
+  }
  }
- 
+
  @each k v scope.scopeParents {
   @if(cache[k]){ @continue };
   cache[k] = 1;
@@ -660,68 +702,73 @@ ast2objx = &(scope, gscope, ast){
   @return asobj(v);
  }
  @if(t == "num"){
-  @return asobj(num(v)); 
+  @return asobj(num(v));
  }
  @if(t == "null"){
-  @return asobj(_);  
+  @return asobj(_);
  }
  @if(t == "undf"){
-  @return asobj(__);  
+  @return asobj(__);
  }
- 
+
  @if(t == "call"){
   #f = ast2objx(scope, gscope, v);
-	@if(!?f){
-	 @if(v[0] != "id"){
+  @if(!?f){
+   @if(v[0] != "id"){
     log(v)
-	  die("call func not defined for unknown reason")	 
-	 }
-	//func not defined, if v[0] is id, do predefine	 
+    die("call func not defined for unknown reason")
+   }
+  //func not defined, if v[0] is id, do predefine
    #f = objNew(funcblockc, {})
-	 #pscope = innateGet(scope, "scope")
+   #pscope = innateGet(scope, "scope")
    routex(f, pscope, v[1])
-	 innateSet(f, "predefined", 1)	 
-	}
-	#arr = ast2arrx(scope, gscope, ast[2])
-	@if(v[0] == "get" && v[3] == "obj"){
-	 #oo = f.funcArgs[0]	
-	 unshift(arr, oo)
-	 #tt = typepredx(oo)
-	 @if(!?tt){
-	  tt = objc
-	 }
-	 f = objNew(callc, {
-	  callFunc: ccgetf,
-		callArgs: [tt, f.funcArgs[1]]
-	 })
-	}
+   innateSet(f, "predefined", 1)
+  }
+  #arr = ast2arrx(scope, gscope, ast[2])
+  @if(v[0] == "get" && v[3] == "obj"){
+   #oo = f.callArgs[0]
+   #okey = f.callArgs[1]
+   unshift(arr, oo)
+   #to = typepredx(oo)
+   @if(!?to){
+    to = objc
+   }
+   @if(typex(okey) == "Str"){
+    f = curryGetx(to, asval(okey))
+   }@else{
+     f = objNew(callc, {
+     callFunc: currygetf,
+     callArgs: [to, okey]
+    })
+   }
+  }
   @return objNew(callc, {
    callFunc: f
    callArgs: arr
   })
  }
  @if(t == "assign"){
-	#lexdef = 0
+  #lexdef = 0
   @if(v[0][0] == "id"){
-	 #vv = v[0][1]
+   #vv = v[0][1]
    #lv = scopeGetLocal(scope, vv)
    @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
     lexdef = 0
    }@elif(scopeGetLocal(gscope, vv)){
     lexdef = 0
    }@else{
-    lexdef = 1	 //is not global or local var
-	 }
+    lexdef = 1   //is not global or local var
+   }
   }
-	@if(lexdef){
+  @if(lexdef){
    #leftname = v[0][1]
    @if(v[1][0] == "func"){
-	 //func need predefined
-	  #prefunc = scopeGetLocal(scope, leftname);
-		@if(!?prefunc){
+   //func need predefined
+    #prefunc = scopeGetLocal(scope, leftname);
+    @if(!?prefunc){
      prefunc = objNew(funcblockc, {})
      routex(prefunc, scope, leftname)
-		}
+    }
     #actfunc = ast2objx(scope, gscope, v[1])
     prefunc.func = actfunc.func
     prefunc.funcArgts = actfunc.funcArgts
@@ -731,26 +778,39 @@ ast2objx = &(scope, gscope, ast){
    }@else{
     #r = ast2objx(scope, gscope, v[1])
     routex(r, scope, leftname)
-    innateSet(r, "isdef", 1)    
+    innateSet(r, "isdef", 1)
     @return r
    }
   }
   #left = ast2objx(scope, gscope, v[0]);
   #right = ast2objx(scope, gscope, v[1]);
-	#op = v[2]
-	@if(?op){
-	 @if(op == "splus"){
-	  right = objNew(callc, {
-		 callFunc: concatf
-		 callArgs: [left, right]
-		})
-	 }@elif(op == "definedor"){
-	  #leftx = ["op", "defined", [v[0]]]
-		right = ast2objx(scope, gscope, ["op", "or", [leftx, v[1]]])
-	 }@else{
+  #op = v[2]
+  @if(?op){
+   @if(op == "splus"){
+    right = objNew(callc, {
+     callFunc: concatf
+     callArgs: [left, right]
+    })
+   }@elif(op == "definedor"){
+    #leftx = ["op", "defined", [v[0]]]
+    right = ast2objx(scope, gscope, ["op", "or", [leftx, v[1]]])
+   }@else{
     right = ast2objx(scope, gscope, ["op", op, [v[0], v[1]]])
    }
-	}	
+  }
+  #predt = typepredx(right)
+  @if(?predt){
+    @if(typex(left) == "SidLocal"){
+    @if(!?left.sidLocal[left.sid].confidType){
+     left.sidLocal[left.sid].confidType = predt
+    }
+   }
+    @if(typex(left) == "SidGlobal"){
+    @if(!?left.sidGlobal[left.sid].confidType){
+     left.sidGlobal[left.sid].confidType = predt
+    }
+   }
+  }
   @return objNew(assignc, {
    assignLeft: left,
    assignRight: right
@@ -759,14 +819,14 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "get"){
   #a0 = ast2objx(scope, gscope, v)
   #a1 = ast2objx(scope, gscope, ast[2])
-	#v3 = ast[3]
-	@if(ast[3] == "items"){
-	 v3 = "dic" //TODO check dic or arr
-	}
-	@return objNew(callc, {
-	 callFunc: scopeGetLocal(def, v3^"Get")
-	 callArgs: [a0, a1]
-	})
+  #v3 = ast[3]
+  @if(ast[3] == "items"){
+   v3 = "dic" //TODO check dic or arr
+  }
+  @return objNew(callc, {
+   callFunc: scopeGetLocal(def, v3^"Get")
+   callArgs: [a0, a1]
+  })
  }
  @if(t == "include"){
   @if(!match(v, "\.sl$")){
@@ -776,11 +836,11 @@ ast2objx = &(scope, gscope, ast){
   @if(!fileExists(ss)){
    die("import: file "^s^" not defined")
   }
-	@return objNew(includec, {
-	 include: ss
-	})    
+  @return objNew(includec, {
+   include: ss
+  })
  }
- 
+
  @if(t == "ctrl"){
   #args = ast[2]
   @if(v == "foreach"){
@@ -793,7 +853,7 @@ ast2objx = &(scope, gscope, ast){
     ctrlArgs: [
      args[0]
      ast2objx(scope, gscope, args[1])
-     ast2objx(scope, gscope, args[2])     
+     ast2objx(scope, gscope, args[2])
     ]
    })
   }
@@ -810,9 +870,9 @@ ast2objx = &(scope, gscope, ast){
    @return objNew(ctrleachc, {
     ctrlArgs: [
      args[0]
-     args[1]     
+     args[1]
      ast2objx(scope, gscope, args[2])
-     ast2objx(scope, gscope, args[3])     
+     ast2objx(scope, gscope, args[3])
     ]
    })
   }
@@ -828,7 +888,7 @@ ast2objx = &(scope, gscope, ast){
   }
   @if(v == "for"){
    args[3][2] = "BlockNovar"
-   @return objNew(ctrlforc, {ctrlArgs: ast2arrx(scope, gscope, args)})   
+   @return objNew(ctrlforc, {ctrlArgs: ast2arrx(scope, gscope, args)})
   }
   @if(v == "while"){
    args[1][2] = "BlockNovar"
@@ -837,7 +897,7 @@ ast2objx = &(scope, gscope, ast){
   @if(v == "return"){
    @return objNew(ctrlreturnc, {
     ctrlArgs: [ast2objx(scope, gscope, args[0])]
-   })  
+   })
   }
   @if(v == "break"){
    @return objNew(ctrlbreakc, {})
@@ -847,48 +907,48 @@ ast2objx = &(scope, gscope, ast){
   }
   @if(v == "goto"){
    @return objNew(ctrlgotoc, {
-    ctrlArgs: [ast2objx(scope, gscope, args[0])]	 
-	 })
+    ctrlArgs: [ast2objx(scope, gscope, args[0])]
+   })
   }
  }
- 
+
  @if(t == "id"){
   #lv = scopeGetLocal(scope, v)
   @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
    @return objNew(sidlocalc, {
-	  sid: v
-		sidLocal: scope
-	 })
+    sid: v
+    sidLocal: scope
+   })
   }
   @if(scopeGetLocal(gscope, v)){
    @return objNew(sidglobalc, {
-	  sid: v
-		sidGlobal: gscope
-	 })
-  }  
+    sid: v
+    sidGlobal: gscope
+   })
+  }
   #r = scopeGetx(scope, v)
-	@if(!?r){
-	 die("ast2obj: id is not defined, "^v)
-	}
-	@return r;
+  @if(!?r){
+   die("ast2obj: id is not defined, "^v)
+  }
+  @return r;
  }
  @if(t == "idlib"){
   #r = scopeGetx(scope, v)
   @if(!?r){
-   die(v^" not defined")	
+   die(v^" not defined")
   }
-	@return r;
+  @return r;
  }
  @if(t == "idglobal"){
   #x = objNew(confidc, {
    confidName: v
 //    confidType: a.argtType
   })
-  scopeSet(gscope, v, x)   
+  scopeSet(gscope, v, x)
   @return objNew(sidglobalc, {
-	 sid: v
-	 sidGlobal: gscope
-	}) 
+   sid: v
+   sidGlobal: gscope
+  })
  }
  @if(t == "idlocal"){
   #x = objNew(confidlocalc, {
@@ -897,9 +957,9 @@ ast2objx = &(scope, gscope, ast){
   })
   scopeSet(scope, v, x)
   @return objNew(sidlocalc, {
-	 sid: v
-	 sidLocal: scope
-	}) 
+   sid: v
+   sidLocal: scope
+  })
  }
 
  @if(t == "arr"){
@@ -935,15 +995,15 @@ ast2objx = &(scope, gscope, ast){
     #x = objNew(blocknovarc, {
      block: arr
      blockLabels: labels
-    })	 
+    })
    }@else{
     #x = objNew(blockc, {
      block: arr
      blockLabels: labels
     })
-	 }
-	 x->scope = scope
-	 @return x
+   }
+   x->scope = scope
+   @return x
   }
   @if(tt == "Dic"){
    #dic = ast2dicx(scope, gscope, v)
@@ -960,8 +1020,8 @@ ast2objx = &(scope, gscope, ast){
    @if(?argast[1]){
     push(funcArgts, objNew(argtc, {
      argtName: argast[0]
-     argtType: ast2objx(scope, gscope, argast[1])    
-    }))   
+     argtType: ast2objx(scope, gscope, argast[1])
+    }))
    }@else{
     push(funcArgts, objNew(argtc, {
      argtName: argast[0]
@@ -984,55 +1044,58 @@ ast2objx = &(scope, gscope, ast){
     confidName: a.argtName
     confidType: a.argtType
    })
-   scopeSet(nscope, i, x) 
-   scopeSet(nscope, a.argtName, x)  
+   scopeSet(nscope, i, x)
+   scopeSet(nscope, a.argtName, x)
   }
   #b = ast2objx(nscope, gscope, block)
   @return objNew(funcblockc, {
    func: b
    funcArgts: funcArgts,
    funcReturn: funcReturn
-  })  
+  })
  }
  @if(t == "tpl"){
-  @return objNew(functplc, {func: v})
- } 
+  @return objNew(functplc, {
+   func: v
+   funcTplFile: ast[2]
+  })
+ }
  @if(t == "op"){
   #cname = "Op"^ucfirst(v)
-	#class = scopeGetLocal(def, cname)
-	#args = ast[2]
-	@if(len(args) == 1){
+  #class = scopeGetLocal(def, cname)
+  #args = ast[2]
+  @if(len(args) == 1){
    @return objNew(class, {
-	  op1: ast2objx(scope, gscope, args[0])		
+    op1: ast2objx(scope, gscope, args[0])
    })
-	}@else{
+  }@else{
    @return objNew(class, {
-	  op2Left: ast2objx(scope, gscope, args[0])
-	  op2Right: ast2objx(scope, gscope, args[1])
+    op2Left: ast2objx(scope, gscope, args[0])
+    op2Right: ast2objx(scope, gscope, args[1])
    })
-	}
+  }
  }
  @if(t == "class"){
   #parents = ast2arrx(scope, gscope, v);
-	#schema = ast2objx(scope, gscope, ast[2])
+  #schema = ast2objx(scope, gscope, ast[2])
   #x = @ReprClassx {
    classSchema: schema || {}
    classParents: {}
   }
   @if parents {
-   parentSetx(x, "classParents", parents) 
+   parentSetx(x, "classParents", parents)
   }
-  innateSet(x, "obj", classc)	
-	@return x
+  innateSet(x, "obj", classc)
+  @return x
  }
  @if(t == "curry"){
   #class = ast2objx(scope, gscope, v)
-	#dic = ast2objx(scope, gscope, ast[2])
-	@return curryInitx(class, dic)
+  #dic = ast2objx(scope, gscope, ast[2])
+  @return curryInitx(class, dic)
  }
  @if(t == "obj"){
  //TODO func, dic, arr with spec class
-	#c = ast2objx(scope, gscope, v);
+  #c = ast2objx(scope, gscope, v);
   @return objNew(c, ast2objx(scope, gscope, ast[2]))
  }
  @if(t == "scope"){
@@ -1042,8 +1105,8 @@ ast2objx = &(scope, gscope, ast){
    scopeParents: {}
   }
   parentSetx(x, "scopeParents", parents)
-  innateSet(x, "obj", scopec)    
-	@return x
+  innateSet(x, "obj", scopec)
+  @return x
  }
  die("ast: unknown type, "^t)
 }
@@ -1072,8 +1135,8 @@ blockExecx = &(block, env, sttlabel){
 }
 execGetx = &(t, env, cache){
  #e = env.envExecScope
- @if(?e[t]){
-  @return e[t];
+ @if(?scopeGetLocal(e, t)){
+  @return scopeGetLocal(e, t);
  }
  @if(!cache){
   cache = {};
@@ -1091,25 +1154,26 @@ execGetx = &(t, env, cache){
 
   exect = execGetx(k, env, cache);
   @if(?exect){
-   e[t] = exect;	
+   e[t] = exect;
    @return exect;
-  } 
+  }
  }@else{
   @if(!?deft){
-	 die("execGet: type not defined, "^t)
-	}
+   die("execGet: type not defined, "^t)
+  }
   @each k v deft.classParents{
    @if(cache[k]){ @return; }
    cache[k] = 1;
    exect = execGetx(k, env, cache);
    @if(?exect){
-    e[t] = exect;	
+    e[t] = exect;
     @return exect;
    }
   }
  }
 }
-tplCallx = &(str, args, env){
+tplCallx = &(functpl, args, env){
+ #str = functpl.func
  @if(!str){ @return ""}
  #tstr = tplParse(str);
  #tscope = scopeNewx(def)
@@ -1127,15 +1191,18 @@ tplCallx = &(str, args, env){
  #nenv = objNew(envc,  {
   envDefScope: tscope
   envGlobalScope: env.envGlobalScope
- 
+
   envExecScope: execsp
   envExecCache: ##defExecCache,
   envState: s,
   envGlobal: env.envGlobal,
-  envStack: [], 
+  envStack: [],
  })
+ @if(functpl.funcTplFile){
+  nenv.envFile = functpl.funcTplFile
+ }
  #r = blockExecx(o, nenv);
- @return r.return;  
+ @return r.return;
 }
 stateNewx = &(argts, args){
  #state = {}
@@ -1151,7 +1218,7 @@ callx = &(func, args, env){
   @return callNative(func.func, args, env)
  }
  @if(t == "FuncTpl"){
-  @return tplCallx(func.func, args, env);
+  @return tplCallx(func, args, env);
  }
  @if(t == "FuncBlock"){
   #state = stateNewx(func.funcArgts, args)
@@ -1171,7 +1238,7 @@ execx = &(oo, env){
  #t = typex(o)
  @if(!?t){
   log(o)
-	die("no type defined")
+  die("no type defined")
  }
  #ex = execGetx(t, env)
  @if(!?ex){
@@ -1203,10 +1270,10 @@ fnNewx(execsp, "Main", repr(&(env, o){
 fnNewx(execsp, "Call", repr(&(env, o){
  #func = execx(o.callFunc, env)
  @if(innateGet(func, "predefined")){
-  log(o.callFunc->scope) 
+  log(o.callFunc->scope)
   log(o.callFunc->id)
   die("func not defined");
- }  
+ }
  #args = []
  @foreach e o.callArgs{
   push(args, asval(execx(e, env)))
@@ -1218,34 +1285,27 @@ fnNewx(execsp, "Assign", repr(&(env, o){
  #t = typex(l)
  @if(t == "Call"){
   l = execx(o.assignLeft, env);
-	t = typex(l)
+  t = typex(l)
  }
  #v = asval(execx(o.assignRight, env))
+ #ov = asobj(v)
  @if(t == "SidGlobal"){
-  #confid = l.sidGlobal[l.sid] 
-	@if(!?confid.confidType){
-	 confid.confidType = asobj(v)->obj
-	} 
   @return env.envGlobal[l.sid] = v
  }
  @if(t == "SidLocal"){
-  #confid = l.sidLocal[l.sid]
-	@if(!?confid.confidType){
-	 confid.confidType = asobj(v)->obj
-	}
   @return env.envState[l.sid] = v
  }
  @if(t == "SidObj"){
-  @return l.sidObj.(l.sid) = v 
+  @return l.sidObj.(l.sid) = v
  }
  @if(t == "SidInnate"){
-  @return (l.sidInnate)->(l.sid) = v 
+  @return (l.sidInnate)->(l.sid) = v
  }
  @if(t == "SidDic"){
-  @return l.sidDic[l.sid] = v 
+  @return l.sidDic[l.sid] = v
  }
  @if(t == "Aid"){
-  @return l.aidArr[l.aid] = v  
+  @return l.aidArr[l.aid] = v
  }
  log(l)
  die("left not assignable");
@@ -1269,7 +1329,7 @@ fnNewx(execsp, "CtrlReturn", repr(&(env, o){
 fnNewx(execsp, "CtrlEach", repr(&(env, o){
  #dic = asval(execx(o.ctrlArgs[2], env))
  #k = o.ctrlArgs[0]
- #v = o.ctrlArgs[1] 
+ #v = o.ctrlArgs[1]
  @each key val dic{
   env.envState[k] = key;
   env.envState[v] = val;
@@ -1310,8 +1370,8 @@ fnNewx(execsp, "CtrlFor", repr(&(env, o){
  execx(o.ctrlArgs[0], env)
  @while(1){
   #c = execx(o.ctrlArgs[1], env)
-	@if(c){
-	 #r = blockExecx(o.ctrlArgs[3], env)
+  @if(c){
+   #r = blockExecx(o.ctrlArgs[3], env)
    @if(?r){
     @if(typex(r) == "Return"){
      @return r
@@ -1322,11 +1382,11 @@ fnNewx(execsp, "CtrlFor", repr(&(env, o){
     @if(typex(r) == "CtrlContinue"){
      @continue
     }
-   }	 
-	}@else{
-	 @break
-	}
-  execx(o.ctrlArgs[2], env)	
+   }
+  }@else{
+   @break
+  }
+  execx(o.ctrlArgs[2], env)
  }
 }))
 fnNewx(execsp, "CtrlWhile", repr(&(env, o){
@@ -1342,7 +1402,7 @@ fnNewx(execsp, "CtrlWhile", repr(&(env, o){
    @if(typex(r) == "CtrlContinue"){
     @continue
    }
-  }	
+  }
  }
 }))
 fnNewx(execsp, "CtrlIf", repr(&(env, o){
@@ -1361,7 +1421,7 @@ fnNewx(execsp, "CtrlIf", repr(&(env, o){
 fnNewx(execsp, "ArrCallable", repr(&(env, o){
  #newo = objNew(arrc, [])
  @each i v o{
-  newo[i] = execx(v, env)  
+  newo[i] = execx(v, env)
  }
 // innateSet(newo, "notval", 1)
  @return newo;
@@ -1369,7 +1429,7 @@ fnNewx(execsp, "ArrCallable", repr(&(env, o){
 fnNewx(execsp, "DicCallable", repr(&(env, o){
  #newo = objNew(dicc, {})
  @each i v o{
-  newo[i] = execx(v, env)  
+  newo[i] = execx(v, env)
  }
 // innateSet(newo, "notval", 1)
  @return newo;
@@ -1450,7 +1510,7 @@ fnNewx(execsp, "OpLe", repr(&(env, o){
 ##defExecCache = {}
 
 
-envInitx = &(){
+envInitx = &(f){
  #defsptmp = scopeNewx(def),
  #globalsptmp = scopeNewx(globalsp)
  scopeSet(globalsptmp, "$argv", objNew(confidlocalc, {
@@ -1467,10 +1527,11 @@ envInitx = &(){
  }
  #deftmp = {}
  @return objNew(envc, {
+  envFile: f
   envGlobalScope: globalsptmp
-  envDefScope: defsptmp	
- 
-  envGlobal: globaltmp 
+  envDefScope: defsptmp
+
+  envGlobal: globaltmp
   envState: deftmp,
   envStack: [],
 
@@ -1480,9 +1541,10 @@ envInitx = &(){
 }
 
 //////////test
-#env = envInitx()
+#f = ##$argv[0]
+#env = envInitx(f)
 @if(##$argv[1]){
  env.envExecScope = execsp
 }
-#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(##$argv[0])^"}")
+#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(f)^"}")
 log(execx(objmain, env))

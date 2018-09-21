@@ -27,7 +27,7 @@ var grammar = {
       ["\\\\[\\r\\n;]+", "return"],//allow \ at end of line
 			["\\b\\_\\b", "return 'NULL'"],
 			["\\b\\__\\b", "return 'UNDF'"],
-			["\\$?[a-zA-Z_][a-zA-Z0-9_]*\\$?", "return 'ID'"],
+			["\\$?[a-zA-Z_][a-zA-Z0-9_$]*\\$?", "return 'ID'"],
 //			["\\#[0-9]+", "yytext = yytext.substr(1);return 'LOCAL'"],			
 //TODO bignumber
       ["\\b{int}{frac}?{exp}?u?[slbf]?\\b", "return 'NUM';"],
@@ -143,7 +143,10 @@ var grammar = {
 		Char: "$$ = ['char', $1]",
 		Num: "$$ = ['num', $1]",
 		Str: "$$ = ['str', $1]",
-		Tpl: "$$ = ['tpl', $1]",
+		Tpl: [
+			["TPL", "$$ = ['tpl', $1]"],
+			["TPL STR", "$$ = ['tpl', $1, $2]"],			
+		],
 		Func: "$$ = ['func', $1]",
 		Arr: [
 			["[ ]", "$$ = ['arr', []]"],

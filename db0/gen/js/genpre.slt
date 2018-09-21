@@ -79,6 +79,11 @@ function initx(p, o){
   });
   return p;
 }
+function repr(p, o){
+  var x = initx(p, o)
+	x.__.obj = global._funcnativec
+	return x
+}
 function objNew(c, d){
   var o
 	if(isclassx(c, "Items")){

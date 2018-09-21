@@ -1,1 +1,5 @@
-{argtName:"~=#0[0]~"}
+~@if(?#0[1]){
+~{argtName:"~=#0[0]~", argtType: global._~=lc(#0[1]->id)~c}~
+}@else{
+~{argtName:"~=#0[0]~"}~
+}~

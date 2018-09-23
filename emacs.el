@@ -14,7 +14,9 @@ name-face))
         ("\\@[a-z]+" . font-lock-keyword-face)))
 (define-derived-mode sl-mode c-mode "Soul"
   "major mode for editing Soul language code."
-  (setq font-lock-defaults '(sl-highlights)))
+  (setq font-lock-defaults '(sl-highlights))
+	(setq indent-tabs-mode nil)
+	)
 (add-to-list 'auto-mode-alist '("\\.sl$" . sl-mode))
 
 ;;slt mode

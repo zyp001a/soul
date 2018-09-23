@@ -1,1 +1,4 @@
-start
+&0.ex.listen(&0.port, function(err){
+ if(err) console.log(err)
+ else console.log("Server start at port "+&0.port)
+})

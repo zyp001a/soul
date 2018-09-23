@@ -10,7 +10,7 @@
  }@elif(type(f) == "FuncInternal" || f->isdef){
   printargs = 1 
   ~~=f->name~~
- }@elif(type(f) == "FuncNative" && f->mainpre){
+ }@elif(type(f) == "FuncNative" && f->maininit){
   printargs = 1 
   ~~=f->name~~
  }@elif(type(f) == "Call"){

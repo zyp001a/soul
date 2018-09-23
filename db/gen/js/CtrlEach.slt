@@ -1,5 +1,5 @@
 ~#a = #0.ctrlArgs
-#tmp = genuid();
+#tmp = genuid($env);
 ~let _tmp~=tmp~ = ~=exec(a[2], $env)~;
 for(let _~=asval(a[0])~ in _tmp~=tmp~){
 ~=$indent~let _~=asval(a[1])~ = _tmp~=tmp~[_~=asval(a[0])~];

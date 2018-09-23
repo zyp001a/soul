@@ -1,5 +1,5 @@
 ~
-#r = scopeGet(#$env.envExecScope, "Var")
+#r = scopeGet(#$env.envExecScope, "var")
 @each k v #0->scope {
  @if (istype(v, "ConfidLocal")) {
 ~~=call(r, [k, v], $env)~

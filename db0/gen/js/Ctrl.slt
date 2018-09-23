@@ -29,7 +29,7 @@
 ~while(~=exec(a[0], #$conf)~){  
 ~=ind(exec(a[1], #$conf))~}~
 } @elif t == "each" {
- #tmp = suid();
+ #tmp = suid(#$conf);
 ~let _tmp~=tmp~ = ~=exec(a[2], #$conf)~;
 for(let _~=val(a[0])~ in _tmp~=tmp~){
   let _~=val(a[1])~ = _tmp~=tmp~[_~=val(a[0])~];

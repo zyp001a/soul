@@ -1,0 +1,15 @@
+~
+##$packages = {}
+##$requires = {}
+##nodejsRequire = &(varname, versionstr){
+ @if($packages[varname]){
+  @return
+ }
+ $packages[varname] = "\\npm install "^varname
+ $requires[varname] = "let "^varname^" = require(\""^varname^"\")"
+}
+push(mainpre, $packages)
+push(mainpre, $requires)
+push(mainpre, $funcs)
+push(mainpre, $includes)
+~

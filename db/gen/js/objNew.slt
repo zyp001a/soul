@@ -1,0 +1,16 @@
+~
+#execsp = $env.envExecScope
+#x = scopeGet(execsp, #0->id)
+@if(x){
+~~=call(x, [#1], $env)~~
+}@else{~{
+~
+ @each k v curryList(#0) {
+~~=ind(asval(k))~: ~=ind(exec(v, $env))~,
+~}
+ #x2 = scopeGet(execsp, #0->id^"Ex")
+ @if(x2){
+ ~~=ind(call(x2, [#0, #1], $env))~,
+~
+ }~}~
+}~

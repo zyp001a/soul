@@ -1,0 +1,1 @@
+&0.replace(new RegExp(&1), &2)

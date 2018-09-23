@@ -1,18 +1,41 @@
 ~
 ##$indent = "  "
-##$funcs = {}
-
-
-#execsp = #$env.envExecScope
-#mp = scopeGet(execsp, "MainPre")
-#mainpre = mp()
-//log(mainpre)
-~~=mainpre~~
+##mainpre = []
+##mainpost = []
+#execsp = $env.envExecScope
+#hookmaininit = scopeGet(execsp, "HookMainInit")()
+#hookmainpre = scopeGet(execsp, "HookMainPre")()
 #bf = scopeGet(execsp, "Block")
 #main = call(bf, [#0], #$env)
-
-@each k v $includes{
- ~~=v~~
+#hookmainpost = scopeGet(execsp, "HookMainPost")()
+@each k v mainpre{
+ @if(type(v) == "Str"){
+  ~~=v~
+  ~@continue
+ }
+ @each kk vv v{
+  ~~=vv~
+~}
 }
+@if(hookmaininit){
+~~=hookmaininit~
 ~
-~=main~
+}
+@if(hookmainpre){
+~~=hookmainpre~
+~
+}
+~~=main~
+~@if(hookmainpost){
+~~=hookmainpost~
+~
+}
+@each k v mainpost{
+ @if(type(v) == "Str"){
+  ~~=v~
+  ~@continue
+ }
+ @each kk vv v{
+  ~~=vv~
+~}
+}~

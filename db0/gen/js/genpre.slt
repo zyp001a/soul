@@ -92,18 +92,12 @@ function objNew(c, d){
   	o = initx(d, {obj: c})
 		delete o.__.prop
 	}
-	//TODO！！！！
-  if(typex(c) == "Curry"){
-	  for(var k in c.curry){
-		  var v = c.curry[k]
-		  if(objGet(o, k) == undefined){
-   		  objSet(o, k, v)
-			}
-		}
-	}
-  if(typex(c) == "Class"){
-	//TODO
-	}
+  var x = curryListx(c, {})
+  for(var k in x){
+    if(objGet(o, k) == undefined){
+      objSet(o, k, x[k])
+    }
+  }
 	return o;
 }
 function haskey(x, k){

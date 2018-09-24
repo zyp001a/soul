@@ -5,7 +5,7 @@
  @if($packages[varname]){
   @return
  }
- $packages[varname] = "\\npm install "^varname
+ $packages[varname] = "//npm install "^varname
  $requires[varname] = "let "^varname^" = require(\""^varname^"\")"
 }
 push(mainpre, $packages)

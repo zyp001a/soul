@@ -1,9 +1,9 @@
 <Obj>{
  serverApis: DicApi
- port: Num
+ serverPort: Num
 } => {
  start: &(this){
   log("start")
  }
- port: 80
+ serverPort: 80
 }

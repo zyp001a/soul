@@ -1,11 +1,12 @@
 #a = @Server {
- serverApis: @DicApi {
+ serverApis: {
   ip: @Api {
    apiAddr: "ip"
-	 apiFunc: &(req){
-	  return req.getIp()
+	 apiFunc: &(params, req:Req){
+	  @return req.ip()
  	 }
   }
  }
+ serverPort: 3001
 }
 a.start()

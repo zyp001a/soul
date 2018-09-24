@@ -5,9 +5,17 @@
 ~~=call(x, [#1], $env)~~
 }@else{~{
 ~
+ #joined = {}
  @each k v curryList(#0) {
+  joined[k] = v
+ }
+ @each k v #1 {
+  joined[k] = v
+ }
+ @each k v joined {
 ~~=ind(asval(k))~: ~=ind(exec(v, $env))~,
-~}
+~
+ }
  #x2 = scopeGet(execsp, #0->id^"Ex")
  @if(x2){
  ~~=ind(call(x2, [#0, #1], $env))~,

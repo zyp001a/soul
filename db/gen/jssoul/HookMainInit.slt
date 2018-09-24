@@ -1,6 +1,5 @@
 ~
 asobj->maininit = 1
-
 tplParse = @FuncInternal {}
 ~
 function die(){

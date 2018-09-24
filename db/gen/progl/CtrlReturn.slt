@@ -1,1 +1,1 @@
-return &ctrlArgs[0]
+return ~=exec(#0.ctrlArgs[0], $env)~

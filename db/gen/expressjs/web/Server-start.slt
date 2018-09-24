@@ -1,4 +1,22 @@
-&0.ex.listen(&0.port, function(err){
- if(err) console.log(err)
- else console.log("Server start at port "+&0.port)
+for(let k in &0.serverApis){
+  let v = &0.serverApis[k]
+  &0.ex[v.apiMethod]("/"+v.apiAddr, function(req, res){
+	  let p = new Promise(function(resolve, reject){
+		  let ret = v.apiFunc(req.body, req, res)
+      if(ret != undefined){
+    		resolve(ret)
+			}else{
+			  reject()
+			}
+		})
+		p.then(function(r){
+		  res.send(r)
+		}, function(){
+		  res.send("ERROR")
+		})
+	})
+}
+&0.ex.listen(&0.serverPort, function(err){
+  if(err) console.log(err)
+  else console.log("Server start at port "+&0.serverPort)
 })

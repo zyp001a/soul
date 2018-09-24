@@ -165,6 +165,7 @@ curryNewx = &(scope, name, class, curry){
 })
 ##funcblockc = classNewx(def, "FuncBlock", [funcc], {
  func: blockc
+ funcCatch: blockc 
 })
 ##functplc = classNewx(def, "FuncTpl", [funcc], {
  func: strc
@@ -335,21 +336,31 @@ scopec.classSchema = {
  ctrlArgs: arrc
 })
 
-##ctrlbreakc = curryNewx(def, "CtrlBreak", ctrlc)
-##ctrlcontinuec = curryNewx(def, "CtrlContinue", ctrlc)
-
-##ctrlreturnc = curryNewx(def, "CtrlReturn", ctrlargsc)
-##ctrlgotoc = curryNewx(def, "CtrlGoto", ctrlargsc)
-
 ##ctrlifc = curryNewx(def, "CtrlIf", ctrlargsc)
 ##ctrlforc = curryNewx(def, "CtrlFor", ctrlargsc)
 ##ctrleachc = curryNewx(def, "CtrlEach", ctrlargsc)
 ##ctrlforeachc = curryNewx(def, "CtrlForeach", ctrlargsc)
 ##ctrlwhilec = curryNewx(def, "CtrlWhile", ctrlargsc)
 
+##ctrlbreakc = curryNewx(def, "CtrlBreak", ctrlc)
+##ctrlcontinuec = curryNewx(def, "CtrlContinue", ctrlc)
+##ctrlgotoc = curryNewx(def, "CtrlGoto", ctrlargsc)
+
+##ctrlreturnc = curryNewx(def, "CtrlReturn", ctrlargsc)
+##ctrlthrowc = curryNewx(def, "CtrlThrow", ctrlargsc)
+
 ##returnc = classNewx(def, "Return", [ctrlc], {
  return: objc
 })
+##throwc = classNewx(def, "Throw", [ctrlc], {
+ throw: errorc
+})
+
+##errorc = classNewx(def, "Error", [objc], {
+ errorCode: numc
+ errorMsg: strc
+})
+
 typex = &()
 curryInitx = &()
 methodNewx = &(c, name, fn){
@@ -558,7 +569,7 @@ fnNewx(def, "asobj", repr(&(env, o){
  @return asobj(o)
 }))
 objnewf = fnNewx(def, "objNew", repr(&(env, class, val){
- @return objNew(class, val)
+ @return execx(objNew(class, val), env)
 }))
 
 ////////define basic function
@@ -859,6 +870,7 @@ ast2objx = &(scope, gscope, ast){
      prefunc.func = actfunc.func
      prefunc.funcArgts = actfunc.funcArgts
      prefunc.funcReturn = actfunc.funcReturn
+     prefunc.funcCatch = actfunc.funcCatch     
      innateSet(prefunc, "isdef", 1)
      @return prefunc;
     }@else{
@@ -993,6 +1005,24 @@ ast2objx = &(scope, gscope, ast){
    args[1][2] = "BlockNovar"
    @return objNew(ctrlwhilec, {ctrlArgs: ast2arrx(scope, gscope, args)})
   }
+  @if(v == "throw"){
+   #x = ast2objx(scope, gscope, args[0])
+   #tt = typepredx(x) 
+   @if(isclassx(tt,"Str")){
+    x = objNew(callc, {
+     callFunc: objnewf,
+	   callArgs: [errorc, objNew(diccallablec, {
+      errorCode: 1
+      errorMsg: x      
+     })]
+    })   
+   }@elif(!isclassx(tt, "Error")){
+    log(x)
+    log(tt)
+    die("ast2obj: throw grammar error, must be error or string");
+   }
+   @return objNew(ctrlthrowc, {ctrlArgs: [x]}) 
+  }  
   @if(v == "return"){
 	 @if(args){
     @return objNew(ctrlreturnc, {
@@ -1131,6 +1161,7 @@ ast2objx = &(scope, gscope, ast){
   #block = v[0];
   #argts = v[1][0];
   #return = v[1][1];
+  #catch = v[2];  
   #funcArgts = []
   @foreach argast argts{
    @if(?argast[1]){
@@ -1164,10 +1195,19 @@ ast2objx = &(scope, gscope, ast){
    scopeSet(nscope, a.argtName, x)
   }
   #b = ast2objx(nscope, gscope, block)
+  @if(catch){
+   catch[2] = "Block"
+   scopeSet(nscope, "$err", objNew(confidargc, {
+    confidName: "$err"
+    confidType: errorc    
+   }))
+   #funcCatch = ast2objx(nscope, gscope, catch)
+  }
   @return objNew(funcblockc, {
    func: b
    funcArgts: funcArgts,
    funcReturn: funcReturn
+   funcCatch: funcCatch   
   })
  }
  @if(t == "tpl"){
@@ -1356,8 +1396,19 @@ callx = &(func, args, env){
   push(env.envStack, env.envState)
   env.envState = state;
   #r = blockExecx(func.func, env)
-  @if(r && typex(r) == "Return"){
-   r = r.return
+  @if(r){
+   @if(typex(r) == "Return"){
+    r = r.return
+   }
+   @if(typex(r) == "Throw"){
+    @if(?func.funcCatch){
+     state["$err"] = r.throw
+     r = blockExecx(func.funcCatch, env)
+     @if(r && typex(r) == "Return"){
+      r = r.return
+     }
+    }
+   }
   }
   env.envState = pop(env.envStack)
   @return r;
@@ -1395,8 +1446,22 @@ fnNewx(execsp, "Func", repr(&(env, o){
 fnNewx(execsp, "Class", repr(&(env, o){
  @return o
 }))
+fnNewx(execsp, "Curry", repr(&(env, o){
+ @return o
+}))
+fnNewx(execsp, "Block", repr(&(env, o){
+ @return o
+}))
+fnNewx(execsp, "Error", repr(&(env, o){
+ @return o
+}))
 fnNewx(execsp, "Main", repr(&(env, o){
- @return blockExecx(o, env)
+ #x = blockExecx(o, env)
+ @if(typex(x) == "Throw"){
+  log("THROW ERROR")
+  die(x.throw.errorMsg)
+ }
+ @return x
 }))
 fnNewx(execsp, "Call", repr(&(env, o){
  #func = execx(o.callFunc, env)
@@ -1461,6 +1526,11 @@ fnNewx(execsp, "CtrlReturn", repr(&(env, o){
   return: execx(o.ctrlArgs[0], env)
  })
 }))
+fnNewx(execsp, "CtrlThrow", repr(&(env, o){
+ @return objNew(throwc, {
+  throw: execx(o.ctrlArgs[0], env)
+ })
+}))
 fnNewx(execsp, "CtrlEach", repr(&(env, o){
  #dic = asval(execx(o.ctrlArgs[2], env))
  #k = o.ctrlArgs[0]
@@ -1470,7 +1540,7 @@ fnNewx(execsp, "CtrlEach", repr(&(env, o){
   env.envState[v] = val;
   #r = blockExecx(o.ctrlArgs[3], env)
   @if(?r){
-   @if(typex(r) == "Return"){
+   @if(typex(r) == "Return" || typex(r) == "Throw"){
     @return r
    }
    @if(typex(r) == "CtrlBreak"){
@@ -1489,7 +1559,7 @@ fnNewx(execsp, "CtrlForeach", repr(&(env, o){
   env.envState[k] = e;
   #r = blockExecx(o.ctrlArgs[2], env)
   @if(?r){
-   @if(typex(r) == "Return"){
+   @if(typex(r) == "Return" || typex(r) == "Throw"){
     @return r
    }
    @if(typex(r) == "CtrlBreak"){
@@ -1508,7 +1578,7 @@ fnNewx(execsp, "CtrlFor", repr(&(env, o){
   @if(c){
    #r = blockExecx(o.ctrlArgs[3], env)
    @if(?r){
-    @if(typex(r) == "Return"){
+    @if(typex(r) == "Return" || typex(r) == "Throw"){
      @return r
     }
     @if(typex(r) == "CtrlBreak"){
@@ -1528,7 +1598,7 @@ fnNewx(execsp, "CtrlWhile", repr(&(env, o){
  @while(execx(o.ctrlArgs[0], env)){
   #r = blockExecx(o.ctrlArgs[1], env)
   @if(?r){
-   @if(typex(r) == "Return"){
+   @if(typex(r) == "Return" || typex(r) == "Throw"){
     @return r
    }
    @if(typex(r) == "CtrlBreak"){

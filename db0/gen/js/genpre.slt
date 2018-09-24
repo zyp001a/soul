@@ -90,10 +90,12 @@ function objNew(c, d){
 		o = initx(d, {obj: c, prop: {}})		
 	}else{
   	o = initx(d, {obj: c})
+		delete o.__.prop
 	}
-  if(typex(c) == "Cons"){
-	  for(var k in c.cons){
-		  var v = c.cons[k]
+	//TODO！！！！
+  if(typex(c) == "Curry"){
+	  for(var k in c.curry){
+		  var v = c.curry[k]
 		  if(objGet(o, k) == undefined){
    		  objSet(o, k, v)
 			}

@@ -21,7 +21,7 @@ var grammar = {
 			["`(\\\\.|[^\\\\`])*`",
 			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\`/g, '`'); return 'STR';"], 			
 			["\'(\\\\.|[^\\\\\'])*\'|\"(\\\\.|[^\\\\\"])*\"",
-			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\u([0-9a-fA-F]{4})/, function(m, n){ return String.fromCharCode(parseInt(n, 16)) }).replace(/\\\\(.)/g, function(m, n){ if(n == 'n') return '\\n';if(n == 'r') return '\\r';if(n == 't') return '\\t'; if(n == '\\\\') return \"\\\\\\\\\"; return n;}); return 'STR';"], 
+			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\u([0-9a-fA-F]{4})/, function(m, n){ return String.fromCharCode(parseInt(n, 16)) }).replace(/\\\\(.)/g, function(m, n){ if(n == 'n') return '\\n';if(n == 'r') return '\\r';if(n == 't') return '\\t'; if(n == '\\\\') return \"\\\\\\\\\"; return '\'+n;}); return 'STR';"], 
 //			["\<[a-zA-Z0-9_\\\/\\s]*\>",
 //       "yytext = yytext.replace(/^\<\\s*/, '').replace(/\\s*\>$/, ''); return 'PARENTS';"],
       ["\\\\[\\r\\n;]+", "return"],//allow \ at end of line
@@ -44,7 +44,7 @@ var grammar = {
 			["@each", "return 'EACH'"],
 			["@while", "return 'WHILE'"],
 			["@include", "return 'INCLUDE'"],
-//			["@package", "return 'PACKAGE'"],						
+			["@throw", "return 'THROW'"],
 			["\\=\\>", "return '=>'"],
 			["\\-\\>", "return '->'"], 
       ["\\(", "return '('"],
@@ -192,6 +192,7 @@ var grammar = {
 			["BREAK", "$$ = ['ctrl', 'break']"],
 			["CONTINUE", "$$ = ['ctrl', 'continue']"],
 			["GOTO ID", "$$ = ['ctrl', 'goto', [$2]]"],
+			["THROW Expr", "$$ = ['ctrl', 'throw', [$2]]"],			
 		],
 		"Include": [
 			["INCLUDE ID", "$$ = ['include', $2]"],
@@ -235,7 +236,9 @@ var grammar = {
 		],
 		"FUNC": [
 			["& Dic", "$$ = [$2, [[]]]"],
+			["& Dic Dic", "$$ = [$2, [[]], $3]"],			
 			["& Args Dic", "$$ = [$3, $2]"],
+			["& Args Dic Dic", "$$ = [$3, $2, $4]"],			
 			["& Args", "$$ = [, $2]"],			
 		],
 		"Args": [

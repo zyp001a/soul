@@ -1,16 +1,15 @@
-try catch?
-type checking, almost done
 
+all obj oriented
 complete self-generation
-cache include
+ debug linenum support
+ cache include
+ interface pass type
+ __.context  contextSet/Get/Add/Del
+ boolean
+ 
+natl define
 
 impl intelligence system with pseduo natuaral lang
-
-
-__.context
-contextSet/Get/Add/Del
-
-boolean
 
 
 input output ui abstraction

@@ -1783,4 +1783,4 @@ envInitx = &(defsp, execsp, f){
  env.envExecScope = scopeGetx(gensp, "jssoul"),
 }
 #objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(f)^"}")
-log(execx(objmain, env))
+fileWrite(##$argv[0]^".js", execx(objmain, env))

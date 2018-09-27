@@ -1,0 +1,5 @@
+~@if(type(#1) == "Str"){
+~&0.~=asval(#1)~~
+}@else{
+~objGetp(&0, &1)~
+}~

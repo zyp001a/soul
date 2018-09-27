@@ -1,0 +1,7 @@
+##nullc = curryNewx(def, "Null", valc)
+##undfc = curryNewx(def, "Undf", valc)
+##numc = curryNewx(def, "Num", valc)
+##sizetc = curryNewx(def, "Sizet", numc)
+##strc = curryNewx(def, "Str", valc)
+##charc = curryNewx(def, "Char", strc)
+##funcvc = curryNewx(def, "Funcv", valc)

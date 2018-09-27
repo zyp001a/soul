@@ -413,6 +413,9 @@ curryGetx = &()
 curryListx = &()
 classGetx = &()
 /////////define method
+methodNewx(strc, "split", repr(&(env, s, sep){
+ @return split(s, sep)
+}))
 methodNewx(dicc, "get", repr(&(env, dic, key){
  @return objNew(siddicc, {
   sid: key
@@ -440,6 +443,15 @@ fnNewx(def, "log", repr(&(env, x){
 }))
 fnNewx(def, "logx", repr(&(env, x){
  logx(x)
+}))
+fnNewx(def, "ucfirst", repr(&(env, x){
+ @return ucfirst(x)
+}))
+fnNewx(def, "uc", repr(&(env, x){
+ @return uc(x)
+}))
+fnNewx(def, "lc", repr(&(env, x){
+ @return lc(x)
 }))
 fnNewx(def, "die", repr(&(env, x){
  die(x)
@@ -639,9 +651,9 @@ curryGetx = &(c, t){
     @return x
    }
   }
-  die("curryGet: key not found, "^t)
+//  die("curryGet: key not found, "^t)
  }
- die("curryGet: type error, "^typex(c))
+// die("curryGet: type error, "^typex(c))
 }
 typex = &(oo){
  #o = asobj(oo)

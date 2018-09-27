@@ -9,6 +9,7 @@ process.argv.shift();
 process.argv.shift();
 global._$argv = process.argv;
 global._$sysenv = process.env;
+
 var fs = require("fs");
 var path = require("path");
 var proglParser = require("./progl-parser")

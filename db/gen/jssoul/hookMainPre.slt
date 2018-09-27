@@ -65,13 +65,13 @@ Object.defineProperty(global, '__file', {
 });
 function initp(p, o){
   if(!p) p = {};
-	if(p.__){
-	 for(var k in o){
-	  p.__[k] = o[k]
-	 }
-	}else{
+  if(p.__){
+   for(var k in o){
+    p.__[k] = o[k]
+   }
+  }else{
    p.__ = o || {}
-	}
+  }
   Object.defineProperty(p, '__', {
     enumerable: false,
     configurable: false
@@ -80,24 +80,24 @@ function initp(p, o){
 }
 function reprp(p, o){
   var x = initp(p, o)
-	x.__.obj = global._funcnativec
-	return x
+  x.__.obj = global._funcnativec
+  return x
 }
 function objNewp(c, d){
   var o
-	if(isclassx(c, "Items")){
-		o = initp(d, {obj: c, prop: {}})		
-	}else{
-  	o = initp(d, {obj: c})
-		delete o.__.prop
-	}
+  if(isclassx(c, "Items")){
+    o = initp(d, {obj: c, prop: {}})
+  }else{
+    o = initp(d, {obj: c})
+    delete o.__.prop
+  }
   var x = curryListx(c, {})
   for(var k in x){
     if(objGetp(o, k) == undefined){
       objSetp(o, k, x[k])
     }
   }
-	return o;
+  return o;
 }
 function asvalp(o){
   var t = typeof o;
@@ -111,24 +111,24 @@ function asvalp(o){
     return o.val
 
   var tid = o.__.obj.__.id;
-	if(tid == "SidDic"){
-	 return asvalp(o.sidDic[o.sid])
-	}
-	if(tid == "SidObj"){
-	 return asvalp(o.sidObj[o.sid])
-	}
-	if(tid == "SidInnate"){
-	 return asvalp(o.sidInnate.__[o.sid])
-	}
-	if(tid == "Aid"){
-	 return asvalp(o.aidArr[o.aid])
-	}
+  if(tid == "SidDic"){
+   return asvalp(o.sidDic[o.sid])
+  }
+  if(tid == "SidObj"){
+   return asvalp(o.sidObj[o.sid])
+  }
+  if(tid == "SidInnate"){
+   return asvalp(o.sidInnate.__[o.sid])
+  }
+  if(tid == "Aid"){
+   return asvalp(o.aidArr[o.aid])
+  }
   return o;
 }
 function asobjp(o){
   var t = typeof o;
   if(t == "undefined"){
-    return initp({val: undefined}, {obj: global._undfc, isval:1});  
+    return initp({val: undefined}, {obj: global._undfc, isval:1});
   }
   if(t == "object"){
     if(!t) return initp({val: null}, {obj: global._nullc, isval:1});
@@ -136,16 +136,16 @@ function asobjp(o){
       if(Array.isArray(o)){
         return initp(o, {obj: global._arrc, prop:{}});
       }else{
-        return initp(o, {obj: global._dicc, prop:{}});      
+        return initp(o, {obj: global._dicc, prop:{}});
       }
     }
     return o;
   }
   if(t == "string"){
-    return initp({val: o}, {obj: global._strc, isval:1});  
+    return initp({val: o}, {obj: global._strc, isval:1});
   }
   if(t == "number"){
-    return initp({val: o}, {obj: global._numc, isval:1});  
+    return initp({val: o}, {obj: global._numc, isval:1});
   }
   die(t + " not defined, asobj")
 }
@@ -156,9 +156,9 @@ function objGetp(o, k){
   if(k == "scope"){
     return o[k]
   }
-	if(o.__ && o.__.prop){
-	  return o.__.prop[k]
-	}
+  if(o.__ && o.__.prop){
+    return o.__.prop[k]
+  }
   return o[k]
 }
 function objSetp(o, k, v){
@@ -168,8 +168,8 @@ function objSetp(o, k, v){
   if(k == "scope"){
     return o[k] = v
   }
-	if(o.__ && o.__.prop){
-	  return o.__.prop[k] = v
-	}	
+  if(o.__ && o.__.prop){
+    return o.__.prop[k] = v
+  }
   return o[k] = v
 }

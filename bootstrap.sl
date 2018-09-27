@@ -142,8 +142,8 @@ curryNewx = &(scope, name, class, curry){
 ##numc = curryNewx(def, "Num", valc)
 ##sizetc = curryNewx(def, "Sizet", numc)
 ##strc = curryNewx(def, "Str", valc)
+##charc = curryNewx(def, "Char", strc)
 ##funcvc = curryNewx(def, "Funcv", valc)
-
 
 ##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
@@ -664,10 +664,13 @@ typepredx = &(oo){
    @return classGetx(c, asval(key))
   }
   @if(o.callFunc->id == "Dic$get"){
-   log("TODO typepredx Dic$get")
+   @return o->itemsType
   }
   @if(o.callFunc->id == "Arr$get"){
-   log("TODO typepredx Arr$get")  
+   @return o->itemsType
+  }
+  @if(o.callFunc->id == "Str$get"){
+   @return charc
   }
   @return o.callFunc.funcReturn
  }@elif(t == "SidLocal"){
@@ -1751,10 +1754,20 @@ envInitx = &(defsp, execsp, f){
   confidName: "$funcs"
   confidType: dicc
  }))
+ scopeSet(globalsptmp, "$dirname", objNew(confidlocalc, {
+  confidName: "$dirname"
+  confidType: strc
+ }))
+ scopeSet(globalsptmp, "$filename", objNew(confidlocalc, {
+  confidName: "$filename"
+  confidType: strc
+ }))
  #globaltmp = {
   $includes: {}
-  $funcs: {}  
+  $funcs: {}
   $argv: ##$argv
+  $filename: f
+  $dirname: pathDirname(f)
  }
  #deftmp = {}
  @return objNew(envc, {

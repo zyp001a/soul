@@ -8,8 +8,10 @@
  $packages[varname] = "//npm install "^varname
  $requires[varname] = "let "^varname^" = require(\""^varname^"\")"
 }
+##$preloads = {}
 push(mainpre, $packages)
 push(mainpre, $requires)
+push(mainpre, $preloads)
 push(mainpre, $funcs)
 push(mainpre, $includes)
 ~

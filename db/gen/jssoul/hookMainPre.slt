@@ -58,6 +58,6 @@ function asobj(o){
   }
   if(t == "number"){
     return initx({val: o}, {obj: global._numc, isval:1});
+  }
   die(t + " not defined, asobj")
 }
-

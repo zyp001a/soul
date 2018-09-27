@@ -48,7 +48,7 @@ routex = &(oo, scope, name){
 parentSetx = &(p, k, parents){
  @foreach e parents{
   //TODO reduce
-  p.(k)[e->id] = e;
+  dic(p.(k))[e->id] = e;
  }
 }
 scopePresetx = &(scope, name, parents){

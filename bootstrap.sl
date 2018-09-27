@@ -450,6 +450,15 @@ fnNewx(def, "len", repr(&(env, x){
 fnNewx(def, "strlen", repr(&(env, x){
  @return strlen(x)
 }))
+fnNewx(def, "str", repr(&(env, x){
+ @return str(x)
+}))
+fnNewx(def, "num", repr(&(env, x){
+ @return num(x)
+}))
+fnNewx(def, "dic", repr(&Dic(env, x){
+ @return x
+}))
 fnNewx(def, "push", repr(&(env, a, e){
  push(a, e)
  @return e;
@@ -850,7 +859,7 @@ ast2objx = &(scope, gscope, ast){
     nscope = scopeIntox(scope, arr[1])
     leftname = arr[2]
    }
-   #lv = scopeIntox(nscope, leftname)
+   #lv = scopeGetLocal(nscope, leftname)
    @if(lv && (typex(lv) == "ConfidLocal" || typex(lv) == "ConfidArg")){
     lexdef = 0
    }@elif(scopeGetLocal(gscope, leftname)){
@@ -1413,6 +1422,7 @@ callx = &(func, args, env){
   env.envState = pop(env.envStack)
   @return r;
  }
+ log(func)
  die(t^": exec not defined")
 }
 execx = &(oo, env){
@@ -1450,6 +1460,9 @@ fnNewx(execsp, "Curry", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Block", repr(&(env, o){
+ @return o
+}))
+fnNewx(execsp, "Scope", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Error", repr(&(env, o){
@@ -1763,8 +1776,11 @@ envInitx = &(defsp, execsp, f){
 #defsptmp = scopeGetx(def, "web"),
 #execsptmp = scopeGetx(gensp, "expressjs"),
 #env = envInitx(defsptmp, execsptmp, f)
-@if(##$argv[1]){
+@if(##$argv[1] == 1){
  env.envExecScope = execsp
+}
+@if(##$argv[1] == 2){
+ env.envExecScope = scopeGetx(gensp, "jssoul"),
 }
 #objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(f)^"}")
 log(execx(objmain, env))

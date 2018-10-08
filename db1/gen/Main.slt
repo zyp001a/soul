@@ -9,8 +9,7 @@ scopeGet(execsp, "hookMainInit")()
 #main = call(bf, [#0], #$env)
 #hookmainpost = scopeGet(execsp, "hookMainPost")()
 @if(hookmainpre){
-~~=hookmainpre~
-~
+~~=hookmainpre~~
 }
 @each k v mainpre{
  @if(type(v) == "Str"){
@@ -21,8 +20,7 @@ scopeGet(execsp, "hookMainInit")()
   ~~=vv~
 ~}
 }
-~~=main~
-~
+~~=main~~
 @each k v mainpost{
  @if(type(v) == "Str"){
   ~~=v~
@@ -33,7 +31,6 @@ scopeGet(execsp, "hookMainInit")()
 ~}
 }
 @if(hookmainpost){
-~~=hookmainpost~
-~
+~~=hookmainpost~~
 }
 ~

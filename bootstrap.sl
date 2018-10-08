@@ -145,6 +145,9 @@ curryNewx = &(scope, name, class, curry){
 ##charc = curryNewx(def, "Char", strc)
 ##funcvc = curryNewx(def, "Funcv", valc)
 
+##enumc = classNewx(def, "Enum", [objc])
+##voidc = classNewx(def, "Void", [voidc])
+
 ##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
  argtType: classc
@@ -444,6 +447,7 @@ fnNewx(def, "log", repr(&(env, x){
 fnNewx(def, "logx", repr(&(env, x){
  logx(x)
 }))
+
 fnNewx(def, "ucfirst", repr(&(env, x){
  @return ucfirst(x)
 }))
@@ -738,7 +742,7 @@ dbPath = &(x){
  @return ns^"/"^replaceAll(x->id, "_", "/")
 }
 dbGetx = &(scope, key){
- #p = pathResolve(##$sysenv["HOME"]^"/soul/db"^dbPath(scope)^"/"^replaceAll(key, "_", "/"))
+ #p = pathResolve(##$sysenv["HOME"]^"/soul/db1"^dbPath(scope)^"/"^replaceAll(key, "_", "/"))
  p = replaceAll(p, "\\$", "-")
  @if(fileExists(p^".sl")){
   @return fileRead(p^".sl")
@@ -1277,14 +1281,18 @@ ast2objx = &(scope, gscope, ast){
   #dic = ast2objx(scope, gscope, ast[2])
   @return curryInitx(class, dic)
  }
- @if(t == "obj"){
- //TODO func, dic, arr with spec class
+ @if(t == "objnew"){
   #c = ast2objx(scope, gscope, v);
-	
   @return objNew(callc, {
    callFunc: objnewf,
 	 callArgs: [c, ast2objx(scope, gscope, ast[2])]
   })
+ }
+ @if(t == "obj"){
+ //TODO func, dic, arr with spec class
+ //TODO throw error if dic callable
+  #c = ast2objx(scope, gscope, v);
+  @return objNew(c, ast2objx(scope, gscope, ast[2]))
  }
  @if(t == "scope"){
   #parents = ast2arrx(scope, gscope, v)
@@ -1807,5 +1815,5 @@ envInitx = &(defsp, execsp, f){
 @if(##$argv[1] == 2){
  env.envExecScope = scopeGetx(gensp, "jssoul"),
 }
-#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(f)^"}")
+#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@@Main {"^fileRead(f)^"}")
 fileWrite(##$argv[0]^".js", execx(objmain, env))

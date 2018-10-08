@@ -1,0 +1,4 @@
+~
+#execsp = $env.envExecScope
+#x = scopeGet(execsp, "js_objNew")
+~initp(~=call(x, [#0, #1], $env)~)

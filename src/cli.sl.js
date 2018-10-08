@@ -1,7 +1,4 @@
-~
-asobj->maininit = 1
-tplParse = @FuncInternal {}
-~
+
 process.argv.shift();
 process.argv.shift();
 global._$argv = process.argv;
@@ -173,3 +170,155 @@ function objSetp(o, k, v){
   }
   return o[k] = v
 }
+
+/*ReprScopex*/
+/*ReprCurryx*/
+/*ReprClassx*/
+function routex(_oo, _scope, _name){
+  let _o
+  let _id
+  _o = asobjp(_oo)
+  if(!_o.__.index){
+    _o.__.index = 0
+  }
+  if(!_scope){
+    return _o
+  }
+  if(!(_name !== undefined)){
+    _name = _o.__.index.toString()
+    _o.__.index = _o.__.index + 1
+    _o.__.noname = 1
+  }
+  _scope[_name] = _o
+  _o.__.name = _name
+  _id = _scope.__.id
+  if(!(_id !== undefined)){
+    _o.__.id = "."
+    _o.__.ns = _name
+  }else if(_id == "."){
+    _o.__.id = _name
+    _o.__.ns = _scope.__.ns
+  }else if(_scope.__.noname){
+    _o.__.id = _name
+    _o.__.ns = _scope.__.ns + "/" + _id
+  }else{
+    _o.__.id = _id + "_" + _name
+    _o.__.ns = _scope.__.ns
+  }
+  _o.__.scope = _scope
+  return _o
+}
+function parentSetx(_p, _k, _parents){
+  let _e
+
+  for(let _e of _parents){
+    objGetp(_p, _k)
+    [_e.__.id] = _e
+  }
+
+}
+function scopePresetx(_scope, _name, _parents){
+  let _x
+  _x = initp({
+    scope:   {
+    },
+    scopeParents:   {
+    },
+  })
+  if(_parents){
+    parentSetx(_x, "scopeParents", _parents)
+  }
+  routex(_x, _scope, _name)
+  return _x
+}
+function classPresetx(_scope, _name, _parents, _schema){
+  let _x
+  _x = initp({
+    classCurry:   {
+    },
+    classSchema:   _schema || {
+    },
+    classParents:   {
+    },
+  })
+  if(_parents){
+    parentSetx(_x, "classParents", _parents)
+  }
+  routex(_x, _scope, _name)
+  return _x
+}
+global._root = scopePresetx()
+global._def = scopePresetx(global._root, "def")
+global._objc = classPresetx(global._def, "Obj")
+global._classc = classPresetx(global._def, "Class", [global._objc])
+global._scopec = classPresetx(global._def, "Scope", [global._objc])
+global._root.__.obj = global._scopec
+global._def.__.obj = global._scopec
+global._objc.__.obj = global._classc
+global._classc.__.obj = global._classc
+global._scopec.__.obj = global._classc
+function scopeNewx(_scope, _name, _parents){
+  let _x
+  _x = scopePresetx(_scope, _name, _parents)
+  _x.__.obj = global._scopec
+  return _x
+}
+function scopeIntox(_scope, _key){
+  let _nscope
+  let _arr
+  let _i
+  let _e
+  let _xr
+  _nscope = _scope
+  _arr = _key.split("_")
+  let _tmp1 = _arr;
+  for(let _i in _tmp1){
+    let _e = _tmp1[_i];
+    _xr = _scope[_e]
+    if(!(_xr !== undefined)){
+      _nscope = scopeNewx(_nscope, _e)
+    }else{
+      _nscope = _xr
+    }
+  }
+  return _nscope
+}
+function classNewx(_scope, _name, _parents, _schema){
+  let _x
+  _x = classPresetx(_scope, _name, _parents, _schema)
+  _x.__.obj = global._classc
+  return _x
+}
+global._curryc = classNewx(global._def, "Curry", [global._objc])
+global._valc = classNewx(global._def, "Val", [global._objc])
+function curryInitx(_class, _curry){
+  let _x
+  _x = initp({
+    curry:   _curry || {
+    },
+    curryClass:   _class,
+  })
+  _x.__.obj = global._curryc
+  return _x
+}
+function curryNewx(_scope, _name, _class, _curry){
+  let _x
+  _x = curryInitx(_class, _curry)
+  routex(_x, _scope, _name)
+  return _x
+}
+global._nullc = curryNewx(global._def, "Null", global._valc)
+global._undfc = curryNewx(global._def, "Undf", global._valc)
+global._numc = curryNewx(global._def, "Num", global._valc)
+global._sizetc = curryNewx(global._def, "Sizet", global._numc)
+global._strc = curryNewx(global._def, "Str", global._valc)
+global._charc = curryNewx(global._def, "Char", global._strc)
+global._funcvc = curryNewx(global._def, "Funcv", global._valc)
+1
+
+
+
+
+
+
+

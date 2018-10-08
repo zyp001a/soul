@@ -1,5 +1,0 @@
-initp({~@each k v #1 {~
-  ~=asval(k)~: ~=ind(exec(v, $env))~,~}~
-}, {
-  obj: ~=lc(#0->id)~c
-})

@@ -1,0 +1,11 @@
+~
+#make = &(c, $env){
+ #$arr = []
+~type ~=c->id~ struct {
+~@each k v c.classSchema{
+ ~~=$indent~_~=k~ ~=exec(v, $env)~
+~
+}~}~
+ @return join($arr, "")
+}
+$structs[#0->id] = make(#0, $env)~

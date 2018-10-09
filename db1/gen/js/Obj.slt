@@ -1,0 +1,22 @@
+~
+#execsp = $env.envExecScope
+#c = #1 || #0->obj
+#dic = #0
+~{
+~
+ #joined = {}
+ @each k v curryList(c) {
+  joined[k] = v
+ }
+ @each k v dic {
+  joined[k] = v
+ }
+ @each k v joined {
+~~=ind(asval(k))~: ~=ind(exec(v, $env))~,
+~
+ }
+ #x2 = scopeGet(execsp, c->id^"Ex")
+ @if(x2){
+ ~~=ind(call(x2, [c, dic], $env))~,
+~
+ }~}

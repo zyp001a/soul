@@ -1,5 +1,8 @@
 ~
 #r = scopeGet(#$env.envExecScope, "var")
+@if(!r){
+ die("gen: var not defined")
+}
 @each k v #0->scope {
  @if (istype(v, "ConfidLocal")) {
 ~~=call(r, [k, v], $env)~
@@ -7,8 +10,9 @@
  }
 }
 @each i e #0.block {
- @if(i != 0){~
+ #tmp = exec(e, $env)
+~~=tmp~~
+ @if(i != len(#0.block)-1 && tmp){~
 ~}
-~~=exec(e, $env)~~
 }
 ~

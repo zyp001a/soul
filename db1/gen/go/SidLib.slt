@@ -1,0 +1,3 @@
+~
+#r = scopeGet(#$env.envExecScope, "typemap")
+~~=call(r, [#0.sidLib->id], $env)~

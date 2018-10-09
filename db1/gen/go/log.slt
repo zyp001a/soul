@@ -1,2 +1,1 @@
-~goRequire("fmt")~
-fmt.Println(&0)
+~goImport("fmt")~fmt.Println(&0)

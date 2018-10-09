@@ -1,6 +1,9 @@
 ~
 #f = #0.callFunc
 #a = #0.callArgs
+@if(type(f) == "SidLib"){
+ #f = f.sidLib
+}
 #printargs = 0
 @if(istype(f, "Func")){
  #n = f->id

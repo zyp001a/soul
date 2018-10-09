@@ -3,10 +3,10 @@
 ##mainpre = []
 ##mainpost = []
 #execsp = $env.envExecScope
-#hookmaininit = scopeGet(execsp, "hookMainInit")()
-#hookmainpre = scopeGet(execsp, "hookMainPre")(#0, $env)
-#hookmain = scopeGet(execsp, "hookMain")(#0, $env)
-#hookmainpost = scopeGet(execsp, "hookMainPost")(#0, $env)
+#hookmaininit = call(scopeGet(execsp, "hookMainInit"), [#0], $env)
+#hookmainpre = call(scopeGet(execsp, "hookMainPre"), [#0], $env)
+#hookmain = call(scopeGet(execsp, "hookMain"), [#0], $env)
+#hookmainpost = call(scopeGet(execsp, "hookMainPost"), [#0], $env)
 @if(hookmaininit){
 ~~=hookmaininit~~
 }

@@ -1,0 +1,9 @@
+~
+#execsp = $env.envExecScope
+#c = #1 || #0->obj
+#dic = #0
+~~=c->id~{
+~@each k v dic{
+ ~~=$indent~_~=k~: ~=exec(v, $env)~,
+~
+}~}

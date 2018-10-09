@@ -1,0 +1,8 @@
+~
+#execsp = $env.envExecScope
+#x = scopeGet(execsp, #0->id)
+@if(x){
+ ~~=call(x, [#1], $env)~~
+}@else{
+ ~~=call(scopeGet(execsp, "Obj"), [#1, #0], $env)~~
+}~

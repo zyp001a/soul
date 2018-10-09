@@ -1,14 +1,14 @@
 ~
-##$requires = {}
-##goRequire = &(varname){
- @if($requires[varname]){
+##$imports = {}
+##goImport = &(varname){
+ @if($imports[varname]){
   @return
  }
- $requires[varname] = "import \""^varname^"\""
+ $imports[varname] = "import \""^varname^"\""
 }
-##$preloads = {}
-push(mainpre, $requires)
-push(mainpre, $preloads)
+##$structs = {}
+push(mainpre, $imports)
+push(mainpre, $structs)
 push(mainpre, $funcs)
 push(mainpre, $includes)
 ~package main

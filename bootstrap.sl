@@ -140,13 +140,13 @@ curryNewx = &(scope, name, class, curry){
 ##nullc = curryNewx(def, "Null", valc)
 ##undfc = curryNewx(def, "Undf", valc)
 ##numc = curryNewx(def, "Num", valc)
-##sizetc = curryNewx(def, "Sizet", numc)
+##uintc = curryNewx(def, "Uint", numc)
 ##strc = curryNewx(def, "Str", valc)
 ##charc = curryNewx(def, "Char", strc)
 ##funcvc = curryNewx(def, "Funcv", valc)
 
 ##enumc = classNewx(def, "Enum", [objc])
-##voidc = classNewx(def, "Void", [objc])
+##voidpc = classNewx(def, "Voidp", [objc])
 
 ##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
@@ -180,6 +180,9 @@ curryNewx = &(scope, name, class, curry){
 
 ##itemsc =  classNewx(def, "Items", [valc], {
  itemsType: classc
+})
+##itemsc =  classNewx(def, "ItemsStatic", [itemsc], {
+ itemsStaticLength: uintc
 })
 ##arrc = curryNewx(def, "Arr", itemsc)
 ##dicc = curryNewx(def, "Dic", itemsc)
@@ -235,6 +238,9 @@ scopec.classSchema = {
 })
 ##sidglobalc =  classNewx(def, "SidGlobal", [sidc], {
  sidGlobal: scopec
+})
+##sidlibc =  classNewx(def, "SidLib", [sidc], {
+ sidLib: objc
 })
 ##sidobjc =  classNewx(def, "SidObj", [sidc], {
  sidObj: objc
@@ -693,6 +699,8 @@ typepredx = &(oo){
   @return scopeGetLocal(o.sidLocal, o.sid).confidType
  }@elif(t == "SidGlobal"){
   @return scopeGetLocal(o.sidGlobal, o.sid).confidType
+ }@elif(t == "SidLib"){
+  @return o.sidLib->obj
  }@elif(t == "SidObj"){
   @return classGetx(o.sidObj->obj, o.sid)
  }@elif(t == "SidDic"){
@@ -931,12 +939,12 @@ ast2objx = &(scope, gscope, ast){
   }
   #predt = typepredx(right)
   @if(?predt){
-    @if(typex(left) == "SidLocal"){
+   @if(typex(left) == "SidLocal"){
     @if(!?left.sidLocal[left.sid].confidType){
      left.sidLocal[left.sid].confidType = predt
     }
    }
-    @if(typex(left) == "SidGlobal"){
+   @if(typex(left) == "SidGlobal"){
     @if(!?left.sidGlobal[left.sid].confidType){
      left.sidGlobal[left.sid].confidType = predt
     }
@@ -1093,7 +1101,10 @@ ast2objx = &(scope, gscope, ast){
   @if(!?r){
    die("ast2obj: id is not defined, "^v)
   }
-  @return r;
+  @return  objNew(sidlibc, {
+   sid: v
+   sidLib: r
+  })
  }
  @if(t == "idlib"){
   #r = scopeGetx(scope, v)
@@ -1686,6 +1697,9 @@ fnNewx(execsp, "SidLocal", repr(&(env, o){
 fnNewx(execsp, "SidGlobal", repr(&(env, o){
  @return env.envGlobal[o.sid]
 }))
+fnNewx(execsp, "SidLib", repr(&(env, o){
+ @return execx(o.sidLib, env)
+}))
 fnNewx(execsp, "SidInnate", repr(&(env, o){
  @return o.sidInnate->(o.sid)
 }))
@@ -1723,7 +1737,8 @@ fnNewx(execsp, "OpAnd", repr(&(env, o){
  @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpOr", repr(&(env, o){
- @if(asval(execx(o.op2Left, env))){ @return 1 }
+ #l = asval(execx(o.op2Left, env))
+ @if(l){ @return l }
  @return asval(execx(o.op2Right, env))
 }))
 fnNewx(execsp, "OpDefinedor", repr(&(env, o){
@@ -1824,7 +1839,10 @@ envInitx = &(defsp, execsp, f){
  env.envExecScope = scopeGetx(gensp, "go"),
 }
 #objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@@Main {"^fileRead(f)^"}")
-@if(##$argv[1] == 2){
+@if(##$argv[1] == 1){
+ log(execx(objmain, env))
+}
+@if(##$argv[1] == 2 || !$argv[1]){
  fileWrite(##$argv[0]^".js", execx(objmain, env))
 }
 @if(##$argv[1] == 3){

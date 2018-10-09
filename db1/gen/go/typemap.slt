@@ -1,0 +1,9 @@
+~
+#t = #0
+@if(t == "Str"){
+ ~string~
+}@elif(t == "Num"){
+ ~float64~
+}@else{
+ ~~=t~~
+}~

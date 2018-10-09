@@ -1,1 +1,1 @@
-~die(#0)~
+~log("FuncNative!!");die(#0)~

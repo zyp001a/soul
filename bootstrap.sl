@@ -146,7 +146,7 @@ curryNewx = &(scope, name, class, curry){
 ##funcvc = curryNewx(def, "Funcv", valc)
 
 ##enumc = classNewx(def, "Enum", [objc])
-##voidc = classNewx(def, "Void", [voidc])
+##voidc = classNewx(def, "Void", [objc])
 
 ##argtc = classNewx(def, "Argt", [objc], {
  argtName: strc
@@ -1260,7 +1260,11 @@ ast2objx = &(scope, gscope, ast){
   }
  }
  @if(t == "class"){
-  #parents = ast2arrx(scope, gscope, v);
+  @if(!?v || len(v) == 0){
+   #parents = [objc];   
+  }@else{
+   #parents = ast2arrx(scope, gscope, v);
+  }
   #schema = ast2objx(scope, gscope, ast[2])
 	@if(?ast[3]){
    #curry = ast2objx(scope, gscope, ast[3])
@@ -1304,6 +1308,7 @@ ast2objx = &(scope, gscope, ast){
   innateSet(x, "obj", scopec)
   @return x
  }
+ log(ast)
  die("ast: unknown type, "^t)
 }
 
@@ -1815,5 +1820,13 @@ envInitx = &(defsp, execsp, f){
 @if(##$argv[1] == 2){
  env.envExecScope = scopeGetx(gensp, "jssoul"),
 }
+@if(##$argv[1] == 3){
+ env.envExecScope = scopeGetx(gensp, "go"),
+}
 #objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@@Main {"^fileRead(f)^"}")
-fileWrite(##$argv[0]^".js", execx(objmain, env))
+@if(##$argv[1] == 2){
+ fileWrite(##$argv[0]^".js", execx(objmain, env))
+}
+@if(##$argv[1] == 3){
+ fileWrite(##$argv[0]^".go", execx(objmain, env))
+}

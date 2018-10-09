@@ -3,11 +3,13 @@
 ##mainpre = []
 ##mainpost = []
 #execsp = $env.envExecScope
-scopeGet(execsp, "hookMainInit")()
-#hookmainpre = scopeGet(execsp, "hookMainPre")()
-#bf = scopeGet(execsp, "Block")
-#main = call(bf, [#0], #$env)
-#hookmainpost = scopeGet(execsp, "hookMainPost")()
+#hookmaininit = scopeGet(execsp, "hookMainInit")()
+#hookmainpre = scopeGet(execsp, "hookMainPre")(#0, $env)
+#hookmain = scopeGet(execsp, "hookMain")(#0, $env)
+#hookmainpost = scopeGet(execsp, "hookMainPost")(#0, $env)
+@if(hookmaininit){
+~~=hookmaininit~~
+}
 @if(hookmainpre){
 ~~=hookmainpre~~
 }
@@ -20,7 +22,7 @@ scopeGet(execsp, "hookMainInit")()
   ~~=vv~
 ~}
 }
-~~=main~~
+~~=hookmain~~
 @each k v mainpost{
  @if(type(v) == "Str"){
   ~~=v~

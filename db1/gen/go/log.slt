@@ -1,0 +1,2 @@
+~goRequire("fmt")~
+fmt.Println(&0)

@@ -1,0 +1,14 @@
+~
+##$requires = {}
+##goRequire = &(varname){
+ @if($requires[varname]){
+  @return
+ }
+ $requires[varname] = "import \""^varname^"\""
+}
+##$preloads = {}
+push(mainpre, $requires)
+push(mainpre, $preloads)
+push(mainpre, $funcs)
+push(mainpre, $includes)
+~package main

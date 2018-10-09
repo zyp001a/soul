@@ -1,0 +1,5 @@
+~
+#execsp = #1.envExecScope
+#bf = scopeGet(execsp, "Block")
+#main = call(bf, [#0], #1)
+~~=main~

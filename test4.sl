@@ -1,3 +1,4 @@
+#b = [1]
 Metax = <>{
  type: Str
  val: Num

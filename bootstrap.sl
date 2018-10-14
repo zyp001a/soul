@@ -186,7 +186,7 @@ curryNewx = &(scope, name, class, curry){
 })
 ##arrc = curryNewx(def, "Arr", itemsc)
 ##dicc = curryNewx(def, "Dic", itemsc)
-##diccallablec =  curryNewx(def, "DicClass", dicc)
+##dicclassc =  curryNewx(def, "DicClass", dicc)
 
 
 classc.classSchema = {
@@ -222,14 +222,12 @@ scopec.classSchema = {
  callArgs: arrc
 })
 
-##diccallablec =  curryNewx(def, "DicCallable", dicc, {
- itemsType: callablec
+##diccallablec =  classNewx(def, "DicCallable", [dicc, callablec], {
 })
-##arrcallablec =  curryNewx(def, "ArrCallable", arrc, {
- itemsType: callablec
+##arrcallablec =  classNewx(def, "ArrCallable", [arrc, callablec], {
 })
 
-##idc = classNewx(def, "Id", [objc])
+##idc = classNewx(def, "Id", [callablec])
 ##sidc =  classNewx(def, "Sid", [idc], {
  sid: strc,
 })
@@ -261,15 +259,17 @@ scopec.classSchema = {
  confidName: strc,
  confidType: classc,
 })
-##confidargc = curryNewx(def, "ConfidArg", confidc)
-##confidlocalc = curryNewx(def, "ConfidLocal", confidc)
+##confidargc = classNewx(def, "ConfidArg", [confidc])
+##confidlocalc = classNewx(def, "ConfidLocal", [confidc], {
+ confidLocalValue: objc
+})
 
 ##assignc = classNewx(def, "Assign", [objc], {
  assignLeft: idc
  assignRight: objc
 })
-
-##opc = classNewx(def, "Op", [objc], {
+##assignafterc = classNewx(def, "Assign", [assignc])
+##opc = classNewx(def, "Op", [callablec], {
  opPrecedence: numc
 })
 ##op1c = classNewx(def, "Op1", [opc], {
@@ -811,13 +811,36 @@ scopeGetx = &(scope, key){
 //////////////define parser function
 ast2objx = &(scope, gscope, ast)
 ast2arrx = &(scope, gscope, arr){
- #arrx = objNew(arrcallablec, [])
+ #arrx = []
+ #callable = 0;
  @foreach v arr{
-  push(arrx, ast2objx(scope, gscope, v))
+  #e = ast2objx(scope, gscope, v)
+  @if(istypex(e, "Callable")){
+   callable = 1
+  }
+  push(arrx, e)
  }
- @return arrx
+ @if(callable){
+  @return objNew(arrcallablec, arrx)
+ }@else{
+  @return objNew(arrc, arrx) 
+ }
 }
 ast2dicx = &(scope, gscope, dic){
+ #dicx = {}
+ #callable = 0;
+ @foreach v dic{
+  #e = ast2objx(scope, gscope, v[0])
+  @if(istypex(e, "Callable")){
+   callable = 1
+  }
+  dicx[v[1]] = e
+ }
+ @if(callable){
+  @return objNew(diccallablec, dicx)
+ }@else{
+  @return objNew(dicc, dicx) 
+ }
  #dicx = objNew(diccallablec, {})
  @foreach v dic{
   dicx[v[1]] = ast2objx(scope, gscope, v[0])
@@ -942,11 +965,25 @@ ast2objx = &(scope, gscope, ast){
    @if(typex(left) == "SidLocal"){
     @if(!?left.sidLocal[left.sid].confidType){
      left.sidLocal[left.sid].confidType = predt
+     @if(!istypex(right, "Callable")){
+      left.sidLocal[left.sid].confidLocalValue = right
+      @return objNew(assignafterc, {
+       assignLeft: left,
+       assignRight: right
+      })      
+     }
     }
    }
    @if(typex(left) == "SidGlobal"){
     @if(!?left.sidGlobal[left.sid].confidType){
      left.sidGlobal[left.sid].confidType = predt
+     @if(!istypex(right, "Callable")){
+      left.sidGlobal[left.sid].confidLocalValue = right
+      @return objNew(assignafterc, {
+       assignLeft: left,
+       assignRight: right
+      })
+     }     
     }
    }
   }
@@ -1330,7 +1367,6 @@ progl2objx = &(scope, gscope, sstr){
 }
 
 //////////////define call function
-
 blockExecx = &(block, env, sttlabel){
  @if(sttlabel){
   #stt = block.labels[sttlabel]
@@ -1779,7 +1815,7 @@ fnNewx(execsp, "OpLe", repr(&(env, o){
 ##defExecCache = {}
 
 
-envInitx = &(defsp, execsp, f){
+envInitx = &(defsp, globalsp, f){
  #defsptmp = scopeNewx(defsp),
  #globalsptmp = scopeNewx(globalsp)
  scopeSet(globalsptmp, "$argv", objNew(confidlocalc, {
@@ -1819,7 +1855,6 @@ envInitx = &(defsp, execsp, f){
   envState: deftmp,
   envStack: [],
 
-  envExecScope: execsp
   envExecCache: {},
  })
 }
@@ -1827,24 +1862,23 @@ envInitx = &(defsp, execsp, f){
 //////////test
 #f = ##$argv[0]
 #defsptmp = scopeGetx(def, "web"),
-#execsptmp = scopeGetx(gensp, "expressjs"),
-#env = envInitx(defsptmp, execsptmp, f)
+#env = envInitx(defsptmp, globalsp, f)
+
+#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@@Main {"^fileRead(f)^"}")
+
+@if(!$argv[1]){
+ env.envExecScope = scopeGetx(gensp, "expressjs"),
+ fileWrite(##$argv[0]^".js", execx(objmain, env))
+}
 @if(##$argv[1] == 1){
  env.envExecScope = execsp
-}
-@if(##$argv[1] == 2){
- env.envExecScope = scopeGetx(gensp, "jssoul"),
-}
-@if(##$argv[1] == 3){
- env.envExecScope = scopeGetx(gensp, "go"),
-}
-#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@@Main {"^fileRead(f)^"}")
-@if(##$argv[1] == 1){
  log(execx(objmain, env))
 }
 @if(##$argv[1] == 2 || !$argv[1]){
+ env.envExecScope = scopeGetx(gensp, "jssoul"),
  fileWrite(##$argv[0]^".js", execx(objmain, env))
 }
 @if(##$argv[1] == 3){
+ env.envExecScope = scopeGetx(gensp, "go"),
  fileWrite(##$argv[0]^".go", execx(objmain, env))
 }

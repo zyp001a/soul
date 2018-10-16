@@ -1,5 +1,7 @@
 ~
 #r = scopeGet(#$env.envExecScope, "typemap")
-@if(#1.confidType){
- ~var _~=asval(#0)~ ~=call(r, [#1.confidType->id], $env)~~
+@if(?#1.confidLocalValue){
+ ~_~=asval(#0)~ := ~=exec(#1.confidLocalValue, $env)~~
+}@elif(#1.confidType){
+ ~var _~=asval(#0)~ ~=call(r, [#1.confidType], $env)~~
 }~

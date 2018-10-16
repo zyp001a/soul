@@ -268,7 +268,7 @@ scopec.classSchema = {
  assignLeft: idc
  assignRight: objc
 })
-##assignafterc = classNewx(def, "Assign", [assignc])
+##assignafterc = classNewx(def, "AssignAfter", [assignc])
 ##opc = classNewx(def, "Op", [callablec], {
  opPrecedence: numc
 })
@@ -416,6 +416,7 @@ execx = &()
 blockExecx = &()
 callx = &()
 istypex = &()
+isclassx = &()
 typex = &()
 progl2objx = &()
 curryGetx = &()
@@ -464,6 +465,7 @@ fnNewx(def, "lc", repr(&(env, x){
  @return lc(x)
 }))
 fnNewx(def, "die", repr(&(env, x){
+ log(env.envFile)
  die(x)
 }))
 fnNewx(def, "len", repr(&(env, x){
@@ -566,8 +568,20 @@ fnNewx(def, "scopeGetLocal", repr(&(env, s, key){
 fnNewx(def, "scopeSet", repr(&(env, s, key, v){
  @return scopeSet(s, key, v)
 }))
-fnNewx(def, "call", repr(&(env, func, args, env){
+fnNewx(def, "call", repr(&(env, func, args, eenv){
+ @if(eenv){
+  @return callx(func, args, eenv)
+ }
  @return callx(func, args, env)
+}))
+fnNewx(def, "execarr", repr(&(env, arr, sep, eenv){
+ #s = ""
+ @for #i=0; i<len(arr); i++ {
+  @if i != 0 {
+   s += sep                                                                      }
+  s += execx(arr[i], eenv || env)
+ }
+ @return s
 }))
 fnNewx(def, "exec", repr(&(env, o, eenv){
  @if(eenv){
@@ -719,7 +733,7 @@ isclassrx = &(c, t){
   @if(k == t){
    @return 1;
   }
-  @if(isclassrx(v, t)){
+  @if(isclassx(v, t)){
    @return 1
   }
  }
@@ -841,11 +855,6 @@ ast2dicx = &(scope, gscope, dic){
  }@else{
   @return objNew(dicc, dicx) 
  }
- #dicx = objNew(diccallablec, {})
- @foreach v dic{
-  dicx[v[1]] = ast2objx(scope, gscope, v[0])
- }
- @return dicx
 }
 ast2objx = &(scope, gscope, ast){
  #t = ast[0]
@@ -1874,7 +1883,7 @@ envInitx = &(defsp, globalsp, f){
  env.envExecScope = execsp
  log(execx(objmain, env))
 }
-@if(##$argv[1] == 2 || !$argv[1]){
+@if(##$argv[1] == 2){
  env.envExecScope = scopeGetx(gensp, "jssoul"),
  fileWrite(##$argv[0]^".js", execx(objmain, env))
 }

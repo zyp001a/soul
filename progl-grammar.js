@@ -143,7 +143,7 @@ var grammar = {
 			["( Expr )", "$$ = $2"]			
 		],		
 		Null: "$$ = ['null', null]",
-		Undf: "$$ = ['undf', undfined]",		
+		Undf: "$$ = ['undf', undefined]",		
 		Char: "$$ = ['char', $1]",
 		Num: "$$ = ['num', $1]",
 		Str: "$$ = ['str', $1]",
@@ -189,7 +189,7 @@ var grammar = {
 			["FOREACH ID Expr Dic", "$$ = ['ctrl', 'foreach', [$2, $3, $4]]"],
 			["EACH ID ID Expr Dic", "$$ = ['ctrl', 'each', [$2, $3, $4, $5]]"],
 			["RETURN Expr", "$$ = ['ctrl', 'return', [$2]]"],
-			["RETURN", "$$ = ['ctrl', 'return']"],			
+			["RETURN", "$$ = ['ctrl', 'return', [['undf', undefined]]]"],			
 			["BREAK", "$$ = ['ctrl', 'break']"],
 			["CONTINUE", "$$ = ['ctrl', 'continue']"],
 			["GOTO ID", "$$ = ['ctrl', 'goto', [$2]]"],

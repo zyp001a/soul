@@ -102,7 +102,7 @@ case 25:
 this.$ = ['null', null]
 break;
 case 26:
-this.$ = ['undf', undfined]
+this.$ = ['undf', undefined]
 break;
 case 27:
 this.$ = ['char', $$[$0]]
@@ -183,7 +183,7 @@ case 57:
 this.$ = ['ctrl', 'return', [$$[$0]]]
 break;
 case 58:
-this.$ = ['ctrl', 'return']
+this.$ = ['ctrl', 'return', [['undf', undefined]]]
 break;
 case 59:
 this.$ = ['ctrl', 'break']

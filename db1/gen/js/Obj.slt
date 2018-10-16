@@ -16,7 +16,7 @@
 ~
  }
  #x2 = scopeGet(execsp, c->id^"Ex")
- @if(x2){
+ @if(?x2){
  ~~=ind(call(x2, [c, dic], $env))~,
 ~
  }~}

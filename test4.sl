@@ -1,4 +1,6 @@
-#b = [1]
+#c = 1
+#b = [c]
+b[0] = 3
 Metax = <>{
  type: Str
  val: Num
@@ -8,3 +10,4 @@ Metax = <>{
  val: 1+1
 }
 log(x.type)
+log(b[0])

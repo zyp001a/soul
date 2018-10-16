@@ -1,13 +1,17 @@
 ~
-#t = #0
-@if(!t || t == "Voidp"){
- ~interface~
-}elif(t == "Str"){
- ~string~
-}@elif(t == "Num"){
- ~float64~
-}@elif(t == "Arr" || t == "ArrCallable"){
- ~[]interface{}~
+@if(!?#0){
+ ~interface{}~
 }@else{
- ~~=t~~
+ #t = #0->id
+ @if(!t || t == "Voidp"){
+  ~interface{}~
+ }@elif(t == "Str"){
+  ~string~
+ }@elif(t == "Num"){
+  ~float64~
+ }@elif(t == "Arr" || t == "ArrCallable"){
+  ~[]interface{}~
+ }@else{
+  ~~=t~~
+ }
 }~

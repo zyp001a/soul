@@ -110,7 +110,18 @@ scopeIntox = &(scope, key){
  }
  @return nscope
 }
-
+classInitx = &(parents, schema, curry){
+ #x = @ReprClassx {
+  classSchema: schema || {}
+  classParents: {}
+  classCurry: curry || {}
+ }
+ @if parents {
+  parentSetx(x, "classParents", parents)
+ }
+ x->obj = classc
+ @return x
+}
 classNewx = &(scope, name, parents, schema){
  #x = classPresetx(scope, name, parents, schema)
  x->obj = classc
@@ -422,6 +433,7 @@ progl2objx = &()
 curryGetx = &()
 curryListx = &()
 classGetx = &()
+
 /////////define method
 methodNewx(strc, "split", repr(&(env, s, sep){
  @return split(s, sep)
@@ -589,6 +601,16 @@ fnNewx(def, "exec", repr(&(env, o, eenv){
  }
  @return execx(o, env) 
 }))
+fnNewx(def, "curryJoin", repr(&(env, c, dic){
+ #joined = {}
+ @each k v curryListx(c, {}) {
+  joined[k] = v
+ }
+ @each k v dic {
+  joined[k] = v
+ }
+ @return joined
+}))
 fnNewx(def, "fileRead", repr(&(env, f){
  @return fileRead(f)
 }))
@@ -601,8 +623,14 @@ fnNewx(def, "fileExists", repr(&(env, f){
 fnNewx(def, "progl2obj", repr(&(env, scope, gscope, sstr){
  @return progl2objx(scope, gscope, sstr)
 }))
+fnNewx(def, "classGet", repr(&(env, o, s){
+ @return classGetx(o, s)
+}))
 fnNewx(def, "istype", repr(&(env, o, s){
  @return istypex(o, s)
+}))
+fnNewx(def, "isclass", repr(&(env, o, s){
+ @return isclassx(o, s)
 }))
 fnNewx(def, "type", repr(&(env, o){
  @return typex(o)
@@ -928,19 +956,32 @@ ast2objx = &(scope, gscope, ast){
    }
    @if(lexdef){
     @if(v[1][0] == "func"){
-   //func need predefined
-     #prefunc = scopeGetLocal(scope, leftname);
-     @if(!?prefunc){
-      prefunc = objNew(funcblockc, {})
-      routex(prefunc, scope, leftname)
+   //func predefined
+     #pre = scopeGetLocal(scope, leftname);
+     @if(!?pre){
+      pre = objNew(funcblockc, {})
+      routex(pre, scope, leftname)
      }
-     #actfunc = ast2objx(scope, gscope, v[1])
-     prefunc.func = actfunc.func
-     prefunc.funcArgts = actfunc.funcArgts
-     prefunc.funcReturn = actfunc.funcReturn
-     prefunc.funcCatch = actfunc.funcCatch     
-     innateSet(prefunc, "isdef", 1)
-     @return prefunc;
+     #act = ast2objx(scope, gscope, v[1])
+     pre.func = act.func
+     pre.funcArgts = act.funcArgts
+     pre.funcReturn = act.funcReturn
+     pre.funcCatch = act.funcCatch     
+     innateSet(pre, "isdef", 1)
+     @return pre;
+    }@elif(v[1][0] == "class"){
+   //class predefined
+     #pre = scopeGetLocal(scope, leftname);
+     @if(!?preclass){
+      pre = classInitx([objc])
+      routex(pre, scope, leftname)
+     }
+     #act = ast2objx(scope, gscope, v[1])
+     pre.classSchema = act.classSchema
+     pre.classCurry = act.classCurry
+     pre.classParents = act.classParents
+     innateSet(pre, "isdef", 1)
+     @return pre;
     }@else{
      #r = ast2objx(scope, gscope, v[1])
      routex(r, scope, leftname)
@@ -1145,7 +1186,11 @@ ast2objx = &(scope, gscope, ast){
   }
   #r = scopeGetx(scope, v)
   @if(!?r){
-   die("ast2obj: id is not defined, "^v)
+   @if(uc(v[0]) == v[0]){
+    r = classNewx(scope, v, [objc])
+   }@else{
+    die("ast2obj: id is not defined, "^v)
+   }
   }
   @return  objNew(sidlibc, {
    sid: v
@@ -1153,7 +1198,7 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "idlib"){
-  #r = scopeGetx(scope, v)
+  #r = scopeGetx(scope, v)  
   @if(!?r){
    die(v^" not defined")
   }
@@ -1326,20 +1371,17 @@ ast2objx = &(scope, gscope, ast){
 	@if(?ast[3]){
    #curry = ast2objx(scope, gscope, ast[3])
 	}
-  #x = @ReprClassx {
-   classSchema: schema || {}
-   classParents: {}
-	 classCurry: curry || {}
-  }
-  @if parents {
-   parentSetx(x, "classParents", parents)
-  }
-	x->obj = classc
+  #x = classInitx(parents, schema, curry)
   @return x
  }
  @if(t == "curry"){
   #class = ast2objx(scope, gscope, v)
   #dic = ast2objx(scope, gscope, ast[2])
+  @each k vv dic{
+   @if(typex(vv) == "SidLib"){
+    dic[k] = vv.sidLib;
+   }
+  }
   @return curryInitx(class, dic)
  }
  @if(t == "objnew"){
@@ -1438,6 +1480,14 @@ tplCallx = &(functpl, args, env){
   confidName: "$env"
   confidType: envc
  }))
+ scopeSet(tscope, "$arglen", objNew(confidlocalc, {
+  confidName: "$arglen"
+  confidType: numc
+ }))
+ scopeSet(tscope, "$this", objNew(confidlocalc, {
+  confidName: "$this"
+  confidType: functplc
+ }))
  @if(functpl.funcTplFile){
   #m = match(functpl.funcTplFile, "([^\\/]+)$")
   @if uc(m[1][0]) == m[1][0] && !match(m[1], "-") {
@@ -1449,6 +1499,7 @@ tplCallx = &(functpl, args, env){
  #s = {}
  s["$env"] = env;
  s["$arglen"] = args.length
+ s["$this"] = functpl 
  @each i v args{
   s[i] = v;
  }

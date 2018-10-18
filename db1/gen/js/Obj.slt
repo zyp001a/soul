@@ -4,13 +4,7 @@
 #dic = #0
 ~{
 ~
- #joined = {}
- @each k v curryList(c) {
-  joined[k] = v
- }
- @each k v dic {
-  joined[k] = v
- }
+ #joined = curryJoin(c, dic)
  @each k v joined {
 ~~=ind(asval(k))~: ~=ind(exec(v, $env))~,
 ~

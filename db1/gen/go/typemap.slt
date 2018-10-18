@@ -9,8 +9,16 @@
   ~string~
  }@elif(t == "Num"){
   ~float64~
- }@elif(t == "Arr" || t == "ArrCallable"){
-  ~[]interface{}~
+ }@elif(t == "Sizet"){
+  ~uint~
+ }@elif($enums[t]){
+  ~uint8~
+ }@elif(isclass(#0, "Arr")){
+  ~[]~=$this(curryGet(#0, "itemsType"))~~
+ }@elif(isclass(#0, "Dic")){
+  ~map[string]~=$this(curryGet(#0, "itemsType"))~~
+ }@elif(#0.curryClass){
+  ~~=$this(#0.curryClass)~~  
  }@else{
   ~~=t~~
  }

@@ -1,0 +1,13 @@
+~
+#make = &(c, $env){
+ #$arr = []
+~const (
+~
+ @each k v c.enum{
+  ~~=$indent+c->id+v~ = ~=k~
+~
+ }
+~)~
+ @return join($arr, "")
+}
+$enums[#0->id] = make(#0, $env)~

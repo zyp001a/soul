@@ -1,9 +1,9 @@
-ObjTypex = @Enum {
+ObjTypex = @@Enum {
  enum: ["NUM", "STR", "DIC", "ARR", "FUNC", "OBJ", "SCOPE", "CLASS", "CURRY"]
 }
 Metax = <>{
  type: ObjTypex
- val: Void
+ val: Voidp
 }
 DicMetax = => Dic {
  itemsType: Metax
@@ -14,15 +14,15 @@ Dicx = => Dic {
 Arrx = => Arr {
  itemsType: Metax
 }
+DicClassx = => Dic {
+ itemsType: Classx
+}
 Classx = <>{
  name: Str
  id: Str
  ns: Str
  schema: DicMetax
  parents: DicClassx
-}
-DicClassx = => Dic {
- itemsType: Classx
 }
 Curryx = <>{
  name: Str
@@ -65,6 +65,7 @@ objNewx = @@FuncInternal
 objSetx = @@FuncInternal
 scopeGetLocal = @@FuncInternal
 scopeSet = @@FuncInternal
+/*
 routex = &(oo, scope, name){
  #o = asobjx(oo)
  @if(!o->index){
@@ -126,3 +127,4 @@ classPresetx = &(scope, name, parents, schema){
  routex(x, scope, name);
  @return x;
 }
+*/

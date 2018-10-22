@@ -17,17 +17,17 @@ Arrx = => Arr {
 DicClassx = => Dic {
  itemsType: Classx
 }
-Classx = <>{
+Routex = <>{
  name: Str
  id: Str
  ns: Str
+ index: Uint
+}
+Classx = <Routex>{
  schema: DicMetax
  parents: DicClassx
 }
-Curryx = <>{
- name: Str
- id: Str
- ns: Str
+Curryx = <Routex>{
  schema: DicMetax 
  class: Classx
 }
@@ -35,16 +35,12 @@ Objx = <>{
  class: Classx
  val: Dicx
 }
-Scopex = <>{
- name: Str
- id: Str
- ns: Str
- index: Sizet
- parent: DicScopex
- val: DicMetax
-}
 DicScopex = => Dic {
  itemsType: Scopex
+}
+Scopex = <Routex>{
+ parent: DicScopex
+ val: DicMetax
 }
 
 ##rootsp
@@ -58,73 +54,36 @@ DicScopex = => Dic {
 ##curryc
 ##valc
 
-asobjx = @@FuncInternal
-asvalx = @@FuncInternal
-reprx = @@FuncInternal
-objNewx = @@FuncInternal
-objSetx = @@FuncInternal
-scopeGetLocal = @@FuncInternal
-scopeSet = @@FuncInternal
-/*
-routex = &(oo, scope, name){
- #o = asobjx(oo)
- @if(!o->index){
-  o->index = 0
+routex = &Routex(o:Routex, scope:Scopex, name:Str){
+ @if(!o.index){
+  o.index = 0
  }
  @if(!scope){
   @return o
  }
+ /*
  @if(!?name){
   name = str(o->index)
-	o->index ++
-	o->noname = 1
+  o->index ++
+  o->noname = 1
  }
- scopeSetx(scope, name, o);
+ scopeSet(scope, name, o);
  o->name = name
  #id = scope->id
  @if(!?id){
   o->id = "."
-	o->ns = name
+  o->ns = name
  }@elif(id == "."){
   o->id = name
-	o->ns = scope->ns
+  o->ns = scope->ns
  }@elif(scope->noname){
   o->id = name
-	o->ns = scope->ns^"/"^id
+  o->ns = scope->ns^"/"^id
  }@else{
   o->id = id^"_"^name
-	o->ns = scope->ns
+  o->ns = scope->ns
  }
  o->scope = scope
+ */
  @return o;
 }
-parentSetx = &(p, k, parents){
- @foreach e parents{
-  //TODO reduce
-  dic(p.(k))[e->id] = e;
- }
-}
-scopePresetx = &(scope, name, parents){
- #x = @ReprScopex {
-  scope: {}
-  scopeParents: {}
- }
- @if parents {
-  parentSetx(x, "scopeParents", parents)
- }
- routex(x, scope, name);
- @return x;
-}
-classPresetx = &(scope, name, parents, schema){
- #x = @ReprClassx {
-  classCurry: {}
-  classSchema: schema || {}
-  classParents: {}
- }
- @if parents {
-  parentSetx(x, "classParents", parents)
- }
- routex(x, scope, name);
- @return x;
-}
-*/

@@ -9,7 +9,7 @@
   ~string~
  }@elif(t == "Num"){
   ~float64~
- }@elif(t == "Sizet"){
+ }@elif(t == "Uint"){
   ~uint~
  }@elif($enums[t]){
   ~uint8~

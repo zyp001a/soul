@@ -1,0 +1,30 @@
+~
+#block = #0.func
+#argts = #0.funcArgts
+#typemap = scopeGet($env.envExecScope, "typemap")
+#strx = exec(block, $env);
+#x = "";
+@each i v argts{
+ @if (i != 0) {x ^= ", "}
+ #vv = "_" ^ v.argtName ^ " " ^ typemap(v.argtType)
+ x ^= vv;
+}
+#y = ""
+@if(#0.funcReturn){
+ y ^= " " + typemap(#0.funcReturn)
+}
+@if(#0->isdef){
+ #nn = #0->name
+}@else{
+ #nn = #0->id 
+}
+
+@if(nn){ nn = " "^nn }
+#make = &(nn, x, y, strx, $env){
+ #$arr = []
+ ~func~=nn~(~=x~)~=y~{
+~=ind(strx)~
+}~
+ @return join($arr, "")
+}
+$funcs[#0->id] = make(nn, x, y, strx, $env)~

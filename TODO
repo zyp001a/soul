@@ -2,6 +2,7 @@
  change Callable to Calling
  __.context  contextSet/Get/Add/Del
  lcfirst
+ 
 all obj oriented
 complete self-generation
  debug linenum support

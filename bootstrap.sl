@@ -152,6 +152,9 @@ curryNewx = &(scope, name, class, curry){
 ##undfc = curryNewx(def, "Undf", valc)
 ##numc = curryNewx(def, "Num", valc)
 ##uintc = curryNewx(def, "Uint", numc)
+##floatc = curryNewx(def, "Float", numc)
+##doublec = curryNewx(def, "Double", numc)
+##booleanc = curryNewx(def, "Boolean", numc)
 ##strc = curryNewx(def, "Str", valc)
 ##charc = curryNewx(def, "Char", strc)
 ##funcvc = curryNewx(def, "Funcv", valc)
@@ -432,7 +435,9 @@ typex = &()
 progl2objx = &()
 curryGetx = &()
 curryListx = &()
+typepredx = &()
 classGetx = &()
+
 
 /////////define method
 methodNewx(strc, "split", repr(&(env, s, sep){
@@ -640,6 +645,9 @@ fnNewx(def, "asval", repr(&(env, o){
 }))
 fnNewx(def, "asobj", repr(&(env, o){
  @return asobj(o)
+}))
+fnNewx(def, "typepred", repr(&(env, o){
+ @return typepredx(o)
 }))
 objnewf = fnNewx(def, "objNew", repr(&(env, class, val){
  @return execx(objNew(class, val), env)
@@ -1351,8 +1359,24 @@ ast2objx = &(scope, gscope, ast){
   #class = scopeGetLocal(def, cname)
   #args = ast[2]
   @if(len(args) == 1){
+   #arg0 = ast2objx(scope, gscope, args[0])   
+   @if(v == "not"){
+    #t0 = typepredx(arg0)
+    @if(!?t0 || t0->id == "Boolean"){
+    }@elif(isclassx(t0, "Num")){
+     @return objNew(opnec, {
+      op2Left: arg0
+      op2Right: asobj(0)
+     })
+    }@else{
+     @return objNew(opnec, {
+      op2Left: arg0
+      op2Right: asobj(_)
+     })    
+    }
+   }
    @return objNew(class, {
-    op1: ast2objx(scope, gscope, args[0])
+    op1: arg0
    })
   }@else{
    @return objNew(class, {
@@ -1580,6 +1604,9 @@ execx = &(oo, env){
 fnNewx(execsp, "Obj", repr(&(env, o){
  log("Obj to be defined: "^o->obj->id)
  log(o)
+ @return o
+}))
+fnNewx(execsp, "Ctrl", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Val", repr(&(env, o){

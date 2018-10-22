@@ -2,7 +2,12 @@
 #make = &(c, $env){
  #$arr = []
 ~type ~=c->id~ struct {
-~@each k v c.classSchema{
+~@each k v c.classParents{
+ @if(k == "Obj"){@continue;}
+ ~~=ind(k)~
+~
+}
+@each k v c.classSchema{
  ~~=$indent~_~=k~ ~=exec(v, $env)~
 ~
 }~}~

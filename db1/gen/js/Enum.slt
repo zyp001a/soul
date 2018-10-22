@@ -1,0 +1,10 @@
+~
+#make = &(c, $env){
+ #$arr = []
+ @each k v c.enum{
+  ~var ~=c->id+v~ = ~=k~
+~
+ }
+ @return join($arr, "")
+}
+$preloads[#0->id] = make(#0, $env)~

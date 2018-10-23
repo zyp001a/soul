@@ -1,9 +1,8 @@
 ~
-#execsp = $env.envExecScope
+#execsp =  $env.envExecScope
 #c = #1 || #0->obj
 #dic = #0
-log(c->id)
-~~=c->id~{
+~&~=c->id~{
 ~@each k v curryJoin(c, dic){
  ~~=$indent~_~=k~: ~=exec(v, $env)~,
 ~

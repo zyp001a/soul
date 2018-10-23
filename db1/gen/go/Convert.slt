@@ -1,0 +1,2 @@
+~#typemap = scopeGet($env.envExecScope, "typemap")
+~&convert.(~=typemap(#0.convertType)~)

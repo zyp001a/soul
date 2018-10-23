@@ -11,6 +11,18 @@
  @if(r){
   ~~=call(r, a, $env)~~
  }@elif(type(f) == "FuncInternal" || f->isdef){
+  @for #i=len(a);i<len(f.funcArgts);i++ {
+   #vvv = Arr(f.funcArgts)[i]
+   @if(vvv.argtType){
+    @if(isclass(vvv.argtType, "Val")){
+     push(a, curryGet(vvv.argtType, "valDefault"))
+    }@else{
+     push(a, _)
+    }
+   }@else{
+    push(a, _)
+   }
+  }
   printargs = 1 
   ~~=f->name~~
  }@elif(type(f) == "FuncNative" && f->maininit){
@@ -33,7 +45,7 @@
 }
 #arr = []
 @if printargs {
- @foreach e a{ 
+ @foreach e a{
   push(arr, exec(e, $env))
  }
  ~(~=join(arr, ", ")~)~

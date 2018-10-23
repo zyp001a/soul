@@ -7,6 +7,8 @@
   ~interface{}~
  }@elif(t == "Str"){
   ~string~
+ }@elif(t == "Boolean"){
+  ~boolean~
  }@elif(t == "Num"){
   ~float64~
  }@elif(t == "Uint"){
@@ -20,6 +22,6 @@
  }@elif(#0.curryClass){
   ~~=$this(#0.curryClass)~~  
  }@else{
-  ~~=t~~
+  ~*~=t~~
  }
 }~

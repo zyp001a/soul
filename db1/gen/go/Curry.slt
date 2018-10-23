@@ -1,0 +1,24 @@
+~
+#typemap = scopeGet($env.envExecScope, "typemap")
+#make = &(c, $env){
+ #$arr = []
+~const (
+~
+ @each k v c.curry.enum{
+  ~~=$indent+c->id+v~ = ~=k~
+~
+ }
+~)~
+ @return join($arr, "")
+}
+#make2 = &(c, typemap, $env){
+ #$arr = []
+ ~type ~=c->id~ ~=typemap(c)~~
+ @return join($arr, "")
+}
+@if(isclass(#0, "Enum")){
+ $enums[#0->id] = make(#0, $env)
+}@elif(isclass(#0, "Items")){
+// $structs[#0->id] = make2(#0, typemap, $env)
+}
+~

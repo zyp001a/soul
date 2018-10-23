@@ -1,0 +1,4 @@
+~
+goImport("unsafe");
+#tmpi = genuid($env);
+~var tmp~=tmpi~ ~=#0.sid~;unsafe.Sizeof(tmp~=tmpi~)

@@ -129,7 +129,9 @@ classNewx = &(scope, name, parents, schema){
 }
 
 ##curryc = classNewx(def, "Curry", [objc])
-##valc = classNewx(def, "Val", [objc])
+##valc = classNewx(def, "Val", [objc], {
+ valDefault: objc
+})
 
 curryInitx = &(class, curry){
  #x = @ReprCurryx {
@@ -148,18 +150,27 @@ curryNewx = &(scope, name, class, curry){
 
 
 
-##nullc = curryNewx(def, "Null", valc)
-##undfc = curryNewx(def, "Undf", valc)
-##numc = curryNewx(def, "Num", valc)
+//##nullc = curryNewx(def, "Null", valc)
+##undfc = curryNewx(def, "Undf", valc, {
+ valDefault: __
+})
+##numc = curryNewx(def, "Num", valc, {
+ valDefault: 0
+})
 ##uintc = curryNewx(def, "Uint", numc)
 ##floatc = curryNewx(def, "Float", numc)
 ##doublec = curryNewx(def, "Double", numc)
 ##booleanc = curryNewx(def, "Boolean", numc)
-##strc = curryNewx(def, "Str", valc)
-##charc = curryNewx(def, "Char", strc)
-##funcvc = curryNewx(def, "Funcv", valc)
+##strc = curryNewx(def, "Str", valc, {
+ valDefault: ""
+})
+##charc = curryNewx(def, "Char", valc, {
+ valDefault: ''
+})
+##funcvc = curryNewx(def, "Funcv", valc, {
+ valDefault: __
+})
 
-##enumc = classNewx(def, "Enum", [objc])
 ##voidpc = classNewx(def, "Voidp", [objc])
 
 ##argtc = classNewx(def, "Argt", [objc], {
@@ -202,6 +213,9 @@ curryNewx = &(scope, name, class, curry){
 ##dicc = curryNewx(def, "Dic", itemsc)
 ##dicclassc =  curryNewx(def, "DicClass", dicc)
 
+##enumc = classNewx(def, "Enum", [valc], {
+ enum: arrc
+})
 
 classc.classSchema = {
  classParents: dicc
@@ -227,6 +241,11 @@ scopec.classSchema = {
  envState: dicc,
  envGlobal: dicc,
  envStack: arrc,
+})
+
+##convertc = classNewx(def, "Convert", [objc], {
+ convertType: classc
+ convert: objc
 })
 
 ##callablec = classNewx(def, "Callable", [objc])
@@ -296,57 +315,57 @@ scopec.classSchema = {
 //https://en.cppreference.com/w/c/language/operator_precedence
 //remove unused
 //get and assign are not operators in Soul
-##notc = curryNewx(def, "OpNot", op1c, {
+##opnotc = curryNewx(def, "OpNot", op1c, {
  opPrecedence: 10
 })
-##definedc = curryNewx(def, "OpDefined", op1c, {
+##opdefinedc = curryNewx(def, "OpDefined", op1c, {
  opPrecedence: 10
 })
-##splusc = curryNewx(def, "OpTimes", op2c, {
+##optimesc = curryNewx(def, "OpTimes", op2c, {
  opPrecedence: 20
 })
-##splusc = curryNewx(def, "OpObelus", op2c, {
+##opobelusc = curryNewx(def, "OpObelus", op2c, {
  opPrecedence: 20
 })
-##splusc = curryNewx(def, "OpMod", op2c, {
+##opmodc = curryNewx(def, "OpMod", op2c, {
  opPrecedence: 20
 })
-##plusc = curryNewx(def, "OpPlus", op2c, {
+##opplusc = curryNewx(def, "OpPlus", op2c, {
  opPrecedence: 30
 })
-##plusc = curryNewx(def, "OpSplus", op2c, {
+##opsplusc = curryNewx(def, "OpSplus", op2c, {
  opPrecedence: 30
 })
-##splusc = curryNewx(def, "OpMinus", op2c, {
+##opminusc = curryNewx(def, "OpMinus", op2c, {
  opPrecedence: 30
 })
-##splusc = curryNewx(def, "OpGe", op2c, {
+##opgec = curryNewx(def, "OpGe", op2c, {
  opPrecedence: 40
 })
-##splusc = curryNewx(def, "OpLe", op2c, {
+##oplec = curryNewx(def, "OpLe", op2c, {
  opPrecedence: 40
 })
-##splusc = curryNewx(def, "OpGt", op2c, {
+##opgtc = curryNewx(def, "OpGt", op2c, {
  opPrecedence: 40
 })
-##splusc = curryNewx(def, "OpLt", op2c, {
+##opltc = curryNewx(def, "OpLt", op2c, {
  opPrecedence: 40
 })
 
-##splusc = curryNewx(def, "OpEq", op2c, {
+##opeqc = curryNewx(def, "OpEq", op2c, {
  opPrecedence: 50
 })
-##splusc = curryNewx(def, "OpNe", op2c, {
+##opnec = curryNewx(def, "OpNe", op2c, {
  opPrecedence: 50
 })
 
-##splusc = curryNewx(def, "OpAnd", op2c, {
+##opandc = curryNewx(def, "OpAnd", op2c, {
  opPrecedence: 60
 })
-##splusc = curryNewx(def, "OpOr", op2c, {
+##oporc = curryNewx(def, "OpOr", op2c, {
  opPrecedence: 70
 })
-##definedc = curryNewx(def, "OpDefinedor", op1c, {
+##opdefinedorc = curryNewx(def, "OpDefinedor", op1c, {
  opPrecedence: 80
 })
 
@@ -427,6 +446,7 @@ callNewx = &(func, args){
 //predefined basic function, like c header, TODO delete
 scopeGetx = &()
 execx = &()
+ncExecx = &()
 blockExecx = &()
 callx = &()
 istypex = &()
@@ -449,7 +469,7 @@ methodNewx(dicc, "get", repr(&(env, dic, key){
   sidDic: dic
  })
 }))
-methodNewx(arrc, "get", repr(&(env, arr, key){
+##arrgetc = methodNewx(arrc, "get", repr(&(env, arr, key){
  @return objNew(aidc, {
   aid: key
   aidArr: arr
@@ -466,6 +486,9 @@ fnNewx(def, "genuid", repr(&(env, eenv){
  @return x
 }))
 fnNewx(def, "log", repr(&(env, x){
+ log(x)
+}))
+fnNewx(def, "sizeof", repr(&(env, x){
  log(x)
 }))
 fnNewx(def, "logx", repr(&(env, x){
@@ -650,7 +673,7 @@ fnNewx(def, "typepred", repr(&(env, o){
  @return typepredx(o)
 }))
 objnewf = fnNewx(def, "objNew", repr(&(env, class, val){
- @return execx(objNew(class, val), env)
+ @return objNew(class, val)
 }))
 
 ////////define basic function
@@ -757,6 +780,8 @@ typepredx = &(oo){
   @return o.sidDic.itemsTypes
  }@elif(t == "Aid"){
   @return o.aidArr.itemsTypes
+ }@elif(t == "Convert"){
+  @return o.convertType
  }@else{
   @return o->obj
  }
@@ -873,6 +898,9 @@ ast2arrx = &(scope, gscope, arr){
  @if(callable){
   @return objNew(arrcallablec, arrx)
  }@else{
+  @each k v arrx{
+   arrx[k] = ncExecx(v)
+  } 
   @return objNew(arrc, arrx) 
  }
 }
@@ -889,6 +917,9 @@ ast2dicx = &(scope, gscope, dic){
  @if(callable){
   @return objNew(diccallablec, dicx)
  }@else{
+  @each k v dicx{
+   dicx[k] = ncExecx(v)
+  }
   @return objNew(dicc, dicx) 
  }
 }
@@ -901,9 +932,9 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "num"){
   @return asobj(num(v));
  }
- @if(t == "null"){
-  @return asobj(_);
- }
+// @if(t == "null"){
+//  @return asobj(_);
+// }
  @if(t == "undf"){
   @return asobj(__);
  }
@@ -920,6 +951,13 @@ ast2objx = &(scope, gscope, ast){
    #pscope = innateGet(scope, "scope")
    routex(f, pscope, v[1])
    innateSet(f, "predefined", 1)
+  }
+  @if(f.sidLib && (f.sidLib->obj->id == "Class" || f.sidLib->obj->id == "Curry")){
+   //TODO type2type converter
+   @return objNew(convertc, {
+    convertType: f.sidLib
+    convert: ast2objx(scope, gscope, ast[2][0])
+   })
   }
   #arr = ast2arrx(scope, gscope, ast[2])
   @if(v[0] == "get" && v[3] == "obj"){
@@ -1061,7 +1099,7 @@ ast2objx = &(scope, gscope, ast){
     die("typepred error")
    }
    @return objNew(callc, {
-    callFunc: curryGetx(to, "get")
+    callFunc: curryGetx(to, "get") || arrgetc
     callArgs: [a0, a1]
    })	 
   }
@@ -1362,16 +1400,21 @@ ast2objx = &(scope, gscope, ast){
    #arg0 = ast2objx(scope, gscope, args[0])   
    @if(v == "not"){
     #t0 = typepredx(arg0)
-    @if(!?t0 || t0->id == "Boolean"){
+    @if(!?t0 || t0->id == "Boolean" || t0->id == "OpDefined"){
     }@elif(isclassx(t0, "Num")){
-     @return objNew(opnec, {
+     @return objNew(opeqc, {
       op2Left: arg0
       op2Right: asobj(0)
      })
-    }@else{
-     @return objNew(opnec, {
+    }@elif(isclassx(t0, "Str")){
+     @return objNew(opeqc, {
       op2Left: arg0
-      op2Right: asobj(_)
+      op2Right: asobj("")
+     })
+    }@else{
+     @return objNew(opeqc, {
+      op2Left: arg0
+      op2Right: asobj(__)
      })    
     }
    }
@@ -1379,9 +1422,20 @@ ast2objx = &(scope, gscope, ast){
     op1: arg0
    })
   }@else{
+   #arg0 = ast2objx(scope, gscope, args[0])
+   #arg1 = ast2objx(scope, gscope, args[1])            
+   @if(v == "eq"){
+    #lt = typepredx(arg0)
+    #rt = typepredx(arg1)
+    @if(lt && isclassx(lt, "Enum") && typex(arg1) == "Str"){
+     arg1 = objNew(lt, {
+      val: arg1
+     })
+    }
+   }
    @return objNew(class, {
-    op2Left: ast2objx(scope, gscope, args[0])
-    op2Right: ast2objx(scope, gscope, args[1])
+    op2Left: arg0
+    op2Right: arg1
    })
   }
  }
@@ -1392,8 +1446,14 @@ ast2objx = &(scope, gscope, ast){
    #parents = ast2arrx(scope, gscope, v);
   }
   #schema = ast2objx(scope, gscope, ast[2])
+  @each k vv schema{
+   schema[k] = ncExecx(vv)
+  }  
 	@if(?ast[3]){
    #curry = ast2objx(scope, gscope, ast[3])
+   @each k vv curry{
+    curry[k] = ncExecx(vv)
+   }
 	}
   #x = classInitx(parents, schema, curry)
   @return x
@@ -1402,9 +1462,7 @@ ast2objx = &(scope, gscope, ast){
   #class = ast2objx(scope, gscope, v)
   #dic = ast2objx(scope, gscope, ast[2])
   @each k vv dic{
-   @if(typex(vv) == "SidLib"){
-    dic[k] = vv.sidLib;
-   }
+   dic[k] = ncExecx(vv)
   }
   @return curryInitx(class, dic)
  }
@@ -1456,7 +1514,7 @@ blockExecx = &(block, env, sttlabel){
   }
  }
 }
-execGetx = &(t, env, cache){
+execGetx = &(t, o, env, cache){
  #e = env.envExecScope
  @if(?scopeGetLocal(e, t)){
   @return scopeGetLocal(e, t);
@@ -1469,13 +1527,13 @@ execGetx = &(t, env, cache){
   e[t] = exect;
   @return exect
  }
- #deft = scopeGetx(env.envDefScope, t)
+ #deft = o || scopeGetx(env.envDefScope, t)
  @if(typex(deft) == "Curry"){
   #k = innateGet(deft.curryClass, "id")
   @if(cache[k]){ @return; }
   cache[k] = 1;
 
-  exect = execGetx(k, env, cache);
+  exect = execGetx(k, __, env, cache);
   @if(?exect){
    e[t] = exect;
    @return exect;
@@ -1487,7 +1545,7 @@ execGetx = &(t, env, cache){
   @each k v deft.classParents{
    @if(cache[k]){ @return; }
    cache[k] = 1;
-   exect = execGetx(k, env, cache);
+   exect = execGetx(k, __, env, cache);
    @if(?exect){
     e[t] = exect;
     @return exect;
@@ -1584,6 +1642,20 @@ callx = &(func, args, env){
  log(func)
  die(t^": exec not defined")
 }
+ncExecx = &(oo){
+ #o = asobj(oo)
+ #t = typex(o)
+ @if(t == "SidLib"){
+  @return o.sidLib
+ }
+ @if(istypex(o, "Items")){
+  @return o
+ }
+ @if(istypex(o, "Val")){
+  @return o.val
+ }
+ @return o
+}
 execx = &(oo, env){
  #o = asobj(oo)
  #t = typex(o)
@@ -1591,7 +1663,7 @@ execx = &(oo, env){
   log(o)
   die("no type defined")
  }
- #ex = execGetx(t, env)
+ #ex = execGetx(t, o->obj, env)
  @if(!?ex){
   die("exec: unknown type, "^t);
  }
@@ -1637,6 +1709,9 @@ fnNewx(execsp, "Main", repr(&(env, o){
   die(x.throw.errorMsg)
  }
  @return x
+}))
+fnNewx(execsp, "Convert", repr(&(env, o){
+ @return execx(o.convert, env)
 }))
 fnNewx(execsp, "Call", repr(&(env, o){
  #func = execx(o.callFunc, env)
@@ -1951,7 +2026,7 @@ envInitx = &(defsp, globalsp, f){
 #defsptmp = scopeGetx(def, "web"),
 #env = envInitx(defsptmp, globalsp, f)
 
-#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@@Main {"^fileRead(f)^"}")
+#objmain = progl2objx(env.envDefScope, env.envGlobalScope, "@Main {"^fileRead(f)^"}")
 
 @if(!$argv[1]){
  env.envExecScope = scopeGetx(gensp, "expressjs"),

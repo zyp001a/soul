@@ -1,46 +1,35 @@
-ObjTypex = @@Enum {
- enum: ["NUM", "STR", "DIC", "ARR", "FUNC", "OBJ", "SCOPE", "CLASS", "CURRY"]
-}
-Metax = <>{
- type: ObjTypex
- val: Voidp
-}
-DicMetax = => Dic {
- itemsType: Metax
-}
-Dicx = => Dic {
- itemsType: Metax
-}
-Arrx = => Arr {
- itemsType: Metax
-}
-DicClassx = => Dic {
- itemsType: Classx
+T = =>Enum {
+ enum: [
+  "NULL", "NUM", "STR", "DIC", "ARR", "FUNC",
+  "SCOPE", "CLASS", "CURRY",
+  "OBJ"
+ ]
 }
 Routex = <>{
  name: Str
  id: Str
  ns: Str
  index: Uint
+ scope: Objx
 }
-Classx = <Routex>{
- schema: DicMetax
- parents: DicClassx
+Dicx = => Dic {
+ itemsType: Objx
 }
-Curryx = <Routex>{
- schema: DicMetax 
- class: Classx
+Arrx = => Arr {
+ itemsType: Objx
+}
+Oopx = <>{
+ itemsType: Objx 
+ class: Objx
+ schema: Dicx
+ curry: Dicx
+ parents: Dicx
 }
 Objx = <>{
- class: Classx
- val: Dicx
-}
-DicScopex = => Dic {
- itemsType: Scopex
-}
-Scopex = <Routex>{
- parent: DicScopex
- val: DicMetax
+ type: T
+ route: Routex
+ oop: Oopx
+ val: Voidp 
 }
 
 ##rootsp
@@ -53,21 +42,32 @@ Scopex = <Routex>{
 ##scopec
 ##curryc
 ##valc
-
-routex = &Routex(o:Routex, scope:Scopex, name:Str){
- @if(!o.index){
-  o.index = 0
+/*
+valx = &(o:Objx)Voidp{
+ #t = o.type
+ @if(t == "NUM"){
+  @return 
+ }
+ @return 1
+}
+*/
+routex = &(o:Objx, scope:Objx, name:Str)Objx{
+ @if(!o.route){
+  o.route = &Routex{}
+ }
+ #r = o.route;
+ @if(!r.index){
+  r.index = 0
  }
  @if(!scope){
   @return o
  }
- /*
- @if(!?name){
-  name = str(o->index)
-  o->index ++
-  o->noname = 1
+ @if(!name){
+  name = str(r.index)
+  r.index ++
  }
- scopeSet(scope, name, o);
+ Dicx(scope.val)[name] = o
+  /*
  o->name = name
  #id = scope->id
  @if(!?id){
@@ -84,6 +84,7 @@ routex = &Routex(o:Routex, scope:Scopex, name:Str){
   o->ns = scope->ns
  }
  o->scope = scope
- */
+ */  
  @return o;
 }
+//log(valx(@Metax{}))

@@ -142,7 +142,7 @@ var grammar = {
 			"Assign",
 			["( Expr )", "$$ = $2"]			
 		],		
-		Null: "$$ = ['null', null]",
+		Null: "$$ = ['undf', undefined]",
 		Undf: "$$ = ['undf', undefined]",		
 		Char: "$$ = ['char', $1]",
 		Num: "$$ = ['num', $1]",
@@ -245,8 +245,8 @@ var grammar = {
 		"Args": [
 			["( )", "$$= [[]]"],
 			["( Subdefs )", "$$= [$2]"],
-			["Cn ( Subdefs )", "$$= [$3, $1]"],
-			["Cn ( )", "$$= [[], $1]"],
+			["( Subdefs ) Cn", "$$= [$2, $4]"],
+			["( ) Cn", "$$= [[], $3]"],
 		],
     "Subdefs": [
       ["Subdef", "$$ = [$1]; "],
@@ -283,12 +283,12 @@ var grammar = {
 			["=> ID { }", "$$ = ['curry', ['idlib', $2], ['dic', [], 'Dic']];"],			
 		],
 		"Obj": [
-			["@ ID { }", "$$ = ['objnew', ['idlib', $2], ['dic', [], 'Dic']];"],
-			["@ ID { Elems }", "$$ = ['objnew', ['idlib', $2], ['dic', $4, 'Dic']];"],
-			["@@ ID ", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],			
-			["@@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],
-			["@@ ID { Elems }", "$$ = ['obj', ['idlib', $2], ['dic', $4]];"],						
-			["@@ ID Func", "$$ = ['obj', ['idlib', $2], $3];"],
+			["& ID { }", "$$ = ['objnew', ['idlib', $2], ['dic', [], 'Dic']];"],
+			["& ID { Elems }", "$$ = ['objnew', ['idlib', $2], ['dic', $4, 'Dic']];"],
+			["@ ID ", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],			
+			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],
+			["@ ID { Elems }", "$$ = ['obj', ['idlib', $2], ['dic', $4]];"],						
+			["@ ID Func", "$$ = ['obj', ['idlib', $2], $3];"],
 		],
 		"CallArgs": [
 			["( )", "$$ = []"],

@@ -278,7 +278,6 @@ numtDefx("Unlimited")
 })
 
 
-
 ##funcvc = curryNewx(defsp, "Funcv", valc, {
  valDefault: nullv
 })

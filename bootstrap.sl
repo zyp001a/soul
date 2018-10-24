@@ -747,6 +747,7 @@ typepredx = &(oo){
  #o = asobj(oo)
  #t = typex(o)
  @if(t == "Call"){
+  
   @if(o.callFunc->id == "objNew"){
    @return o.callArgs[0]
   }
@@ -958,6 +959,8 @@ ast2objx = &(scope, gscope, ast){
     convertType: f.sidLib
     convert: ast2objx(scope, gscope, ast[2][0])
    })
+  }@elif(f.sidLib){
+   f = f.sidLib
   }
   #arr = ast2arrx(scope, gscope, ast[2])
   @if(v[0] == "get" && v[3] == "obj"){
@@ -1124,35 +1127,54 @@ ast2objx = &(scope, gscope, ast){
  @if(t == "ctrl"){
   #args = ast[2]
   @if(v == "foreach"){
+   #args1 = ast2objx(scope, gscope, args[1])
+   #tt = typepredx(args1)
    scopeSet(scope, args[0], objNew(confidlocalc, {
     confidName: args[0]
- //    confidType: a.argtType
+    confidType: curryGetx(tt, "itemsType")    
    }))
    args[2][2] = "BlockNovar"
+   #args2 = ast2objx(scope, gscope, args[2])   
    @return objNew(ctrlforeachc, {
     ctrlArgs: [
      args[0]
-     ast2objx(scope, gscope, args[1])
-     ast2objx(scope, gscope, args[2])
+     args1
+     args2
+     tt
     ]
    })
   }
   @if(v == "each"){
-   scopeSet(scope, args[0], objNew(confidlocalc, {
-    confidName: args[0]
- //    confidType: a.argtType
-   }))
+   #args2 = ast2objx(scope, gscope, args[2])
+   #tt = typepredx(args2)
+   @if(!tt || !tt->id){
+    scopeSet(scope, args[0], objNew(confidlocalc, {
+     confidName: args[0]
+    }))
+   }@elif(isclassx(tt, "Dic")){
+    scopeSet(scope, args[0], objNew(confidlocalc, {
+     confidName: args[0]
+     confidType: strc
+    }))
+   }@else{
+    scopeSet(scope, args[0], objNew(confidlocalc, {
+     confidName: args[0]
+     confidType: uintc
+    }))   
+   }
    scopeSet(scope, args[1], objNew(confidlocalc, {
     confidName: args[1]
- //    confidType: a.argtType
+    confidType: curryGetx(tt, "itemsType")    
    }))
    args[3][2] = "BlockNovar"
+   #args3 = ast2objx(scope, gscope, args[3])
    @return objNew(ctrleachc, {
     ctrlArgs: [
      args[0]
      args[1]
-     ast2objx(scope, gscope, args[2])
-     ast2objx(scope, gscope, args[3])
+     args2
+     args3
+     tt
     ]
    })
   }
@@ -1184,14 +1206,14 @@ ast2objx = &(scope, gscope, ast){
       errorCode: 1
       errorMsg: x      
      })]
-    })   
+    })
    }@elif(!isclassx(tt, "Error")){
     log(x)
     log(tt)
     die("ast2obj: throw grammar error, must be error or string");
    }
    @return objNew(ctrlthrowc, {ctrlArgs: [x]}) 
-  }  
+  }
   @if(v == "return"){
 	 @if(args){
     @return objNew(ctrlreturnc, {
@@ -1286,6 +1308,12 @@ ast2objx = &(scope, gscope, ast){
 
  @if(t == "arr"){
   #arr = ast2arrx(scope, gscope, v)
+  @if(len(arr) > 0){//&& !classGetx(arr->obj, "itemsType")
+   #tt = typepredx(arr[0])
+   @if(tt != _){
+    arr->obj = curryInitx(arr->obj, {itemsType: tt})
+   }
+  }
   @return arr;
  }
  @if(t == "dic"){
@@ -1474,10 +1502,16 @@ ast2objx = &(scope, gscope, ast){
   })
  }
  @if(t == "obj"){
- //TODO func, dic, arr with spec class
  //TODO throw error if dic callable
   #c = ast2objx(scope, gscope, v);
   @return objNew(c, ast2objx(scope, gscope, ast[2]))
+ }
+ @if(t == "objx"){
+  #c = ast2objx(scope, gscope, v);
+  #r = ast2objx(scope, gscope, ast[2])
+  r->obj = c
+  r->isval = 0
+  @return r
  }
  @if(t == "scope"){
   #parents = ast2arrx(scope, gscope, v)
@@ -1516,16 +1550,18 @@ blockExecx = &(block, env, sttlabel){
 }
 execGetx = &(t, o, env, cache){
  #e = env.envExecScope
- @if(?scopeGetLocal(e, t)){
-  @return scopeGetLocal(e, t);
- }
  @if(!cache){
   cache = {};
- }
- #exect = scopeGetx(e, t)
- @if(?exect){
-  e[t] = exect;
-  @return exect
+ } 
+ @if(t){
+  @if(?scopeGetLocal(e, t)){
+   @return scopeGetLocal(e, t);
+  }
+  #exect = scopeGetx(e, t)
+  @if(?exect){
+   e[t] = exect;
+   @return exect
+  }
  }
  #deft = o || scopeGetx(env.envDefScope, t)
  @if(typex(deft) == "Curry"){
@@ -1540,7 +1576,7 @@ execGetx = &(t, o, env, cache){
   }
  }@else{
   @if(!?deft){
-   die("execGet: type not defined, "^t)
+   die("execGet: type not defined")
   }
   @each k v deft.classParents{
    @if(cache[k]){ @return; }
@@ -1651,7 +1687,7 @@ ncExecx = &(oo){
  @if(istypex(o, "Items")){
   @return o
  }
- @if(istypex(o, "Val")){
+ @if(o->isval){
   @return o.val
  }
  @return o
@@ -1659,10 +1695,6 @@ ncExecx = &(oo){
 execx = &(oo, env){
  #o = asobj(oo)
  #t = typex(o)
- @if(!?t){
-  log(o)
-  die("no type defined")
- }
  #ex = execGetx(t, o->obj, env)
  @if(!?ex){
   die("exec: unknown type, "^t);
@@ -1700,6 +1732,9 @@ fnNewx(execsp, "Scope", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Error", repr(&(env, o){
+ @return o
+}))
+fnNewx(execsp, "Enum", repr(&(env, o){
  @return o
 }))
 fnNewx(execsp, "Main", repr(&(env, o){

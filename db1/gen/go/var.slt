@@ -4,4 +4,6 @@
  ~_~=asval(#0)~ := ~=exec(#1.confidLocalValue, $env)~~
 }@elif(#1.confidType){
  ~var _~=asval(#0)~ ~=call(r, [#1.confidType], $env)~~
+}@else{
+ ~var _~=asval(#0)~ interface{}~
 }~

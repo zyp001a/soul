@@ -1,3 +1,4 @@
 ~
-#r = scopeGet(#$env.envExecScope, "typemap")
-~[]~=call(r, [#0.itemsType], $env)~{~=execarr(#0, ", ", $env)~}
+#typemap = scopeGet(#$env.envExecScope, "typemap")
+log(#0->obj)
+~~=typemap(#0->obj)~{~=execarr(#0, ", ", $env)~}

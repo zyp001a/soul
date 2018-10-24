@@ -11,6 +11,7 @@ Routex = <>{
  ns: Str
  index: Uint
  scope: Objx
+ flagNoname: Boolean
 }
 Dicx = => Dic {
  itemsType: Objx
@@ -28,29 +29,11 @@ Oopx = <>{
 Objx = <>{
  type: T
  route: Routex
+ obj: Objx
  oop: Oopx
  val: Voidp 
 }
 
-##rootsp
-##defsp
-
-
-
-##objc
-##classc
-##scopec
-##curryc
-##valc
-/*
-valx = &(o:Objx)Voidp{
- #t = o.type
- @if(t == "NUM"){
-  @return 
- }
- @return 1
-}
-*/
 routex = &(o:Objx, scope:Objx, name:Str)Objx{
  @if(!o.route){
   o.route = &Routex{}
@@ -67,24 +50,71 @@ routex = &(o:Objx, scope:Objx, name:Str)Objx{
   r.index ++
  }
  Dicx(scope.val)[name] = o
-  /*
- o->name = name
- #id = scope->id
- @if(!?id){
-  o->id = "."
-  o->ns = name
+ r.name = name;
+ #id = scope.route.id
+ @if(!id){
+  r.id = "."
+  r.ns = name
  }@elif(id == "."){
-  o->id = name
-  o->ns = scope->ns
- }@elif(scope->noname){
-  o->id = name
-  o->ns = scope->ns^"/"^id
+  r.id = name
+  r.ns = scope.route.ns
+ }@elif(scope.route.flagNoname){
+  r.id = name
+  r.ns = scope.route.ns + "/" + id
  }@else{
-  o->id = id^"_"^name
-  o->ns = scope->ns
+  r.id = id + "_" + name
+  r.ns = scope.route.ns
  }
- o->scope = scope
- */  
+ r.scope = scope
  @return o;
 }
-//log(valx(@Metax{}))
+
+parentSetx = &(p:Objx, parents:Arrx){
+ @foreach e parents{
+  //TODO reduce
+  p.oop.parents[e.route.id] = e;
+ }
+}
+scopePresetx = &(scope:Objx, name:Str, parents:Arrx)Objx{
+ #x = &Objx {
+  type: @T("SCOPE")
+  route: &Routex{}
+  oop: &Oopx{
+   parents: @Dicx{}
+  }
+  val: @Dicx{}
+ }
+ @if parents != _ {
+  parentSetx(x, parents)
+ }
+ routex(x, scope, name);
+ @return x;
+}
+classPresetx = &(scope:Objx, name:Str, parents:Arrx, schema:Dicx)Objx{
+ #x = &Objx {
+  type: @T("SCOPE")
+  route: &Routex{}
+  oop: &Oopx{
+   parents: @Dicx{}  
+  }
+ }
+ @if parents != _{
+  parentSetx(x, parents)
+ }
+ routex(x, scope, name);
+ @return x;
+}
+
+#rootsp = scopePresetx()
+#defsp =  scopePresetx(rootsp, "def")
+
+#objc = classPresetx(defsp, "Obj")
+#classc = classPresetx(defsp, "Class", [objc])
+#scopec = classPresetx(defsp, "Scope", [objc])
+
+rootsp.obj = scopec
+defsp.obj = scopec
+objc.obj = classc
+classc.obj = classc
+scopec.obj = classc
+

@@ -1,0 +1,4 @@
+~#a = #0.ctrlArgs
+~for(~=exec(a[0], $env)~; ~=exec(a[1], $env)~; ~=exec(a[2], $env)~){
+~=ind(exec(a[3], $env))~
+}

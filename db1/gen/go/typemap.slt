@@ -1,14 +1,14 @@
 ~
-@if(!?#0){
+@if(!#0){
  ~interface{}~
 }@else{
  #t = #0->id
- @if(!t || t == "Voidp"){
+ @if(t == "Voidp"){
   ~interface{}~
  }@elif(t == "Str"){
   ~string~
  }@elif(t == "Boolean"){
-  ~boolean~
+  ~bool~
  }@elif(t == "Num"){
   ~float64~
  }@elif(t == "Uint"){
@@ -21,6 +21,8 @@
   ~map[string]~=$this(curryGet(#0, "itemsType"))~~
  }@elif(#0.curryClass){
   ~~=$this(#0.curryClass)~~  
+ }@elif(!t){
+  ~interface{}~  
  }@else{
   ~*~=t~~
  }

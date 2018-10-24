@@ -1,4 +1,4 @@
- predefine class
+ modify ind func
  change Callable to Calling
  __.context  contextSet/Get/Add/Del
  lcfirst

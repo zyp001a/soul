@@ -288,7 +288,8 @@ var grammar = {
 			["@ ID ", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],			
 			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],
 			["@ ID { Elems }", "$$ = ['obj', ['idlib', $2], ['dic', $4]];"],						
-			["@ ID Func", "$$ = ['obj', ['idlib', $2], $3];"],
+			["@ ID Func", "$$ = ['objx', ['idlib', $2], $3];"],
+			["@ ID ( Expr )", "$$ = ['objx', ['idlib', $2], $4];"],			
 		],
 		"CallArgs": [
 			["( )", "$$ = []"],

@@ -4,6 +4,6 @@
 #dic = #0
 ~&~=c->id~{
 ~@each k v curryJoin(c, dic){
- ~~=$indent~_~=k~: ~=exec(v, $env)~,
+ ~~=$indent~_~=k~: ~=ind(exec(v, $env))~,
 ~
 }~}

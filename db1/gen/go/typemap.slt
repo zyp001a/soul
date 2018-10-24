@@ -13,6 +13,10 @@
   ~float64~
  }@elif(t == "Uint"){
   ~uint~
+ }@elif(t == "Int"){
+  ~int~
+ }@elif(t == "Char"){
+  ~byte~
  }@elif($enums[t]){
   ~uint8~
  }@elif(isclass(#0, "Arr")){

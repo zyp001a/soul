@@ -1,2 +1,6 @@
 ~#typemap = scopeGet(#$env.envExecScope, "typemap")
-~~=typemap(#0->obj)~{}
+~~=typemap(#0->obj)~{~
+@each k v #0 {~
+~=$indent~"~=asval(k)~": ~=ind(exec(v, $env))~,~
+}~
+}

@@ -157,6 +157,7 @@ curryNewx = &(scope, name, class, curry){
 ##numc = curryNewx(def, "Num", valc, {
  valDefault: 0
 })
+##uintc = curryNewx(def, "Int", numc)
 ##uintc = curryNewx(def, "Uint", numc)
 ##floatc = curryNewx(def, "Float", numc)
 ##doublec = curryNewx(def, "Double", numc)
@@ -1357,6 +1358,12 @@ ast2objx = &(scope, gscope, ast){
   }
   @if(tt == "Dic"){
    #dic = ast2dicx(scope, gscope, v)
+   @if(len(v) > 0){//&& !classGetx(arr->obj, "itemsType")...
+    #tt = typepredx(ast2objx(scope, gscope, v[0][0]))
+    @if(tt != _){
+     dic->obj = curryInitx(dic->obj, {itemsType: tt})
+    }
+   }   
    @return dic;
   }
   die("cannot determine dic or block");

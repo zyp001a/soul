@@ -254,7 +254,7 @@ var grammar = {
     ],
 		"Subdef": [
 			["ID", "$$ = [$1]"],
-			["KeyColon Cn", "$$ = [$1, $2]"],
+			["ID Cn", "$$ = [$1, $2]"],
 		],
 		"Call": [
 			["Id CallArgs", "$$ = ['call', $1, $2];"],
@@ -283,7 +283,7 @@ var grammar = {
 			["=> ID { }", "$$ = ['curry', ['idlib', $2], ['dic', [], 'Dic']];"],			
 		],
 		"Obj": [
-			["& ID { }", "$$ = ['objnew', ['idlib', $2], ['dic', [], 'Dic']];"],
+			["& ID { }", "$$ = ['objnew', ['idlib', $2], ['dic', []]];"],						
 			["& ID { Elems }", "$$ = ['objnew', ['idlib', $2], ['dic', $4, 'Dic']];"],
 			["@ ID ", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],			
 			["@ ID { }", "$$ = ['obj', ['idlib', $2], ['dic', []]];"],

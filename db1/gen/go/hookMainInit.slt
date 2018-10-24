@@ -11,6 +11,7 @@
 push(mainpre, $imports)
 push(mainpre, $enums)
 push(mainpre, $structs)
+push(mainpre, $global)
 push(mainpre, $funcs)
 push(mainpre, $includes)
 ~package main

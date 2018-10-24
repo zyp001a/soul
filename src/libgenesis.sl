@@ -105,16 +105,25 @@ classPresetx = &(scope:Objx, name:Str, parents:Arrx, schema:Dicx)Objx{
  @return x;
 }
 
-#rootsp = scopePresetx()
-#defsp =  scopePresetx(rootsp, "def")
 
-#objc = classPresetx(defsp, "Obj")
-#classc = classPresetx(defsp, "Class", [objc])
-#scopec = classPresetx(defsp, "Scope", [objc])
+##rootsp = scopePresetx()
+##defsp =  scopePresetx(rootsp, "def")
+
+##objc = classPresetx(defsp, "Obj")
+##classc = classPresetx(defsp, "Class", [objc])
+##scopec = classPresetx(defsp, "Scope", [objc])
 
 rootsp.obj = scopec
 defsp.obj = scopec
 objc.obj = classc
 classc.obj = classc
 scopec.obj = classc
+
+scopeNewx = &(scope:Objx, name:Str, parents:Arrx)Objx{
+//TODO when key match "_"
+ #x = scopePresetx(scope, name, parents)
+ x.obj = scopec
+ @return x
+}
+
 

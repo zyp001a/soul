@@ -1,0 +1,6 @@
+~
+#var = scopeGet($env.envExecScope, "var")
+@if(#0.sid[0] != "$"){
+ $global[#0.sid] = call(var, [#0.sid, #0.sidGlobal[#0.sid]], $env)
+}
+~_~=#0.sid~

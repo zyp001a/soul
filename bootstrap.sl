@@ -2035,12 +2035,17 @@ envInitx = &(defsp, globalsp, f){
   confidName: "$filename"
   confidType: strc
  }))
+ scopeSet(globalsptmp, "$global", objNew(confidlocalc, {
+  confidName: "$global"
+  confidType: dicc
+ }))
  #globaltmp = {
   $includes: {}
   $funcs: {}
   $argv: ##$argv
   $filename: f
   $dirname: pathDirname(f)
+  $global: {}
  }
  #deftmp = {}
  @return objNew(envc, {

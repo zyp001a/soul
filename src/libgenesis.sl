@@ -1,7 +1,10 @@
+/////1 set class/structs
 T = =>Enum {
  enum: [
-  "NULL", "INT", "NUM", "STR", "CHAR", "DIC", "ARR", "FUNC",
-  "SCOPE", "CLASS", "CURRY",
+  "NULL", "INT", "NUM", "STR", "CHAR", "DIC", "ARR", "FUNCVAL",
+  "TFUNC", "BFUNC",
+  "MCLASS", "VCLASS", "CCLASS",
+  "SCOPE",
   "BLOCK",
   "OBJ"
  ]
@@ -11,8 +14,14 @@ Routex = <>{
  id: Str
  ns: Str
  index: Uint
- scope: Objx
+ scope: Scopex
  flagNoname: Boolean
+}
+Objx = <>{
+ type: T
+ route: Routex
+ class: Objx
+ val: Voidp
 }
 Dicx = => Dic {
  itemsType: Objx
@@ -21,59 +30,73 @@ Arrx = => Arr {
  itemsType: Objx
 }
 
-Oopx = <>{
- class: Objx//store curryClass and itemsType
+Blockx = <>{
+}
+DicUintx = => Dic {
+ itemsType: Uint
+}
+Funcblockx = <>{
+ obj: Objx
+ block: Blockx
+ labels: DicUintx
+}
+Functplx = <>{
+ obj: Objx
+ tpl: Str
+}
+Scopex = <>{
+ obj: Objx
+ val: Dicx
+ parents: Dicx
+}
+Mclassx = <>{
+ obj: Objx
  schema: Dicx
  curry: Dicx
  parents: Dicx
 }
-Objx = <>{
- type: T
- route: Routex
+Vclassx = <>{
  obj: Objx
- oop: Oopx
- val: Voidp 
+ schema: Dicx
+ curry: Dicx
+ class: Objx
 }
-Funcx = <>{
+Cclassx = <>{
+ obj: Objx
+ curry: Dicx
+ class: Objx
 }
-Blockx = <>{
- 
-}
-routex = &(o Objx, scope Objx, name Str)Objx{
+
+/////2 preset root ...
+routex = &(o Objx, scope Scopex, name Str)Objx{
  @if(!o.route){
   o.route = &Routex{}
  }
  #r = o.route;
+ #sr = scope.obj.route
  @if(!r.index){
   r.index = 0
- }
- @if(!scope){
-  @return o
  }
  @if(!name){
   name = str(r.index)
   r.index ++
  }
- Dicx(scope.val)[name] = o
+ scope.val[name] = o
  r.name = name;
- #id = scope.route.id
+ #id = sr.id
  @if(!id){
-  r.id = "."
-  r.ns = name
- }@elif(id == "."){
   r.id = name
-  r.ns = scope.route.ns
- }@elif(scope.route.flagNoname){
+  r.ns = sr.ns
+ }@elif(sr.flagNoname){
   r.id = name
-  r.ns = scope.route.ns + "/" + id
+  r.ns = sr.ns + "/" + id
  }@else{
   r.id = id + "_" + name
-  r.ns = scope.route.ns
+  r.ns = sr.ns
  }
  r.scope = scope
  @return o;
 }
-
 parentsMakex = &(parentarr Arrx)Dicx{
  @if parentarr == _ {
   @return
@@ -85,51 +108,227 @@ parentsMakex = &(parentarr Arrx)Dicx{
  }
  @return x
 }
-//Def: struct
-//Preset: struct + route
-//Init: struct + obj
-//New: struct + route + obj
-scopeDefx = &(parents Dicx, val Dicx)Objx{
+scopePresetx = &(parentarr Arrx)Objx{
+ #val = &Scopex{
+  parents: parentsMakex(parentarr)
+  val: @Dicx{}
+ }
  #x = &Objx {
   type: @T("SCOPE")
-  route: &Routex{}
-  oop: &Oopx{}
+  val: val
  }
- @if(parents != _){
-  x.oop.parents = parents
- }@else{
-  x.oop.parents = @Dicx{}
- }
- @if(val != _){
-  x.val = val
- }@else{
-  x.val = @Dicx{}
- }
- @return x
+ val.obj = x;
+ @return x;
 }
-classDefx = &(parents Dicx, schema Dicx, curry Dicx)Objx{
+mclassPresetx = &(parentarr Arrx)Objx{
+ #val = &Mclassx{  
+  parents: parentsMakex(parentarr)
+  curry: @Dicx{}
+  schema: @Dicx{}
+ }
  #x = &Objx {
-  type: @T("CLASS")
-  route: &Routex{}
-  oop: &Oopx{}
+  type: @T("MCLASS")
+  val: val
  }
- @if(parents != _){
-  x.oop.parents = parents
- }@else{
-  x.oop.parents = @Dicx{} 
- }
- @if(schema != _){
-  x.oop.schema = schema
- }@else{
-  x.oop.schema = @Dicx{} 
- }
- @if(curry != _){
-  x.oop.curry = curry
- }@else{
-  x.oop.curry = @Dicx{} 
- }
+ val.obj = x;
+ @return x;
+}
+#root = scopePresetx()
+root.route = &Routex{}
+##rootsp = Scopex(root.val)
+#def =  scopePresetx()
+routex(def, rootsp, "Def")
+##defsp = Scopex(def.val)
+
+##objc = mclassPresetx()
+routex(objc, defsp, "Obj")
+##classc = mclassPresetx([objc])
+routex(classc, defsp, "Class")
+##mclassc = mclassPresetx([classc])
+routex(mclassc, defsp, "Mclass")
+##scopec = mclassPresetx([objc])
+routex(scopec, defsp, "Scope")
+
+root.class = scopec
+def.class = scopec
+objc.class = mclassc
+mclassc.class = mclassc
+classc.class = mclassc
+scopec.class = mclassc
+
+/////3 def scope/MVCclassNew
+scopeNewx = &(scope Scopex, name Str, parents Arrx)Objx{
+//THROW when key match "_"
+ #x = scopePresetx(parents)
+ x.class = scopec 
+ routex(x, scope, name);
  @return x
 }
+dicOrx = &(x Dicx)Dicx{
+ @if(x != _){
+  @return @Dicx{}
+ }@else{
+  @return x
+ }
+}
+mclassInitx = &(parentarr Arrx, schema Dicx, curry Dicx)Objx{
+ #val = &Mclassx{  
+  parents: parentsMakex(parentarr)
+  curry: dicOrx(curry)
+  schema: dicOrx(schema)
+ }
+ #x = &Objx {
+  type: @T("MCLASS")
+  class: mclassc
+  val: val
+ }
+ val.obj = x;
+ @return x;
+}
+mclassNewx = &(scope Scopex, name Str, parentarr Arrx, schema Dicx, curry Dicx)Objx{
+ #x = mclassInitx(parentarr, schema, curry)
+ routex(x, scope, name)
+ @return x
+}
+##vclassc = mclassNewx(defsp, "Vclass", [classc])
+##cclassc = mclassNewx(defsp, "Cclass", [classc])
+vclassInitx = &(class Objx, schema Dicx, curry Dicx)Objx{
+ #val = &Vclassx{
+  class: class
+  schema: schema
+  curry: dicOrx(curry)
+ }
+ #x = &Objx {
+  type: @T("VCLASS")
+  class: vclassc
+  val: val
+ }
+ val.obj = x;
+ @return x
+}
+vclassNewx = &(scope Scopex, name Str, class Objx, schema Dicx, curry Dicx)Objx{
+ //TODO class cannot be defsp.Curry
+ #x = vclassInitx(class, schema, curry)
+ routex(x, scope, name)
+ @return x;
+}
+cclassInitx = &(class Objx, curry Dicx)Objx{
+ #val = &Cclassx{
+  class: class
+  curry: dicOrx(curry)
+ }
+ #x = &Objx {
+  type: @T("CCLASS")
+  class: cclassc
+  val: val
+ }
+ val.obj = x;
+ @return x
+}
+cclassNewx = &(scope Scopex, name Str, class Objx, curry Dicx)Objx{
+ //TODO class cannot be defsp.Curry
+ #x = cclassInitx(class, curry)
+ routex(x, scope, name)
+ @return x;
+}
+
+/////4 def val, voidp, null
+##voidpc = mclassNewx(defsp, "Voidp", [objc])
+##valc = mclassNewx(defsp, "Val", [objc], {
+ valDefault: objc
+ val: voidpc
+})
+##nullv =  &Objx{
+ type: @T("NULL")
+}
+##nullc = cclassNewx(defsp, "Null", valc, {
+ valDefault: nullv
+})
+nullv.class = nullc
+
+/////5 def num
+##zerointv = &Objx{
+ type: @T("INT")
+ val: 0
+}
+##zeronumv = &Objx{
+ type: @T("NUM")
+ val: 0.0
+}
+##numc = mclassNewx(defsp, "Num", [valc])
+##intc = mclassNewx(defsp, "Int", [numc])
+##uintc = mclassNewx(defsp, "Uint", [intc])
+
+zeronumv.class = numc
+zerointv.class = intc
+inttDefx = &(x Str){
+ cclassNewx(defsp, x, intc, {
+  valDefault: zerointv
+ })
+}
+uinttDefx = &(x Str){
+ cclassNewx(defsp, x, uintc, {
+  valDefault: zerointv
+ })
+}
+numtDefx = &(x Str){
+ cclassNewx(defsp, x, numc, {
+  valDefault: zeronumv
+ })
+}
+inttDefx("Boolean")//Int1
+inttDefx("Char")//Int8
+inttDefx("Int16")
+inttDefx("Int32")
+inttDefx("Int64")
+uinttDefx("Uint8")
+uinttDefx("Uint16")
+uinttDefx("Uint32")
+uinttDefx("Uint64")
+numtDefx("Float")
+numtDefx("Double")
+
+
+/////6 def items 
+##itemsc =  mclassNewx(defsp, "Items", [valc], {
+ itemsType: classc
+})
+##itemslimitedc =  vclassNewx(defsp, "ItemsLimited", itemsc, {
+ itemsLimitedLength: uintc
+})
+##arrc = cclassNewx(defsp, "Arr", itemsc)
+##dicc = cclassNewx(defsp, "Dic", itemsc)
+
+
+/////7 advanced type init: string, enum, unlimited number...
+##zerostrv = &Objx{
+ type: @T("STR")
+ val: ""
+}
+##strc = cclassNewx(defsp, "Str", valc, {
+ valDefault: zerostrv
+})
+zerostrv.class = strc
+
+/////8 function init
+##funcrawc = cclassNewx(defsp, "Funcraw", valc, {
+ valDefault: nullv
+})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 intDefx = &(x Int)Objx{
  @return &Objx{
   type: @T("INT")
@@ -154,130 +353,3 @@ charDefx = &(x Char)Objx{
   val: x
  } 
 }
-curryDefx = &(class Objx, curry Dicx)Objx{
- #x = &Objx {
-  type: @T("CURRY")
-  route: &Routex{}
-  oop: &Oopx{
-   class: class
-  }
- }
- @if(curry != _){
-  x.oop.curry = curry
- }@else{
-  x.oop.curry = @Dicx{} 
- }
- @return x
-}
-
-scopePresetx = &(scope Objx, name Str, parentarr Arrx)Objx{
- #x = scopeDefx(parentsMakex(parentarr))
- routex(x, scope, name);
- @return x;
-}
-classPresetx = &(scope Objx, name Str, parentarr Arrx, schema Dicx)Objx{
- #x = classDefx(parentsMakex(parentarr))
- routex(x, scope, name);
- @return x;
-}
-
-
-##rootsp = scopePresetx()
-##defsp =  scopePresetx(rootsp, "def")
-
-##objc = classPresetx(defsp, "Obj")
-##classc = classPresetx(defsp, "Class", [objc])
-##scopec = classPresetx(defsp, "Scope", [objc])
-
-rootsp.obj = scopec
-defsp.obj = scopec
-objc.obj = classc
-classc.obj = classc
-scopec.obj = classc
-
-scopeNewx = &(scope Objx, name Str, parents Arrx)Objx{
-//TODO when key match "_"
- #x = scopePresetx(scope, name, parents)
- x.obj = scopec
- @return x
-}
-
-classInitx = &(parentarr Arrx, schema Dicx, curry Dicx)Objx{
- #x = classDefx(parentsMakex(parentarr), schema, curry)
- x.obj = classc
- @return x
-}
-
-classNewx = &(scope Objx, name Str, parentarr Arrx, schema Dicx)Objx{
- #x = classPresetx(scope, name, parentarr, schema)
- x.obj = classc
- @return x
-}
-
-##curryc = classNewx(defsp, "Curry", [objc])
-##valc = classNewx(defsp, "Val", [objc], {
- valDefault: objc
-})
-
-curryInitx = &(class Objx, curry Dicx)Objx{
- #x = curryDefx(class, curry)
- x.obj = curryc
- @return x
-}
-
-curryNewx = &(scope Objx, name Str, class Objx, curry Dicx)Objx{
- //TODO class cannot be defsp.Curry
- #x = curryInitx(class, curry)
- routex(x, scope, name)
- @return x;
-}
-##nullv =  &Objx{
- type: @T("NULL")
-}
-##zerointv = intDefx(0)
-##zeronumv = numDefx(0)
-##nullc = curryNewx(defsp, "Null", valc, {
- valDefault: nullv
-})
-##numc = classNewx(defsp, "Num", [valc])
-##intc = classNewx(defsp, "Int", [numc])
-inttDefx = &(x Str){
- curryNewx(defsp, x, intc, {
-  valDefault: zerointv
- })
-}
-numtDefx = &(x Str){
- curryNewx(defsp, x, numc, {
-  valDefault: zeronumv
- })
-}
-inttDefx("Boolean")
-inttDefx("Int8")
-inttDefx("Int16")
-inttDefx("Int32")
-inttDefx("Int64")
-inttDefx("Uint8")
-inttDefx("Uint16")
-inttDefx("Uint32")
-inttDefx("Uint64")
-numtDefx("Float")
-numtDefx("Double")
-numtDefx("Unlimited")
-
-##strc = curryNewx(defsp, "Str", valc, {
- valDefault: strDefx("")
-})
-##charc = curryNewx(defsp, "Char", valc, {
- valDefault: charDefx(0)
-})
-##voidpc = classNewx(defsp, "Voidp", [objc])
-
-
-##itemsc =  classNewx(defsp, "Items", [valc], {
- itemsType: classc
-})
-
-
-##funcvc = curryNewx(defsp, "Funcv", valc, {
- valDefault: nullv
-})

@@ -207,12 +207,11 @@ curryNewx = &(scope, name, class, curry){
 ##itemsc =  classNewx(def, "Items", [valc], {
  itemsType: classc
 })
-##itemsc =  classNewx(def, "ItemsStatic", [itemsc], {
+##itemsstaticc =  classNewx(def, "ItemsStatic", [itemsc], {
  itemsStaticLength: uintc
 })
 ##arrc = curryNewx(def, "Arr", itemsc)
 ##dicc = curryNewx(def, "Dic", itemsc)
-##dicclassc =  curryNewx(def, "DicClass", dicc)
 
 ##enumc = classNewx(def, "Enum", [valc], {
  enum: arrc
@@ -244,12 +243,13 @@ scopec.classSchema = {
  envStack: arrc,
 })
 
-##convertc = classNewx(def, "Convert", [objc], {
+
+##callablec = classNewx(def, "Callable", [objc])
+##convertc = classNewx(def, "Convert", [callablec], {
  convertType: classc
  convert: objc
 })
 
-##callablec = classNewx(def, "Callable", [objc])
 
 ##callc = classNewx(def, "Call", [callablec], {
  callFunc: funcc
@@ -1180,6 +1180,7 @@ ast2objx = &(scope, gscope, ast){
    })
   }
   @if(v == "if"){
+   //TODO if args[0] not OP change to op
    #l = len(args)
    @for #i=1;i<l;i+=2{
     args[i][2] = "BlockNovar"

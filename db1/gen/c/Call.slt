@@ -5,7 +5,9 @@
  #f = f.sidLib
 }
 #printargs = 0
-@if(istype(f, "Func")){
+@if(istype(f, "FuncTpl")){
+ ~~=tplCall(f, a, $env)~~
+}@elif(istype(f, "Func")){
  #n = f->id
  #r = scopeGet(#$env.envExecScope, n)
  @if(r){

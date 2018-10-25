@@ -352,7 +352,6 @@ scopec.classSchema = {
 ##opltc = curryNewx(def, "OpLt", op2c, {
  opPrecedence: 40
 })
-
 ##opeqc = curryNewx(def, "OpEq", op2c, {
  opPrecedence: 50
 })
@@ -378,13 +377,11 @@ scopec.classSchema = {
 ##ctrlargsc = classNewx(def, "CtrlArgs", [ctrlc], {
  ctrlArgs: arrc
 })
-
 ##ctrlifc = curryNewx(def, "CtrlIf", ctrlargsc)
 ##ctrlforc = curryNewx(def, "CtrlFor", ctrlargsc)
 ##ctrleachc = curryNewx(def, "CtrlEach", ctrlargsc)
 ##ctrlforeachc = curryNewx(def, "CtrlForeach", ctrlargsc)
 ##ctrlwhilec = curryNewx(def, "CtrlWhile", ctrlargsc)
-
 ##ctrlbreakc = curryNewx(def, "CtrlBreak", ctrlc)
 ##ctrlcontinuec = curryNewx(def, "CtrlContinue", ctrlc)
 ##ctrlgotoc = curryNewx(def, "CtrlGoto", ctrlargsc)
@@ -450,6 +447,7 @@ execx = &()
 ncExecx = &()
 blockExecx = &()
 callx = &()
+tplCallx = &()
 istypex = &()
 isclassx = &()
 typex = &()
@@ -615,6 +613,9 @@ fnNewx(def, "call", repr(&(env, func, args, eenv){
  }
  @return callx(func, args, env)
 }))
+fnNewx(def, "tplCall", repr(&(env, func, args, eenv){
+ @return tplCallx(func, args, eenv)
+}))
 fnNewx(def, "execarr", repr(&(env, arr, sep, eenv){
  #s = ""
  @for #i=0; i<len(arr); i++ {
@@ -761,10 +762,10 @@ typepredx = &(oo){
    @return classGetx(c, asval(key))
   }
   @if(o.callFunc->id == "Dic$get"){
-   @return o->itemsType
+   @return curryGetx(typepredx(o.callArgs[0]),"itemsType")
   }
   @if(o.callFunc->id == "Arr$get"){
-   @return o->itemsType
+   @return curryGetx(typepredx(o.callArgs[0]),"itemsType")  
   }
   @if(o.callFunc->id == "Str$get"){
    @return charc

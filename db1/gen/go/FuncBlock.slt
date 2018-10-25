@@ -27,4 +27,9 @@
 }~
  @return join($arr, "")
 }
-$funcs[#0->id] = make(nn, x, y, strx, $env)~
+@if(#0->id){
+ $funcs[#0->id] = make(nn, x, y, strx, $env)
+}@else{
+ ~~=make(nn, x, y, strx, $env)~~
+}
+~

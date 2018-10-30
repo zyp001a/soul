@@ -6,6 +6,7 @@ T = =>Enum {
   "VAR", "BLOCK", "FUNC",
   "CONV", "CALL", "ID", "ASSIGN", "OP"
   "RETURN", "GOTO", "CONTINUE", "BREAK", "ERROR"
+  "PROFILE", "ENV", "EXEC"
   "OBJ"
  ]
 }
@@ -43,8 +44,20 @@ Classx = <>{
  parents: Dicx
  class: Objx 
 }
-
-
+Profilex = <>{
+ global: Scopex
+ def: Scopex
+ exec: Scopex
+}
+Envx = <>{
+ profile: Profilex
+ global: Scopex
+ def: Scopex
+}
+Execx = <>{
+ obj: Objx
+ env: Envx
+}
 /////2 preset root ...
 routex = &(o Objx, scope Scopex, name Str)Objx{
  @if(!o.route){
@@ -64,8 +77,11 @@ routex = &(o Objx, scope Scopex, name Str)Objx{
  r.name = name;
  #id = sr.id
  @if(!id){
+  r.id = "."
+  r.ns = name
+ }@elif(id == "."){
   r.id = name
-  r.ns = sr.ns
+  r.ns = sr.ns  
  }@elif(sr.noname != 0){
   r.id = name
   r.ns = sr.ns + "/" + id
@@ -126,10 +142,13 @@ classvPresetx = &(class Objx)Objx{
  @return x;
 }
 #root = scopePresetx()
-root.route = &Routex{}
+root.route = &Routex{
+ id: ""
+ ns: ""
+}
 ##rootsp = Scopex(root.val)
 #def =  scopePresetx()
-routex(def, rootsp, "Def")
+routex(def, rootsp, "def")
 ##defsp = Scopex(def.val)
 
 ##objc = classmPresetx()
@@ -382,7 +401,7 @@ Funcx = <>{
  obj: Objx
  block: Blockx
  tpl: Str
- native: Voidp
+ native: ValFunc
  
  args: ArrVarx
  return: Varx
@@ -418,16 +437,19 @@ Funcx = <>{
  funcTpl: strc
  funcTplFileName: strc
 })
-funcInitx = &(args ArrVarx, return Varx, f Voidp)Objx{
- @if(f == _){
+funcInitx = &(native ValFunc, args ArrVarx, return Varx)Objx{
+ @if(native == _){
   #c = funcprotoc
  }@else{
   #c = funcnativec
  }
+ @if(args == _){
+  args = @ArrVarx([])
+ }
  #val = &Funcx{
   args: args
   return: return
-  native: f
+  native: native
  }
  #x = &Objx{
   type: @T("FUNC")
@@ -437,28 +459,27 @@ funcInitx = &(args ArrVarx, return Varx, f Voidp)Objx{
  val.obj = x;
  @return x
 }
-//TODO change funcArgts argtType
+//TODO! change funcArgts argtType
+//TODO! js compatible
 fx = @`funcInitx([]*Varx{~
  @foreach v #0.funcArgts{
   ~~="&"~Varx{_name: "~=v.argtName~"},~
  }
 ~}, ~="&"~Varx{}, &0)`
-funcNewx = &(scope Scopex, name Str, fn Objx)Objx{//FuncNative new
+funcNewx = &(scope Scopex, name Str, native ValFunc, args ArrVarx, return Varx)Objx{//FuncNative new
+ #fn = funcInitx(native, args, return)
  routex(fn, scope, name);
  //TODO if  raw
  @return fn
 }
-funcNewx(defsp, "log", fx(&(x Objx)Objx{
- log(x)
- @return nullv
-}))
 
 /////9 def mid
 
 Convx = <>{
 }
 Callx = <>{
- 
+ func: Objx
+ args: Arrx
 }
 ##midc = classmNewx(defsp, "Mid", [objc])
 
@@ -473,6 +494,22 @@ Callx = <>{
  callFunc: funcc
  callArgs: arrc
 })
+
+callInitx = &(func Objx, args Arrx)Objx{
+ #val = &Callx{
+  func: func
+  args: args
+ }
+ @if(args == _){
+  val.args = @Arrx{}
+ }
+ #x = &Objx{
+  type: @T("CALL")
+  class: callc
+  val: val
+ }
+ @return x
+}
 
 ##idc = classmNewx(defsp, "Id", [midc])
 ##idstrc =  classvNewx(defsp, "IdStr", idc, {
@@ -601,36 +638,73 @@ Error = <>{
 ##ctrlerrorc = classcNewx(defsp, "CtrlError", ctrlargsc)
 
 /////12 def  env
-Profilex = <>{
- global: Scopex
- def: Scopex
- exec: Scopex
-}
-Envx = <>{
- profile: Profilex
- global: Scopex
- def: Scopex
-}
 ##profilec = classmNewx(defsp, "Profile", [objc], {
  profileGlobal: scopec
  profileDef: scopec
  profileExec: scopec
 })
-##envc = classmNewx(defsp, "Envc", [objc], {
+##envc = classmNewx(defsp, "Env", [objc], {
  envProfile: profilec
  envGlobal: scopec
  envDef: scopec
+})
+##execc = classmNewx(defsp, "Exec", [objc], {
+ execObj: objc
+ execEnv: envc
 })
 
 /////14 func oop
 
 /////15 func scope
+dbGetx = &(scope Scopex, key Str)Str{
+ @return ""
+}
 scopeIntox = &(scope Scopex, key Str)Scopex{
+ #nscope = scope
+ =>Arr{itemsType:Str}#arr = key.split("_")
+ @foreach e arr{
+  #xr = scope.val[e]
+  @if(!xr){
+   nscope = Scopex(scopeNewx(nscope, e).val)
+  }@else{
+   nscope = Scopex(xr.val);
+  }
+ }
  @return _
 }
 scopeGetSubx = &(scope Scopex, key Str, cache Dic)Objx{
  #nscope = scope
  #nkey = key
+ =>Arr{itemsType:Str}#arr = key.match("(\\S+)_([^_]+)$")
+ @if(arr != _){
+  nscope = scopeIntox(scope, arr[1])
+  nkey = arr[2]
+ }
+ #r = nscope.val[nkey]
+ @if(r != _){
+  @return r
+ }
+
+ @if(!scope.obj.route.noname){
+
+  
+  #sstr = dbGetx(scope, key);
+  @if(sstr != ""){
+   sstr = nkey+" = "+sstr;
+//   r = progl2objx(nscope, {}, sstr)
+//   @return r;
+   @return _
+  }
+ }
+ @each k v scope.parents {
+  @if(cache[k] != _){ @continue };
+  cache[k] = 1;
+  r = scopeGetSubx(Scopex(v.val), key, cache)
+  @if(r != _){
+   @return r;
+  }
+ }
+
  @return _
 }
 scopeGetx = &(scope Scopex, key Str)Objx{
@@ -646,34 +720,55 @@ scopeGetx = &(scope Scopex, key Str)Objx{
  @return _
 }
 /////16 func exec
+//exec use self as cache
+callx = &(func Funcx, args Arrx, env Envx)Objx{
+ @return call(func.native, [args, env]);
+}
 execGetx = &(c Classx, env Envx, cache Dic)Funcx{
- #e = env.profile.exec
+ #profexec = env.profile.exec.val
  @if(!cache){
   cache = {}
  }
  @if(c.obj.route != _){
   #t = c.obj.route.id
-  #x = e.val[t]
+  #x = profexec[t]
   @if(x != _){
    @return Funcx(x.val)
   }
-  #exect = scopeGetx(e, t)
-  @if(exect != _){
-   e.val[t] = exect
-   @return Funcx(exect.val)
+  #execot = scopeGetx(env.profile.exec, t)
+  @if(execot != _){
+   profexec[t] = execot
+   @return Funcx(execot.val)
   }
  }
- 
+ @if(c.class != _){
+  #k = c.class.route.id
+  @if(cache[k] != _){ @return _; }
+  cache[k] = 1;
+  Funcx#exect = execGetx(Classx(c.class.val), env, cache);
+  @if(exect != _){
+   profexec[t] = exect.obj
+   @return exect
+  }  
+ }@elif(c.parents != _){
+  @each k v c.parents{
+   @if(cache[k] != _){ @return; }
+   cache[k] = 1;
+   exect = execGetx(Classx(v.val), env, cache);
+   @if(exect != _){
+    profexec[t] = exect.obj;
+    @return exect;
+   }
+  }
+ }
  @return _
 }
-execx = &(o Objx, env Envx){
+execx = &(o Objx, env Envx)Objx{
  #ex = execGetx(Classx(o.class.val), env)
- /* 
  @if(!ex){
-  die("exec: unknown type, "+t);
+  die("exec: unknown type");
  }
  @return callx(ex, [o], env);
- */
 }
 
 
@@ -686,11 +781,44 @@ execx = &(o Objx, env Envx){
 /////20 init method
 
 /////21 init internal func
-
+#logf = funcNewx(defsp, "log", &(x Arrx, env Envx)Objx{
+ #o = x[0].type
+ #v = x[0].val
+ @if(o == "INT"){
+  log(Int(v)) 
+ }@elif(o == "NUM"){
+  log(Num(v))
+ }@elif(o == "STR"){
+  log(Str(v))   
+ }
+ @return nullv
+})
 /////22 init type exec func
-
+#exec = scopeNewx(rootsp, "exec")
+#execsp = Scopex(exec.val)
+funcNewx(execsp, "Exec", &(x Arrx, env Envx)Objx{
+ log(x[0])
+ @return nullv
+})
+funcNewx(execsp, "Call", &(x Arrx, env Envx)Objx{
+ #c = Callx(x[0].val)
+ 
+ @return callx(Funcx(c.func.val), c.args, env)
+})
 /////23 main func
-
-
+#global = scopeNewx(rootsp, "global")
+#globalsp = Scopex(global.val)
+#prof = &Profilex{
+ global: globalsp
+ def: defsp
+ exec: execsp
+}
+#env = &Envx{
+ profile: prof
+ def: Scopex(scopeNewx(defsp).val)
+ global: Scopex(scopeNewx(globalsp).val)
+}
+#main = callInitx(logf, [intDefx(1)])
+execx(main, env);
 
 

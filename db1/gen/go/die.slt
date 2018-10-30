@@ -1,0 +1,3 @@
+~goImport("fmt")
+goImport("os")
+~fmt.Println(&0);os.Exit(1)

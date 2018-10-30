@@ -168,7 +168,7 @@ curryNewx = &(scope, name, class, curry){
 ##charc = curryNewx(def, "Char", valc, {
  valDefault: ''
 })
-##funcvc = curryNewx(def, "Funcv", valc, {
+##funcvc = curryNewx(def, "ValFunc", valc, {
  valDefault: __
 })
 
@@ -459,8 +459,11 @@ classGetx = &()
 
 
 /////////define method
-methodNewx(strc, "split", repr(&(env, s, sep){
+methodNewx(strc, "split", repr(&Arr(env, s, sep){
  @return split(s, sep)
+}))
+methodNewx(strc, "match", repr(&(env, s, regexp){
+ @return match(s, regexp)
 }))
 methodNewx(dicc, "get", repr(&(env, dic, key){
  @return objNew(siddicc, {

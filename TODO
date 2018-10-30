@@ -1,5 +1,7 @@
+set func proto before read block
+block/class lex promise
+rec if to switch
  modify ind func
- change Callable to Calling
  __.context  contextSet/Get/Add/Del
  lcfirst
  

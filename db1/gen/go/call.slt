@@ -1,0 +1,5 @@
+&0~#arr = []
+@foreach e #1{
+ push(arr, exec(e, $env))
+}
+~(~=join(arr, ", ")~)

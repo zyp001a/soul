@@ -5,6 +5,8 @@
  #t = #0->id
  @if(t == "Voidp"){
   ~interface{}~
+ }@elif(t == "ValFunc"){
+  ~func([]*Objx, *Envx)*Objx~
  }@elif(t == "Str"){
   ~string~
  }@elif(t == "Boolean"){

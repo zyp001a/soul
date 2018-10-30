@@ -1,0 +1,1 @@
+~goImport("regexp")~regexp.MustCompile(&0).FindStringSubmatch(&1)

@@ -1,8 +1,5 @@
-~#a = #0.ctrlArgs
-#tmpi = genuid($env);
-#tmpa = genuid($env);
-~tmp~=tmpa~ := ~=exec(a[1], $env)~;
-for tmp~=tmpi~ := 0; tmp~=tmpi~ < len(tmp~=tmpa~); tmp~=tmpi~ ++ {
-~=$indent~_~=asval(a[0])~ = tmp~=tmpa~[tmp~=tmpi~]
+~
+#a = #0.ctrlArgs
+~for _, _~=asval(a[0])~ = range ~=exec(a[1], $env)~ {
 ~=ind(exec(a[2], $env))~
 }

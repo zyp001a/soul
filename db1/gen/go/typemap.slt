@@ -3,7 +3,7 @@
  ~interface{}~
 }@else{
  #t = #0->id
- @if(t == "Voidp"){
+ @if(t == "Voidp" || t == "Val"){
   ~interface{}~
  }@elif(t == "ValFunc"){
   ~func([]*Objx, *Envx)*Objx~

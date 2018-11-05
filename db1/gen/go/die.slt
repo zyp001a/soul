@@ -1,3 +1,4 @@
 ~goImport("fmt")
 goImport("os")
-~fmt.Println(&0);os.Exit(1)
+goImport("runtime/debug")
+~fmt.Println(&0);debug.PrintStack();os.Exit(1)

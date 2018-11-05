@@ -5,12 +5,12 @@
  #t = #0->id
  @if(t == "Voidp" || t == "Val"){
   ~interface{}~
- }@elif(t == "ValFunc"){
-  ~func([]*Objx, *Envx)*Objx~
+ }@elif(isclass(#0, "Func")){
+  ~func([]*Objx, *Objx)*Objx~
  }@elif(t == "Str"){
   ~string~
  }@elif(t == "Boolean"){
-  ~bool~
+  ~int8~
  }@elif(t == "Num"){
   ~float64~
  }@elif(t == "Uint"){

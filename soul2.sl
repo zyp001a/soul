@@ -390,18 +390,17 @@ DicUintx = => Dic {
 ArrStrx = => Arr {
  itemsType: Str
 }
-Blockx = <>{
- val: Arrx
- labels: DicUintx 
-}
 ##arrstrc = classcNewx(defmain, "ArrStr", arrc, {
  itemsType: strc
 })
-##dicuintc = classcNewx(defmain, "DicUint", arrc, {
+##dicuintc = classcNewx(defmain, "DicUint", dicc, {
  itemsType: uintc
 })
-##statec = classvNewx(defmain, "State", scopec, {
- stateVars: arrstrc
+##dicclassc = classcNewx(defmain, "DicClass", dicc, {
+ itemsType: classc
+})
+##arrclassc = classcNewx(defmain, "ArrClass", arrc, {
+ itemsType: classc
 })
 
 
@@ -410,7 +409,8 @@ Blockx = <>{
 ##funcc = classmNewx(defmain, "Func", [objc])
 
 ##funcprotoc = classvNewx(defmain, "FuncProto", funcc, {
- funcVars: arrstrc
+ funcVarNames: arrstrc
+ funcVarTypes: arrc
  funcReturn: classc
 })
 
@@ -423,13 +423,16 @@ Blockx = <>{
  blockVal: arrc,
  blockLabels: dicuintc
 })
+##blockc = classvNewx(defmain, "BlockState", blockc, {
+ blockState: statec, 
+})
 ##funcclassc = classvNewx(defmain, "FuncClass", funcprotoc, {
  funcClass: classc
 })
 ##funcblockc = classvNewx(defmain, "FuncBlock", funcclassc, {
  funcBlock: blockc
 })
-##functplc = classvNewx(defmain, "FuncTpl", funcclassc, {
+##functplc = classvNewx(defmain, "FuncTpl", funcblockc, {
  funcTpl: strc
  funcTplFileName: strc
 })

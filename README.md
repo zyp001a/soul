@@ -76,4 +76,28 @@ obj: ___
 
 Concept sets -> Pattern match -> Pattern Response
 
-## 
+##
+State
+ stateVars
+ stateDef
+Block
+ blockVal
+ blockLabel
+ blockState
+Func
+ funcVarNames
+ funcVarTypes
+ funcReturn
+ funcBlock
+Call
+ callFunc
+ callArgs
+Call step
+ callFunc -> funcBlock -> blockState -> blockStateIns + callArgs -> blockExec
+ call BlockState -> blockState -> blockStateIns -> blockExec
+ call Block -> get parent state -> blockExec
+
+
+1. state bind blockState
+2. stateVars bind state
+3. 

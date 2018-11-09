@@ -767,7 +767,7 @@ typepredx = &(oo){
   @if(o.callFunc->id == "Dic$get"){
    @return curryGetx(typepredx(o.callArgs[0]),"itemsType")
   }
-  @if(o.callFunc->id == "Arr$get"){
+  @if(o.callFunc->id == "Arr$get"){   
    @return curryGetx(typepredx(o.callArgs[0]),"itemsType")  
   }
   @if(o.callFunc->id == "Str$get"){

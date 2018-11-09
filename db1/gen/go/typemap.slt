@@ -6,7 +6,7 @@
  @if(t == "Voidp" || t == "Val"){
   ~interface{}~
  }@elif(isclass(#0, "Func")){
-  ~func([]*Objx, *Objx)*Objx~
+  ~func(*[]*Objx, *Objx)*Objx~
  }@elif(t == "Str"){
   ~string~
  }@elif(t == "Boolean"){
@@ -22,7 +22,7 @@
  }@elif($enums[t]){
   ~uint8~
  }@elif(isclass(#0, "Arr")){
-  ~[]~=$this(curryGet(#0, "itemsType"))~~
+  ~*[]~=$this(curryGet(#0, "itemsType"))~~
  }@elif(isclass(#0, "Dic")){
   ~map[string]~=$this(curryGet(#0, "itemsType"))~~
  }@elif(#0.curryClass){

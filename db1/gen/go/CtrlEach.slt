@@ -6,8 +6,8 @@
 #tmpi = "_"+asval(a[0])
 #tmpa = "tmp"+genuid($env);
 ~~=tmpa~ := ~=exec(a[2], $env)~;
-for ~=tmpi~ = 0; ~=tmpi~ < uint(len(~=tmpa~)); ~=tmpi~ ++ {
-~=$indent~_~=asval(a[1])~ = ~=tmpa~[~=tmpi~]
+for ~=tmpi~ = 0; ~=tmpi~ < uint(len(*~=tmpa~)); ~=tmpi~ ++ {
+~=$indent~_~=asval(a[1])~ = (*~=tmpa~)[~=tmpi~]
 ~=ind(exec(a[3], $env))~
 }~
 }~

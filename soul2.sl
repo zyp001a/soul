@@ -409,7 +409,7 @@ ArrStrx = => Arr {
 ##funcc = classmNewx(defmain, "Func", [objc])
 
 ##funcprotoc = classvNewx(defmain, "FuncProto", funcc, {
- funcVarNames: arrstrc
+ funcVars: arrstrc
  funcVarTypes: arrc
  funcReturn: classc
 })
@@ -419,11 +419,15 @@ ArrStrx = => Arr {
 ##funcnativec = classmNewx(defmain, "FuncNative", [funcprotoc], {
  funcNative: valfuncc
 })
+##statec = classmNewx(defmain, "State", [objc], {
+ stateVars: arrstrc
+ stateDef: dicc
+})
 ##blockc = classmNewx(defmain, "Block", [objc], {
  blockVal: arrc,
  blockLabels: dicuintc
 })
-##blockc = classvNewx(defmain, "BlockState", blockc, {
+##blockstatec = classvNewx(defmain, "BlockState", blockc, {
  blockState: statec, 
 })
 ##funcclassc = classvNewx(defmain, "FuncClass", funcprotoc, {
@@ -607,10 +611,13 @@ fnInitx = &(val Funcx, args ArrStrx, argtypes Arrx, return Objx)Objx{
  }
  #x = objInitx(c)
  #funcVars = arrDefx(arrstrc)
+ #funcVarTypes = arrDefx(arrc)
  @each i v argtypes{
-  funcVars.val = push(Arrx(funcVars.val), strDefx(args[i]))
+  push(Arrx(funcVars.val), strDefx(args[i]))
+  push(Arrx(funcVarTypes.val), objInitx(v))
  }
  x.dic["funcVars"] = funcVars
+ x.dic["funcVarTypes"] = funcVarTypes
  @if(return != _){
   x.dic["funcReturn"] = return
  } 
@@ -671,7 +678,7 @@ execGetx = &(c Objx, env Objx, cache Dic)Objx{
   cache = {}
  }
  @if(c.id != ""){
-  #t = c.id
+  #t = c.name
   #x = execsp.dic[t]
   @if(x != _){
    @return x

@@ -1,3 +1,3 @@
 ~
 #typemap = scopeGet(#$env.envExecScope, "typemap")
-~~=typemap(#0->obj)~{~=execarr(#0, ", ", $env)~}
+~&[]~=typemap(curryGet(#0->obj, "itemsType"))~{~=execarr(#0, ", ", $env)~}

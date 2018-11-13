@@ -1,2 +1,7 @@
 ~#typemap = scopeGet($env.envExecScope, "typemap")
-~&convert.(~=typemap(#0.convertType)~)
+#x = typepred(#0.convert)
+@if(x && x->name != "Voidp" &&  x->name != "Val"){
+~~=typemap(#0.convertType)~(&convert)~
+}@else{
+~&convert.(~=typemap(#0.convertType)~)~
+}~

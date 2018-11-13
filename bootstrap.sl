@@ -502,6 +502,8 @@ fnNewx(def, "log", repr(&(env, x){
 }))
 fnNewx(def, "jsonParse", repr(&(env, x){
 }))
+fnNewx(def, "osArgs", repr(&(env, x){
+}))
 fnNewx(def, "jsonParseArr", repr(&(env, x){
 }))
 fnNewx(def, "jsonStringify", repr(&(env, x){

@@ -1,0 +1,8 @@
+~
+#pp = typepred(#0)
+@if(isclass(pp, "ArrStatic")){
+ #pre = ""
+}@else{
+ #pre = "*"
+}
+~len(~=pre~&0)

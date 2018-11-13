@@ -1,0 +1,3 @@
+~goImport("strconv")
+funcImport("lf", $env)
+~lf(strconv.Atoi(&0)).(int)

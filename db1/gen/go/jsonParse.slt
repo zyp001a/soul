@@ -1,0 +1,3 @@
+~
+goImport("encoding/json")
+~func (x string)[]interface{}{var res []interface{}; json.Unmarshal([]byte(x), ~="&"~res); return res;}(&0)

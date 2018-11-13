@@ -1,0 +1,3 @@
+func lf(x interface{}, e error)interface{}{
+ return x
+}

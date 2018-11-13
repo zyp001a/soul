@@ -1,0 +1,4 @@
+~
+goImport("io/ioutil")
+funcImport("lf", $env)
+~string(lf(ioutil.ReadFile(&0)).([]byte))

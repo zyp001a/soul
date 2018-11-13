@@ -1,1 +1,2 @@
-~goImport("strconv")~strconv.FormatUint(uint64(&0), 10)
+~goImport("strconv")
+~strconv.FormatUint(uint64(&0), 10)

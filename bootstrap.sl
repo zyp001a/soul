@@ -401,6 +401,9 @@ scopec.classSchema = {
  errorMsg: strc
 })
 
+##addrc = classNewx(def, "Addr", [valc])
+##jsonc = classNewx(def, "Json", [valc])
+##bufferc = classNewx(def, "Buffer", [valc])
 typex = &()
 curryInitx = &()
 methodNewx = &(c, name, fn){
@@ -490,6 +493,18 @@ fnNewx(def, "genuid", repr(&(env, eenv){
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
+fnNewx(def, "jsonParse", repr(&(env, x){
+}))
+fnNewx(def, "jsonParseArr", repr(&(env, x){
+}))
+fnNewx(def, "jsonStringify", repr(&(env, x){
+}))
+fnNewx(def, "typeof", repr(&(env, x){
+}))
+fnNewx(def, "system", repr(&(env, x){
+}))
+fnNewx(def, "cmd", repr(&(env, x){
+}))
 fnNewx(def, "sizeof", repr(&(env, x){
  log(x)
 }))
@@ -515,6 +530,10 @@ fnNewx(def, "len", repr(&(env, x){
 }))
 fnNewx(def, "strlen", repr(&(env, x){
  @return strlen(x)
+}))
+fnNewx(def, "int", repr(&(env, x){
+}))
+fnNewx(def, "float", repr(&(env, x){
 }))
 fnNewx(def, "str", repr(&(env, x){
  @return str(x)

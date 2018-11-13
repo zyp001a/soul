@@ -10,8 +10,8 @@
  }@elif(t == "Str"){
   ~string~
  }@elif(t == "Boolean"){
-  ~int8~
- }@elif(t == "Num"){
+  ~bool~
+ }@elif(t == "Num" || t == "Float"){
   ~float64~
  }@elif(t == "Uint"){
   ~uint~

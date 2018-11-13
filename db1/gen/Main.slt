@@ -2,6 +2,13 @@
 ##$indent = "  "
 ##mainpre = []
 ##mainpost = []
+
+##funcImport = &(key, env){
+ @if(##$funcs[key]){
+  @return;
+ }
+ ##$funcs[key] = call(scopeGet(env.envExecScope, key+"Impl"), [], env)
+}
 #execsp = $env.envExecScope
 #hookmaininit = call(scopeGet(execsp, "hookMainInit"), [#0], $env)
 #hookmainpre = call(scopeGet(execsp, "hookMainPre"), [#0], $env)

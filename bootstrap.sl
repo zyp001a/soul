@@ -211,6 +211,7 @@ curryNewx = &(scope, name, class, curry){
  itemsStaticLength: uintc
 })
 ##arrc = curryNewx(def, "Arr", itemsc)
+##arrstaticc = curryNewx(def, "ArrStatic", arrc)
 ##dicc = curryNewx(def, "Dic", itemsc)
 
 ##enumc = classNewx(def, "Enum", [valc], {
@@ -475,6 +476,12 @@ methodNewx(dicc, "get", repr(&(env, dic, key){
  })
 }))
 ##arrgetc = methodNewx(arrc, "get", repr(&(env, arr, key){
+ @return objNew(aidc, {
+  aid: key
+  aidArr: arr
+ })
+}))
+##arrstaticgetc = methodNewx(arrstaticc, "get", repr(&(env, arr, key){
  @return objNew(aidc, {
   aid: key
   aidArr: arr
@@ -965,6 +972,9 @@ ast2objx = &(scope, gscope, ast){
  }
 
  @if(t == "call"){
+  @if(v[0] == "id"){
+   v[2] = 1
+  }
   #f = ast2objx(scope, gscope, v);
   @if(!?f){
    @if(v[0] != "id"){
@@ -977,6 +987,7 @@ ast2objx = &(scope, gscope, ast){
    routex(f, pscope, v[1])
    innateSet(f, "predefined", 1)
   }
+  
   @if(f.sidLib && (f.sidLib->obj->id == "Class" || f.sidLib->obj->id == "Curry")){
    //TODO type2type converter
    @return objNew(convertc, {
@@ -1281,6 +1292,8 @@ ast2objx = &(scope, gscope, ast){
   @if(!?r){
    @if(uc(v[0]) == v[0]){
     r = classNewx(scope, v, [objc])
+   }@elif(ast[2]){
+    @return __
    }@else{
     die("ast2obj: id is not defined, "^v)
    }

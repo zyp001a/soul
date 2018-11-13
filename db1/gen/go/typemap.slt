@@ -21,6 +21,8 @@
   ~byte~
  }@elif($enums[t]){
   ~uint8~
+ }@elif(isclass(#0, "ArrStatic")){
+  ~[]~=$this(curryGet(#0, "itemsType"))~~  
  }@elif(isclass(#0, "Arr")){
   ~*[]~=$this(curryGet(#0, "itemsType"))~~
  }@elif(isclass(#0, "Dic")){

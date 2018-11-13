@@ -1,13 +1,19 @@
 ~
 #a = #0.ctrlArgs
-@if(isclass(typepred(a[2]), "Dic")){~for _~=asval(a[0])~, _~=asval(a[1])~ = range ~=exec(a[2], $env)~ {
+#pp = typepred(a[2])
+@if(isclass(pp, "Dic")){~for _~=asval(a[0])~, _~=asval(a[1])~ = range ~=exec(a[2], $env)~ {
 ~=ind(exec(a[3], $env))~
 }~}@else{
 #tmpi = "_"+asval(a[0])
 #tmpa = "tmp"+genuid($env);
+@if(isclass(pp, "ArrStatic")){
+ #pre = ""
+}@else{
+ #pre = "*"
+}
 ~~=tmpa~ := ~=exec(a[2], $env)~;
-for ~=tmpi~ = 0; ~=tmpi~ < uint(len(*~=tmpa~)); ~=tmpi~ ++ {
-~=$indent~_~=asval(a[1])~ = (*~=tmpa~)[~=tmpi~]
+for ~=tmpi~ = 0; ~=tmpi~ < uint(len(~=pre+tmpa~)); ~=tmpi~ ++ {
+~=$indent~_~=asval(a[1])~ = (~=pre+tmpa~)[~=tmpi~]
 ~=ind(exec(a[3], $env))~
 }~
 }~

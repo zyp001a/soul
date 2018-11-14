@@ -500,6 +500,8 @@ fnNewx(def, "genuid", repr(&(env, eenv){
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
+fnNewx(def, "copy", repr(&(env, x){
+}))
 fnNewx(def, "jsonParse", repr(&(env, x){
 }))
 fnNewx(def, "osArgs", repr(&(env, x){

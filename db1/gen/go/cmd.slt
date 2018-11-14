@@ -1,9 +1,11 @@
 ~
 goImport("os/exec")
 goImport("strings")
+goImport("log")
+goImport("os")
 @if(!#1){
  #in = '""'
 }@else{
  #in = exec(#1, $env)
 }
-~func (x string) string {cmd := exec.Command("/bin/bash", "-c", &0); if(x != ""){cmd.Stdin = strings.NewReader(x)}; out, err := cmd.Output(); _=err; return string(out); }(~=in~)
+~func (x string) string {cmd:= exec.Command("/bin/bash", "-c", &0); if(x != ""){cmd.Stdin = strings.NewReader(x)}; out, err := cmd.Output(); if(err!= nil){log.Fatal(err);os.Exit(1)}; return string(out); }(~=in~)

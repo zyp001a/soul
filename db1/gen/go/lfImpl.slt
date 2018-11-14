@@ -1,3 +1,9 @@
-func lf(x interface{}, e error)interface{}{
+~goImport("log")
+goImport("os")
+~func lf(x interface{}, e error)interface{}{
+ if(e != nil){
+  log.Fatal(e)
+  os.Exit(1)
+ }
  return x
 }

@@ -555,6 +555,10 @@ fnNewx(def, "num", repr(&(env, x){
 fnNewx(def, "dic", repr(&Dic(env, x){
  @return x
 }))
+fnNewx(def, "unshift", repr(&(env, a, e){
+}))
+fnNewx(def, "shift", repr(&(env, a, e){
+}))
 fnNewx(def, "push", repr(&(env, a, e){
  push(a, e)
  @return e;

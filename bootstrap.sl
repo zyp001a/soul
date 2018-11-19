@@ -168,6 +168,12 @@ curryNewx = &(scope, name, class, curry){
 ##charc = curryNewx(def, "Char", valc, {
  valDefault: ''
 })
+##bytec = curryNewx(def, "Byte", valc, {
+ valDefault: ''
+})
+##bytesc = curryNewx(def, "Bytes", valc, {
+ valDefault: ''
+})
 ##funcvc = curryNewx(def, "ValFunc", valc, {
  valDefault: __
 })

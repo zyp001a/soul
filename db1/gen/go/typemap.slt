@@ -17,8 +17,11 @@
   ~uint~
  }@elif(t == "Int"){
   ~int~
- }@elif(t == "Char"){
+ }@elif(t == "Byte"){
   ~byte~
+ }@elif(t == "Bytes"){
+  goImport('bytes')
+  ~bytes.Buffer~
  }@elif($enums[t]){
   ~uint8~
  }@elif(isclass(#0, "ArrStatic")){

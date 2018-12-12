@@ -1,2 +1,7 @@
 ~goImport("strconv")
-~strconv.FormatUint(uint64(&0), 10)
+#x=typepred(#0)
+@if(isclass(x, "Float")){
+~strconv.FormatUint(uint64(&0), 10)~
+}@else{
+~strconv.FormatFloat(float64(&0), 'f', -1, 64)~
+}~

@@ -475,6 +475,8 @@ methodNewx(strc, "split", repr(&Arr(env, s, sep){
 methodNewx(strc, "match", repr(&(env, s, regexp){
  @return match(s, regexp)
 }))
+methodNewx(strc, "replace", repr(&(env, s, regexp, ss){
+}))
 methodNewx(dicc, "get", repr(&(env, dic, key){
  @return objNew(siddicc, {
   sid: key
@@ -582,10 +584,11 @@ fnNewx(def, "split", repr(&Arr(env, a:Str, s){
  @return split(a, s)
 }))
 fnNewx(def, "escape", repr(&(env, s){
- @return replaceAll(s, "[\n\t\r]", &(x){
+ @return replaceAll(s, `[\n\t\r\"]`, &(x){
   @if(x == "\n"){ @return "\\n" }
   @if(x == "\t"){ @return "\\t" }
   @if(x == "\r"){ @return "\\r" }
+  @if(x == `\"`){ @return `\\\"` }
  })
 }))
 fnNewx(def, "opp", repr(&(env, subo, o, nenv){

@@ -6,7 +6,7 @@
  @if(t == "Voidp" || t == "Val"){
   ~interface{}~
  }@elif(isclass(#0, "Func")){
-  ~func(*[]*Objx, *Objx)*Objx~
+  ~func(*[]*Cptx, *Cptx)*Cptx~
  }@elif(t == "Str"){
   ~string~
  }@elif(t == "Boolean"){

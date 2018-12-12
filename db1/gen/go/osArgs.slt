@@ -1,1 +1,1 @@
-~goImport("os")~os.Args[&0]
+~goImport("os")~~="&"~os.Args

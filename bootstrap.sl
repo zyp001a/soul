@@ -510,7 +510,13 @@ fnNewx(def, "copy", repr(&(env, x){
 }))
 fnNewx(def, "jsonParse", repr(&(env, x){
 }))
-fnNewx(def, "osArgs", repr(&(env, x){
+fnNewx(def, "osArgs", repr(&Arr(env, x){
+}))
+fnNewx(def, "getenv", repr(&(env, x){
+}))
+fnNewx(def, "setenv", repr(&(env, x){
+}))
+fnNewx(def, "pathResolve", repr(&(env, x){
 }))
 fnNewx(def, "jsonParseArr", repr(&(env, x){
 }))

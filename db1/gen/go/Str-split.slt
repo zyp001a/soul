@@ -1,1 +1,1 @@
-~goImport("strings")~strings.Split(&0, &1)
+~goImport("strings")~func () *[]string {tmp:=strings.Split(&0, &1); return ~="&"~tmp;}()

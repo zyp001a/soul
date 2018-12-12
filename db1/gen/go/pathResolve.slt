@@ -1,0 +1,1 @@
+~goImport("path/filepath")~lf(filepath.Abs(&0)).(string)

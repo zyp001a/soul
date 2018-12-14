@@ -16,7 +16,9 @@
   @for #i=len(a);i<len(f.funcArgts);i++ {
    #vvv = Arr(f.funcArgts)[i]
    @if(vvv.argtType){
-    @if(isclass(vvv.argtType, "Val")){
+    @if(isclass(vvv.argtType, "Boolean")){
+     push(a, @Boolean(0))
+    }@elif(isclass(vvv.argtType, "Val")){
      push(a, curryGet(vvv.argtType, "valDefault"))
     }@else{
      push(a, _)

@@ -510,6 +510,8 @@ fnNewx(def, "genuid", repr(&(env, eenv){
 fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
+fnNewx(def, "unused", repr(&(env, x){
+}))
 fnNewx(def, "copy", repr(&(env, x){
 }))
 fnNewx(def, "mkdirAll", repr(&(env, x){

@@ -1,0 +1,3 @@
+~
+goImport("io/ioutil")
+~err := ioutil.WriteFile(&0, []byte(&1), 0666); if(err != nil){ log.Fatal(err); os.Exit(1)} 

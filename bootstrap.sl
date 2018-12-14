@@ -469,6 +469,8 @@ classGetx = &()
 
 
 /////////define method
+methodNewx(enumc, "toString", repr(&Str(env){
+}))
 methodNewx(strc, "split", repr(&Arr(env, s, sep){
  @return split(s, sep)
 }))
@@ -509,6 +511,10 @@ fnNewx(def, "log", repr(&(env, x){
  log(x)
 }))
 fnNewx(def, "copy", repr(&(env, x){
+}))
+fnNewx(def, "mkdirAll", repr(&(env, x){
+}))
+fnNewx(def, "mkdir", repr(&(env, x){
 }))
 fnNewx(def, "jsonParse", repr(&(env, x){
 }))

@@ -477,7 +477,7 @@ methodNewx(strc, "split", repr(&Arr(env, s, sep){
 methodNewx(strc, "match", repr(&(env, s, regexp){
  @return match(s, regexp)
 }))
-methodNewx(strc, "replace", repr(&(env, s, regexp, ss){
+methodNewx(strc, "replace", repr(&Str(env, s, regexp, ss){
 }))
 methodNewx(dicc, "get", repr(&(env, dic, key){
  @return objNew(siddicc, {

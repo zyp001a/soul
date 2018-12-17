@@ -21,7 +21,7 @@ var grammar = {
 			["`(\\\\.|[^\\\\`])*`",
 			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\`/g, '`'); return 'STR';"], 			
 			["\'(\\\\.|[^\\\\\'])*\'|\"(\\\\.|[^\\\\\"])*\"",
-			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\u([0-9a-fA-F]{4})/, function(m, n){ return String.fromCharCode(parseInt(n, 16)) }).replace(/\\\\(.)/g, function(m, n){ if(n == 'n') return '\\n';if(n == 'r') return '\\r';if(n == 't') return '\\t'; if(n == '\\\\') return \"\\\\\\\\\"; return '\'+n;}); return 'STR';"], 
+			 "yytext = yytext.substr(1, yyleng-2).replace(/\\\\u([0-9a-fA-F]{4})/, function(m, n){ return String.fromCharCode(parseInt(n, 16)) }).replace(/\\\\(.)/g, function(m, n){ if(n == 'n') return '\\n';if(n == 'r') return '\\r';if(n == 't') return '\\t'; if(n == '\\\\') return \"\\\\\\\\\"; return n;}); return 'STR';"], 
 //			["\<[a-zA-Z0-9_\\\/\\s]*\>",
 //       "yytext = yytext.replace(/^\<\\s*/, '').replace(/\\s*\>$/, ''); return 'PARENTS';"],
       ["\\\\[\\r\\n;]+", "return"],//allow \ at end of line

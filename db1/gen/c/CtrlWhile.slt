@@ -1,0 +1,6 @@
+~
+#a = #0.ctrlArgs[0];
+#b = #0.ctrlArgs[1];
+~for true {
+~=ind(exec(b, $env))~
+}

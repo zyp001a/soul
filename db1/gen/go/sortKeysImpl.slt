@@ -1,0 +1,10 @@
+~goImport("log")
+goImport("sort")
+~func sortKeys(dic map[string]*Cptx)*[]string{
+ keys := make([]string, 0, len(dic))
+ for k, _ := range dic {
+ 	keys = append(keys, k)
+ }
+ sort.Strings(keys)
+ return ~="&"~keys
+}

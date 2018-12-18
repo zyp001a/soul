@@ -512,6 +512,10 @@ fnNewx(def, "log", repr(&(env, x){
 }))
 fnNewx(def, "print", repr(&(env, x){
 }))
+fnNewx(def, "sort", repr(&Arr(env, x){
+}))
+fnNewx(def, "sortKeys", repr(&Arr(env, x){
+}))
 fnNewx(def, "unused", repr(&(env, x){
 }))
 fnNewx(def, "copy", repr(&(env, x){
@@ -1197,10 +1201,15 @@ ast2objx = &(scope, gscope, ast){
   @if(v == "foreach"){
    #args1 = ast2objx(scope, gscope, args[1])
    #tt = typepredx(args1)
+   #it = curryGetx(tt, "itemsType")
+   @if(it == _ || it.name == "Obj"){
+    it = strc
+   }
    scopeSet(scope, args[0], objNew(confidlocalc, {
     confidName: args[0]
-    confidType: curryGetx(tt, "itemsType")    
+    confidType: it
    }))
+
    args[2][2] = "BlockNovar"
    #args2 = ast2objx(scope, gscope, args[2])   
    @return objNew(ctrlforeachc, {

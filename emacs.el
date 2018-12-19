@@ -7,7 +7,9 @@
         ("\\\\." . font-lock-constant-face)
         ("\\([A-Za-z0-9_$]+\\) *= *\\&" . (1 font-lock-function-name-face))
         ("\\&(\\([^)]+\\))" . (1 font-lock-variable-name-face))
-        ("\\#?\\#[A-Za-z0-9_$]+" . font-lock-variable-name-face)
+        ("->" . font-lock-variable-name-face)
+        ("\\-\\> \\([^{]+\\)" . (1 font-lock-variable-name-face))
+        ("\\#[A-Za-z0-9_$]+" . font-lock-variable-name-face)
         ("\\@foreach \\([a-zA-Z0-9_$]+\\)" . (1 font-lock-variable-name-face))
         ("\\@each \\([a-zA-Z0-9_$]+ [a-zA-Z0-9_$]+\\)" . (1 font-lock-variable-\
 name-face))

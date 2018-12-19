@@ -1,0 +1,2 @@
+~goImport("runtime/debug")
+~debug.PrintStack();

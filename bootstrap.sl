@@ -560,6 +560,9 @@ fnNewx(def, "uc", repr(&(env, x){
 fnNewx(def, "lc", repr(&(env, x){
  @return lc(x)
 }))
+fnNewx(def, "trace", repr(&(env, x){
+ 
+}))
 fnNewx(def, "die", repr(&(env, x){
  log(env.envFile)
  die(x)

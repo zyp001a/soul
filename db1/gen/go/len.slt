@@ -1,8 +1,9 @@
 ~
 #pp = typepred(#0)
-@if(isclass(pp, "ArrStatic")){
- #pre = ""
-}@else{
- #pre = "*"
+#pre = ""
+@if(isclass(pp, "Arr")){
+ @if(!isclass(pp, "ArrStatic")){
+  pre = "*"
+ }
 }
 ~len(~=pre~&0)

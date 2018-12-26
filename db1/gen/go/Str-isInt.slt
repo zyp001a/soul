@@ -1,0 +1,1 @@
+func ()bool{_, err := strconv.Atoi(&0); return err == nil}()

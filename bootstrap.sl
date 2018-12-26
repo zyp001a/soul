@@ -477,6 +477,9 @@ methodNewx(strc, "split", repr(&Arr(env, s, sep){
 methodNewx(strc, "match", repr(&(env, s, regexp){
  @return match(s, regexp)
 }))
+methodNewx(strc, "isInt", repr(&(env){
+ @return _
+}))
 methodNewx(strc, "replace", repr(&Str(env, s, regexp, ss){
 }))
 methodNewx(dicc, "get", repr(&(env, dic, key){

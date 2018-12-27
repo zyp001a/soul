@@ -722,6 +722,9 @@ fnNewx(def, "fileWrite", repr(&(env, f, sstr){
 fnNewx(def, "fileExists", repr(&(env, f){
  @return fileExists(f)
 }))
+fnNewx(def, "fileNt", repr(&Str(env, f){
+ @return fileExists(f)
+}))
 fnNewx(def, "progl2obj", repr(&(env, scope, gscope, sstr){
  @return progl2objx(scope, gscope, sstr)
 }))

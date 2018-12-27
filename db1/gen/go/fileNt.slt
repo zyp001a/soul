@@ -1,0 +1,12 @@
+~goImport("time")
+~func ()string{
+ info, _ := os.Stat(&0)
+ info2, err := os.Stat(&1)
+ if(os.IsNotExist(err)){
+  return "1"
+ }
+ if(info.ModTime().Sub(info2.ModTime()) > (time.Duration(0) * time.Second)){
+  return "1"
+ }
+ return ""
+}()
